@@ -11,7 +11,6 @@ interface SheetProps {
   children: ReactNode;
 }
 
-/** Модальное окно: снизу на телефоне, по центру на большом экране. */
 export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) {
   useEffect(() => {
     if (!open) return;
@@ -21,7 +20,6 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
     };
     document.addEventListener("keydown", onKeyDown);
 
-    // Фон не должен прокручиваться, пока открыта шторка.
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 

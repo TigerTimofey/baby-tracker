@@ -13,7 +13,6 @@ import {
 import styles from "./AuthGate.module.css";
 
 interface AuthGateProps {
-  /** Ключи Supabase не заданы — входить некуда, показываем инструкцию. */
   configured: boolean;
 }
 
@@ -21,17 +20,11 @@ type Mode = "choices" | "email" | "code";
 
 const ERROR_PARAMS = ["error", "error_code", "error_description"];
 
-/** Google возвращает нас с ошибкой в адресе — её нужно показать, а не проглотить. */
 function readErrorFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
   return params.get("error_description") ?? params.get("error");
 }
 
-/**
- * Экран входа. Показывается раньше всего остального: профиль малыша
- * заводится уже внутри аккаунта, чтобы записи сразу принадлежали семье
- * и были видны обоим родителям.
- */
 export function AuthGate({ configured }: AuthGateProps) {
   const [mode, setMode] = useState<Mode>("choices");
   const [email, setEmail] = useState("");
@@ -41,8 +34,6 @@ export function AuthGate({ configured }: AuthGateProps) {
   const [error, setError] = useState<string | null>(readErrorFromUrl);
   const [googleReady, setGoogleReady] = useState<boolean | null>(null);
 
-  // Сообщение уже показано — убираем его из адреса, чтобы не всплывало
-  // снова при перезагрузке. Состояние здесь не трогаем.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (!ERROR_PARAMS.some((key) => params.has(key))) return;
@@ -56,12 +47,10 @@ export function AuthGate({ configured }: AuthGateProps) {
     );
   }, []);
 
-  // Не отправляем человека к провайдеру, который ещё не включён.
   useEffect(() => {
     if (!configured) return;
     let cancelled = false;
     void fetchEnabledProviders().then((providers) => {
-      // Запрос не удался — не мешаем пробовать.
       if (!cancelled) setGoogleReady(providers ? providers.google : true);
     });
     return () => {

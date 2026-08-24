@@ -20,8 +20,6 @@ export function SettingsPage() {
   const location = useLocation();
   const settings = useSettings();
 
-  // Если настройки открыли по прямой ссылке, истории нет — уводим на «Сон»,
-  // иначе «назад» выкинет из приложения.
   const goBack = () =>
     location.key === "default" ? navigate("/sleep") : navigate(-1);
   const { child, children } = useActiveChild();

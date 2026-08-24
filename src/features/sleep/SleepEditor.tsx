@@ -19,7 +19,6 @@ interface SleepEditorProps {
   open: boolean;
   onClose: () => void;
   childId: string;
-  /** Не задан — добавляем новую запись вручную. */
   session?: SleepSession;
 }
 

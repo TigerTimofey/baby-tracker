@@ -13,7 +13,6 @@ interface FieldProps {
   children: (id: string) => ReactNode;
 }
 
-/** Подпись + контрол, связанные через id. */
 export function Field({ label, hint, error, children }: FieldProps) {
   const id = useId();
   return (
@@ -29,7 +28,6 @@ export function Field({ label, hint, error, children }: FieldProps) {
 }
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** Единица измерения, показывается внутри поля справа. */
   suffix?: string;
 }
 

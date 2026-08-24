@@ -2,9 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vite.dev/config/
 export default defineConfig({
-  // Относительные пути: сборку можно открыть с любого хостинга и подпапки.
   base: "./",
   plugins: [
     react(),
@@ -38,12 +36,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-        // Приложение — одна страница, любые адреса ведут в index.html.
+
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
       },
       devOptions: {
-        // В режиме разработки service worker выключен: мешает горячей перезагрузке.
         enabled: false,
       },
     }),
@@ -51,9 +48,6 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Библиотеки меняются редко — пусть кэшируются отдельно от кода
-        // приложения. При обновлении апки service worker перекачивает
-        // только её часть, а не всё разом.
         manualChunks(id) {
           if (id.includes("node_modules/@supabase")) return "supabase";
           if (

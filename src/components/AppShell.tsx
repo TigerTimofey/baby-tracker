@@ -14,7 +14,6 @@ interface Tab {
   to: string;
   label: string;
   icon: IconName;
-  /** Имя цветового токена раздела: --sleep, --growth и т. д. */
   tone: string;
 }
 
@@ -25,7 +24,6 @@ const TABS: Tab[] = [
   { to: "/stats", label: "Статистика", icon: "stats", tone: "stats" },
 ];
 
-/** Цвет раздела по текущему маршруту — им подкрашивается вся страница. */
 function toneForPath(pathname: string): string {
   return TABS.find((tab) => pathname.startsWith(tab.to))?.tone ?? "sleep";
 }
@@ -176,7 +174,7 @@ export function AppShell() {
 
       {formOpen && (
         <ChildForm
-          // Пересоздаём форму при смене режима: поля должны обнуляться.
+
           key={editing ? `edit-${child?.id}` : "new"}
           open={formOpen}
           onClose={() => setFormOpen(false)}

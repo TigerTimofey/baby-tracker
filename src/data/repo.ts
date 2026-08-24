@@ -1,21 +1,11 @@
-/* ---------------------------------------------------------------
-   Репозиторий: чтение/запись записей + оповещение интерфейса.
-
-   Любая запись через save()/softDelete() помечается `_dirty = 1`,
-   и синхронизация потом сама отправит её на сервер.
-   --------------------------------------------------------------- */
-
 import { getDB, getLooseDB } from "./db";
 import type { Local, TableMap, TableName } from "./types";
-
-/* ------------------------------ реактивность ------------------------------ */
 
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
 let version = 0;
 
-/** Оповещаем и соседние вкладки — чтобы таймер сна не разъезжался между ними. */
 const channel =
   typeof BroadcastChannel !== "undefined"
     ? new BroadcastChannel("malysh-data")
@@ -39,14 +29,11 @@ export function getVersion(): number {
   return version;
 }
 
-/** Вызывается после любой записи в базу: перерисовывает интерфейс. */
 export function notifyChange(): void {
   version++;
   for (const listener of listeners) listener();
   channel?.postMessage("changed");
 }
-
-/* --------------------------------- утилиты -------------------------------- */
 
 export function newId(): string {
   return crypto.randomUUID();
@@ -56,9 +43,6 @@ export function nowISO(): string {
   return new Date().toISOString();
 }
 
-/* --------------------------------- чтение --------------------------------- */
-
-/** Все живые (не удалённые) записи таблицы. */
 export async function listAll<K extends TableName>(
   table: K,
 ): Promise<Local<TableMap[K]>[]> {
@@ -67,7 +51,6 @@ export async function listAll<K extends TableName>(
   return rows.filter((row) => !row.deleted);
 }
 
-/** Живые записи одного ребёнка. */
 export async function listByChild<K extends Exclude<TableName, "children">>(
   table: K,
   childId: string,
@@ -89,7 +72,6 @@ export async function getOne<K extends TableName>(
   return (await db.get(table, id)) as Local<TableMap[K]> | undefined;
 }
 
-/** Записи, ждущие отправки на сервер. */
 export async function listDirty<K extends TableName>(
   table: K,
 ): Promise<Local<TableMap[K]>[]> {
@@ -115,12 +97,6 @@ export async function countDirty(): Promise<number> {
   return total;
 }
 
-/* --------------------------------- запись --------------------------------- */
-
-/**
- * Сохранить запись, сделанную пользователем: обновляет `updated_at`
- * и ставит флаг «нужно отправить на сервер».
- */
 export async function save<K extends TableName>(
   table: K,
   record: TableMap[K],
@@ -133,10 +109,6 @@ export async function save<K extends TableName>(
   return row;
 }
 
-/**
- * Мягкое удаление. Запись не стирается, а помечается `deleted` —
- * иначе удаление никогда не доехало бы до второго телефона.
- */
 export async function softDelete<K extends TableName>(
   table: K,
   id: string,
@@ -154,10 +126,6 @@ export async function softDelete<K extends TableName>(
   notifyChange();
 }
 
-/**
- * Записать то, что пришло с сервера. Флаг `_dirty` не ставится:
- * эти данные на сервере уже есть.
- */
 export async function applyRemote<K extends TableName>(
   table: K,
   record: TableMap[K],
@@ -166,7 +134,6 @@ export async function applyRemote<K extends TableName>(
   await db.put(table, { ...record, _dirty: 0 });
 }
 
-/** Снять флаг «не отправлено» — если запись не изменили, пока шёл запрос. */
 export async function clearDirty<K extends TableName>(
   table: K,
   id: string,
@@ -177,4 +144,3 @@ export async function clearDirty<K extends TableName>(
   if (!current || current.updated_at !== sentUpdatedAt) return;
   await db.put(table, { ...current, _dirty: 0 });
 }
-

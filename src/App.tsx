@@ -12,7 +12,6 @@ import { SleepPage } from "./pages/SleepPage";
 import { StatsPage } from "./pages/StatsPage";
 
 export default function App() {
-  // Автосинхронизация живёт столько же, сколько приложение.
   useEffect(() => initSync(), []);
 
   const status = useSyncExternalStore(
@@ -23,18 +22,13 @@ export default function App() {
   const settings = useSettings();
   const { children, loading } = useActiveChild();
 
-  // Ещё выясняем, есть ли действующий вход. Показать экран входа сейчас
-  // значило бы моргнуть им перед тем, кто на самом деле уже вошёл.
   if (status.state === "checking") return null;
 
-  // Профиль малыша заводится уже внутри аккаунта — тогда записи сразу
-  // принадлежат семье и видны обоим родителям.
   const needsAuth = status.state === "signed_out" || status.state === "disabled";
   if (needsAuth && !settings.localOnly) {
     return <AuthGate configured={status.state !== "disabled"} />;
   }
 
-  // Пока читаем локальную базу — не мигаем экраном приветствия.
   if (loading) return null;
 
   if (children.length === 0) return <Onboarding />;

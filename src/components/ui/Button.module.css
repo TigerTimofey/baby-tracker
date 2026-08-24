@@ -23,7 +23,6 @@
   pointer-events: none;
 }
 
-/* Размеры */
 .sm {
   height: 34px;
   padding: 0 14px;
@@ -40,7 +39,6 @@
   font-size: 17px;
 }
 
-/* Варианты. --tone задаёт цвет раздела: сон, рост, вехи. */
 .primary {
   background: var(--tone, var(--accent));
   color: var(--accent-contrast);

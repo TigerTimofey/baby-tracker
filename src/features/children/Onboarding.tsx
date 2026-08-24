@@ -4,7 +4,6 @@ import { Icon } from "../../components/ui/Icon";
 import { ChildForm } from "./ChildForm";
 import styles from "./Onboarding.module.css";
 
-/** Первый запуск: без профиля ребёнка считать нечего. */
 export function Onboarding() {
   const [formOpen, setFormOpen] = useState(false);
 

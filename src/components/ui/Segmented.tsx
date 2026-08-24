@@ -7,7 +7,6 @@ export interface SegmentedOption<T extends string> {
 }
 
 interface SegmentedProps<T extends string> {
-  /** Нужен, чтобы подпись поля (<label for>) указывала на этот переключатель. */
   id?: string;
   value: T;
   options: SegmentedOption<T>[];
@@ -15,7 +14,6 @@ interface SegmentedProps<T extends string> {
   ariaLabel?: string;
 }
 
-/** Переключатель из нескольких равных вариантов. */
 export function Segmented<T extends string>({
   id,
   value,

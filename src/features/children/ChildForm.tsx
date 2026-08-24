@@ -22,9 +22,7 @@ import {
 interface ChildFormProps {
   open: boolean;
   onClose: () => void;
-  /** Не задан — создаём нового ребёнка. */
   child?: Child;
-  /** Можно ли удалить (нельзя, если это единственный профиль). */
   canDelete?: boolean;
 }
 
@@ -84,7 +82,7 @@ export function ChildForm({
     };
 
     await save("children", record);
-    // Новый профиль сразу делаем активным.
+
     if (!child) updateSettings({ activeChildId: record.id });
     onClose();
   }

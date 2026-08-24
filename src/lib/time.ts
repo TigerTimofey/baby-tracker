@@ -1,7 +1,3 @@
-/* ---------------------------------------------------------------
-   Время, длительности и возраст.
-   --------------------------------------------------------------- */
-
 import {
   addMonths,
   addYears,
@@ -14,7 +10,6 @@ import {
 } from "date-fns";
 import type { ISODate, ISODateTime } from "../data/types";
 
-/** Русские окончания: 1 день, 2 дня, 5 дней. */
 export function plural(n: number, forms: [string, string, string]): string {
   const abs = Math.abs(n) % 100;
   const tail = abs % 10;
@@ -32,9 +27,6 @@ const DAYS: [string, string, string] = ["день", "дня", "дней"];
 const MONTHS: [string, string, string] = ["месяц", "месяца", "месяцев"];
 const YEARS: [string, string, string] = ["год", "года", "лет"];
 
-/* ------------------------------ длительности ------------------------------ */
-
-/** «1 ч 24 мин», «24 мин», «48 сек» — компактно, для списков и итогов. */
 export function formatDuration(ms: number): string {
   if (ms < 0) ms = 0;
   const totalMinutes = Math.floor(ms / 60_000);
@@ -47,7 +39,6 @@ export function formatDuration(ms: number): string {
   return `${hours} ч ${minutes} мин`;
 }
 
-/** «01:24:05» — для работающего таймера. */
 export function formatClock(ms: number): string {
   if (ms < 0) ms = 0;
   const total = Math.floor(ms / 1000);
@@ -57,8 +48,6 @@ export function formatClock(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
-
-/* --------------------------------- даты ----------------------------------- */
 
 export function formatTime(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
@@ -77,7 +66,6 @@ export function formatDate(value: Date | ISODateTime | ISODate): string {
   });
 }
 
-/** «Сегодня», «Вчера», «12 августа» — заголовки в лентах событий. */
 export function formatDayLabel(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
   if (isToday(date)) return "Сегодня";
@@ -90,7 +78,6 @@ export function formatDayLabel(value: Date | ISODateTime): string {
   });
 }
 
-/** Ключ для группировки событий по календарным суткам. */
 export function dayKey(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
   return [
@@ -100,7 +87,6 @@ export function dayKey(value: Date | ISODateTime): string {
   ].join("-");
 }
 
-/** Значение для <input type="datetime-local"> — в местной зоне, без «Z». */
 export function toLocalInputValue(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -110,19 +96,15 @@ export function toLocalInputValue(value: Date | ISODateTime): string {
   );
 }
 
-/* -------------------------------- возраст --------------------------------- */
-
 export interface Age {
   years: number;
   months: number;
   days: number;
-  /** Полных месяцев с рождения — по этой шкале строят графики роста. */
   totalMonths: number;
   totalDays: number;
   totalWeeks: number;
 }
 
-/** Момент рождения: дата плюс время, если оно известно. */
 export function birthMoment(birthDate: ISODate, birthTime: string | null): Date {
   const date = parseISO(birthDate);
   if (birthTime) {
@@ -150,10 +132,6 @@ export function ageOf(birth: Date, now: Date = new Date()): Age {
   };
 }
 
-/**
- * Человеческий возраст. До двух месяцев считают в днях и неделях,
- * до двух лет — в месяцах, дальше — в годах: так и говорят родители.
- */
 export function formatAge(age: Age): string {
   if (age.totalDays < 14) return withPlural(age.totalDays, DAYS);
   if (age.totalMonths < 2)
@@ -166,9 +144,6 @@ export function formatAge(age: Age): string {
   return `${withPlural(age.years, YEARS)} ${age.months} мес`;
 }
 
-/* ------------------------------ измерения --------------------------------- */
-
-/** 3450 → «3,45 кг» */
 export function formatWeight(grams: number | null): string {
   if (grams == null) return "—";
   return `${(grams / 1000).toLocaleString("ru-RU", {
@@ -177,7 +152,6 @@ export function formatWeight(grams: number | null): string {
   })} кг`;
 }
 
-/** 525 → «52,5 см» */
 export function formatLength(mm: number | null): string {
   if (mm == null) return "—";
   return `${(mm / 10).toLocaleString("ru-RU", {
@@ -186,7 +160,6 @@ export function formatLength(mm: number | null): string {
   })} см`;
 }
 
-/** "20:30" → минут от полуночи. */
 export function parseTimeOfDay(value: string): number | null {
   const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
   if (!match) return null;

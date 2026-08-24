@@ -1,18 +1,9 @@
-/* ---------------------------------------------------------------
-   Расчёты по сну.
-
-   Главная тонкость: ночной сон пересекает полночь. Поэтому «сколько
-   малыш спал сегодня» считается не по времени начала сна, а по тому,
-   сколько минут сна попало внутрь суток.
-   --------------------------------------------------------------- */
-
 import { parseISO } from "date-fns";
 import type { SleepKind, SleepSession } from "../../data/types";
 import { dayKey } from "../../lib/time";
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Ночной сон — тот, что начался вечером или ночью. Пользователь может поправить. */
 export function guessKind(at: Date): SleepKind {
   const hour = at.getHours();
   return hour >= 19 || hour < 6 ? "night" : "nap";
@@ -26,7 +17,6 @@ export function startMs(session: SleepSession): number {
   return parseISO(session.start_at).getTime();
 }
 
-/** Для незавершённого сна концом считаем «сейчас». */
 export function endMs(session: SleepSession, now: number): number {
   return session.end_at ? parseISO(session.end_at).getTime() : now;
 }
@@ -35,7 +25,6 @@ export function durationMs(session: SleepSession, now: number): number {
   return Math.max(0, endMs(session, now) - startMs(session));
 }
 
-/** Сон, который идёт прямо сейчас (у него нет времени окончания). */
 export function findActive(
   sessions: SleepSession[],
 ): SleepSession | undefined {
@@ -46,7 +35,6 @@ export function sortedByStartDesc(sessions: SleepSession[]): SleepSession[] {
   return [...sessions].sort((a, b) => startMs(b) - startMs(a));
 }
 
-/** Пересечение отрезка сна с произвольным окном времени. */
 function overlapMs(
   fromA: number,
   toA: number,
@@ -56,10 +44,6 @@ function overlapMs(
   return Math.max(0, Math.min(toA, toB) - Math.max(fromA, fromB));
 }
 
-/**
- * Сколько минут сна попало в сутки, начинающиеся в `dayStart`.
- * Ночной сон с 21:00 до 07:00 честно делится между двумя днями.
- */
 export function sleepMsInWindow(
   sessions: SleepSession[],
   windowStart: number,
@@ -74,7 +58,6 @@ export function sleepMsInWindow(
   );
 }
 
-/** Момент последнего пробуждения — от него считается время бодрствования. */
 export function lastWakeMs(sessions: SleepSession[]): number | null {
   let latest: number | null = null;
   for (const session of sessions) {
@@ -89,18 +72,9 @@ export interface DayGroup {
   key: string;
   date: Date;
   sessions: SleepSession[];
-  /** Сумма снов, начавшихся в этот день, — ровно то, что видно в строках. */
   totalMs: number;
 }
 
-/**
- * История по дням, свежие сверху.
- *
- * Сон относится к тому дню, в который он начался. Ночной сон с 21:00 до
- * 07:00 целиком попадает во «вчера» — иначе итог дня не сходился бы с
- * суммой видимых строк, и это сбивало бы с толку. Вопрос «сколько всего
- * спал» закрывает карточка итогов за 24 часа.
- */
 export function groupByDay(sessions: SleepSession[], now: number): DayGroup[] {
   const buckets = new Map<string, SleepSession[]>();
 
@@ -128,17 +102,9 @@ export interface DayStats {
   totalMs: number;
   nightMs: number;
   napMs: number;
-  /** Сколько раз укладывались. */
   count: number;
 }
 
-/**
- * Итоги за последние 24 часа.
- *
- * Именно окно, а не календарные сутки: в 9 утра родителю нужно знать,
- * сколько малыш спал вместе с прошедшей ночью, а не «ноль с полуночи».
- * И цифра не прыгает при переходе через полночь.
- */
 export function statsForLast24h(
   sessions: SleepSession[],
   now: number,
@@ -166,19 +132,10 @@ export function statsForLast24h(
   return { totalMs: nightMs + napMs, nightMs, napMs, count };
 }
 
-/* ------------------------- возрастные ориентиры -------------------------
-   Это средние значения из общедоступных рекомендаций по детскому сну.
-   Они нужны только как подсказка «примерно пора» и не заменяют педиатра:
-   разброс между здоровыми детьми огромный.
-   ------------------------------------------------------------------- */
-
 interface Band {
-  /** Верхняя граница возраста в месяцах (включительно). */
   upToMonths: number;
-  /** Комфортное бодрствование, минуты. */
   wakeMin: number;
   wakeMax: number;
-  /** Сна за сутки, часы. */
   sleepMinH: number;
   sleepMaxH: number;
 }

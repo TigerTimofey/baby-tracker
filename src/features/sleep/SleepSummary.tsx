@@ -10,12 +10,6 @@ interface SleepSummaryProps {
   sessions: SleepSession[];
 }
 
-/**
- * Итоги за скользящие сутки.
- *
- * Считаем за последние 24 часа, а не с полуночи: иначе утром счётчик
- * показывал бы почти ноль, хотя малыш только что проспал ночь.
- */
 export function SleepSummary({ child, sessions }: SleepSummaryProps) {
   const now = useNow(30_000);
   const stats = statsForLast24h(sessions, now);
@@ -23,7 +17,6 @@ export function SleepSummary({ child, sessions }: SleepSummaryProps) {
   const age = ageOf(birthMoment(child.birth_date, child.birth_time), new Date(now));
   const band = bandFor(age.totalMonths);
 
-  // Вся ширина полосы — верхняя граница нормы для возраста.
   const scale = band.sleepMaxH * 3600_000;
   const nightPart = Math.min(100, (stats.nightMs / scale) * 100);
   const napPart = Math.min(100 - nightPart, (stats.napMs / scale) * 100);

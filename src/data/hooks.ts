@@ -1,17 +1,8 @@
-/* ---------------------------------------------------------------
-   Реактивные хуки над локальной базой.
-
-   Любая запись через repo вызывает notifyChange(), после чего все
-   хуки перечитывают свои данные. Для приложения такого размера это
-   проще и предсказуемее, чем кэш-менеджер.
-   --------------------------------------------------------------- */
-
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getVersion, listAll, subscribe } from "./repo";
 import { getSettings, subscribeSettings } from "./settings";
 import type { Child, Settings } from "./types";
 
-/** Счётчик изменений базы: растёт после каждой записи. */
 export function useDataVersion(): number {
   return useSyncExternalStore(subscribe, getVersion, getVersion);
 }
@@ -26,10 +17,6 @@ export interface LiveResult<T> {
   error: Error | null;
 }
 
-/**
- * Выполняет асинхронный запрос к базе и повторяет его при любом
- * изменении данных или при смене `deps`.
- */
 export function useLive<T>(
   loader: () => Promise<T>,
   deps: readonly unknown[] = [],
@@ -41,12 +28,16 @@ export function useLive<T>(
     error: null,
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const run = useCallback(loader, deps);
+  const loaderRef = useRef(loader);
+  useEffect(() => {
+    loaderRef.current = loader;
+  });
+
+  const depsKey = JSON.stringify(deps);
 
   useEffect(() => {
     let cancelled = false;
-    run().then(
+    loaderRef.current().then(
       (data) => {
         if (!cancelled) setState({ data, loading: false, error: null });
       },
@@ -57,7 +48,7 @@ export function useLive<T>(
     return () => {
       cancelled = true;
     };
-  }, [run, version]);
+  }, [depsKey, version]);
 
   return state;
 }
@@ -69,7 +60,6 @@ export function useChildren(): LiveResult<Child[]> {
   }, []);
 }
 
-/** Текущий выбранный ребёнок. Если выбранного нет — первый в списке. */
 export function useActiveChild(): {
   child: Child | null;
   children: Child[];
@@ -83,12 +73,11 @@ export function useActiveChild(): {
   return { child, children: list, loading };
 }
 
-/** Тикающие «сейчас» — для таймеров. По умолчанию раз в секунду. */
 export function useNow(intervalMs = 1000): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), intervalMs);
-    // Вкладку могли усыпить — при возврате сразу подтягиваем время.
+
     const onVisible = () => {
       if (!document.hidden) setNow(Date.now());
     };

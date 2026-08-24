@@ -88,7 +88,6 @@
   font-size: 12.5px;
 }
 
-/* Кнопка Google остаётся белой в обеих темах — так требует Google. */
 .google {
   display: flex;
   align-items: center;

@@ -48,8 +48,6 @@ export function SyncSettings() {
     }
   }
 
-  /* ------------------------- ключи Supabase не заданы ------------------------ */
-
   if (status.state === "disabled") {
     return (
       <Card title="Синхронизация">
@@ -74,9 +72,6 @@ export function SyncSettings() {
     );
   }
 
-  /* ------------------------------- не вошли -------------------------------- */
-
-  // Пока проверяем сессию, показывать «вы не вошли» рано.
   if (status.state === "checking") return null;
 
   if (status.state === "signed_out") {
@@ -180,8 +175,6 @@ export function SyncSettings() {
       </Card>
     );
   }
-
-  /* -------------------------------- вошли ---------------------------------- */
 
   const dot =
     status.state === "error"

@@ -1,4 +1,3 @@
-/** Официальная четырёхцветная «G». Перекрашивать её нельзя по правилам Google. */
 export function GoogleMark({ size = 19 }: { size?: number }) {
   return (
     <svg

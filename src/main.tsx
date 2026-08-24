@@ -5,7 +5,6 @@ import App from "./App";
 import { applyTheme } from "./data/settings";
 import "./styles/global.css";
 
-// Тема ставится до первой отрисовки, иначе экран моргает светлым.
 applyTheme();
 window
   .matchMedia("(prefers-color-scheme: dark)")
@@ -13,7 +12,7 @@ window
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    {/* Адреса с # работают на любом хостинге без настройки перезаписи путей. */}
+
     <HashRouter>
       <App />
     </HashRouter>

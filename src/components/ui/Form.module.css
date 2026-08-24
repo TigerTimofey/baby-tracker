@@ -48,14 +48,12 @@ textarea.control {
   color: var(--danger);
 }
 
-/* Две колонки: «вес» и «рост» рядом. */
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--gap-3);
 }
 
-/* Кнопки действий внизу формы. */
 .actions {
   display: flex;
   gap: var(--gap-3);
@@ -66,7 +64,6 @@ textarea.control {
   flex: 1;
 }
 
-/* Поле с единицей измерения справа: «3,45 кг». */
 .suffixWrap {
   position: relative;
   display: flex;

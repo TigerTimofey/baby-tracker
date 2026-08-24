@@ -25,7 +25,6 @@
   animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-/* На широком экране это уже не «шторка», а обычное окно по центру. */
 @media (min-width: 640px) {
   .overlay {
     align-items: center;

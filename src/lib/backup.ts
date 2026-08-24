@@ -1,11 +1,3 @@
-/* ---------------------------------------------------------------
-   Резервная копия: выгрузка и загрузка всех данных одним файлом.
-
-   Это страховка, не зависящая ни от Supabase, ни от того, что
-   браузер однажды почистит своё хранилище. Дневник ребёнка нельзя
-   потерять из-за очистки кэша.
-   --------------------------------------------------------------- */
-
 import { listAll, save } from "../data/repo";
 import { getSettings, updateSettings } from "../data/settings";
 import { TABLES, type Settings, type TableName } from "../data/types";
@@ -23,7 +15,6 @@ interface Backup {
 export async function buildBackup(): Promise<Backup> {
   const tables: Record<string, unknown[]> = {};
   for (const table of TABLES) {
-    // Служебный флаг синхронизации в файл не попадает.
     tables[table] = (await listAll(table)).map(({ _dirty, ...rest }) => {
       void _dirty;
       return rest;
@@ -61,10 +52,6 @@ export interface ImportResult {
   skipped: number;
 }
 
-/**
- * Загрузка копии. Записи не затирают более свежие: сравниваем
- * `updated_at`, поэтому файл можно применять поверх текущих данных.
- */
 export async function restoreBackup(text: string): Promise<ImportResult> {
   let parsed: Backup;
   try {

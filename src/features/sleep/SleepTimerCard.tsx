@@ -29,7 +29,6 @@ interface SleepTimerCardProps {
   sessions: SleepSession[];
 }
 
-/** Сколько миллисекунд до сегодняшнего времени отхода ко сну. */
 function msUntilBedtime(bedtime: string | null, now: number): number | null {
   if (!bedtime) return null;
   const minutes = parseTimeOfDay(bedtime);
@@ -73,8 +72,6 @@ export function SleepTimerCard({ child, sessions }: SleepTimerCardProps) {
     if (!active) return;
     await save("sleep_sessions", { ...active, kind });
   }
-
-  /* ------------------------------ малыш спит ------------------------------ */
 
   if (active) {
     const elapsed = now - startMs(active);
@@ -129,8 +126,6 @@ export function SleepTimerCard({ child, sessions }: SleepTimerCardProps) {
       </>
     );
   }
-
-  /* --------------------------- малыш бодрствует --------------------------- */
 
   const wakeAt = lastWakeMs(sessions);
   const awakeMs = wakeAt === null ? null : Math.max(0, now - wakeAt);

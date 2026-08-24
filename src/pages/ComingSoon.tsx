@@ -13,10 +13,6 @@ interface ComingSoonProps {
   items: PlannedItem[];
 }
 
-/**
- * Раздел, который ещё не сделан. Показываем не пустоту, а что именно
- * здесь появится — так видно, куда движется приложение.
- */
 export function ComingSoon({ icon, title, text, items }: ComingSoonProps) {
   return (
     <div className={styles.wrap}>

@@ -10,7 +10,6 @@
   text-align: center;
 }
 
-/* Мягкое «дыхание», пока малыш спит. */
 .card.sleeping::before {
   content: "";
   position: absolute;
@@ -54,7 +53,6 @@
   line-height: 1.02;
 }
 
-/* Записей ещё нет — вместо крупной цифры короткая подсказка. */
 .lead {
   position: relative;
   max-width: 30ch;
@@ -88,7 +86,6 @@
   transition: width 0.5s ease;
 }
 
-/* Бодрствует дольше обычного — подсвечиваем, но не тревожно. */
 .barOver {
   background: var(--feeding);
 }

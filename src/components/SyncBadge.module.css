@@ -1,7 +1,9 @@
 .badge {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
   height: 30px;
   padding: 0 10px;
   border: none;

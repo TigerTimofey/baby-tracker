@@ -1,20 +1,6 @@
--- =============================================================
---  Малыш — схема базы данных
---
---  Как применить:
---    Supabase → проект → SQL Editor → New query →
---    вставить весь файл → Run.
---  Скрипт безопасно запускать повторно.
--- =============================================================
-
--- -------------------------------------------------------------
---  1. Семья: общий доступ к данным ребёнка для обоих родителей
--- -------------------------------------------------------------
-
 create table if not exists public.families (
   id          uuid primary key default gen_random_uuid(),
   name        text not null default 'Моя семья',
-  -- Короткий код, по которому второй родитель присоединяется к семье.
   invite_code text not null unique
                 default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)),
   created_at  timestamptz not null default now()
@@ -27,13 +13,6 @@ create table if not exists public.family_members (
   created_at timestamptz not null default now(),
   primary key (family_id, user_id)
 );
-
--- -------------------------------------------------------------
---  2. Вспомогательные функции доступа
---
---  security definer — обязательно: иначе политика на family_members
---  вызывала бы саму себя и запрос уходил бы в рекурсию.
--- -------------------------------------------------------------
 
 create or replace function public.is_family_member(target_family uuid)
 returns boolean
@@ -50,23 +29,6 @@ as $$
   );
 $$;
 
-create or replace function public.can_access_child(target_child uuid)
-returns boolean
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select exists (
-    select 1
-      from public.children c
-      join public.family_members m on m.family_id = c.family_id
-     where c.id = target_child
-       and m.user_id = auth.uid()
-  );
-$$;
-
--- Семья текущего пользователя (первая по времени вступления).
 create or replace function public.my_family_id()
 returns uuid
 language sql
@@ -81,7 +43,6 @@ as $$
    limit 1;
 $$;
 
--- Создать семью и сразу стать её владельцем — одной транзакцией.
 create or replace function public.create_family(family_name text default 'Моя семья')
 returns uuid
 language plpgsql
@@ -106,7 +67,6 @@ begin
 end;
 $$;
 
--- Присоединиться к существующей семье по коду приглашения.
 create or replace function public.join_family(code text)
 returns uuid
 language plpgsql
@@ -136,15 +96,6 @@ begin
 end;
 $$;
 
--- -------------------------------------------------------------
---  3. Отметка серверного времени
---
---  updated_at приходит с устройства и решает конфликты
---  («кто записал последним»), а synced_at ставит сервер — по нему
---  клиент забирает всё, что появилось с прошлой синхронизации.
---  Разделение важно: часы на телефоне могут отставать.
--- -------------------------------------------------------------
-
 create or replace function public.touch_synced_at()
 returns trigger
 language plpgsql
@@ -155,10 +106,6 @@ begin
 end;
 $$;
 
--- -------------------------------------------------------------
---  4. Данные
--- -------------------------------------------------------------
-
 create table if not exists public.children (
   id               uuid primary key,
   family_id        uuid not null references public.families (id) on delete cascade,
@@ -166,7 +113,6 @@ create table if not exists public.children (
   birth_date       date not null,
   birth_time       text,
   sex              text check (sex in ('male', 'female')),
-  -- Вес в граммах, длина в миллиметрах: целые числа, без ошибок округления.
   birth_weight_g   integer,
   birth_height_mm  integer,
   updated_at       timestamptz not null default now(),
@@ -178,7 +124,6 @@ create table if not exists public.sleep_sessions (
   id         uuid primary key,
   child_id   uuid not null references public.children (id) on delete cascade,
   start_at   timestamptz not null,
-  -- null означает «сон идёт прямо сейчас».
   end_at     timestamptz,
   kind       text not null default 'nap' check (kind in ('night', 'nap')),
   note       text,
@@ -237,9 +182,21 @@ create table if not exists public.diapers (
   synced_at    timestamptz not null default now()
 );
 
--- -------------------------------------------------------------
---  5. Индексы, триггеры, RLS — единообразно по всем таблицам
--- -------------------------------------------------------------
+create or replace function public.can_access_child(target_child uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+      from public.children c
+      join public.family_members m on m.family_id = c.family_id
+     where c.id = target_child
+       and m.user_id = auth.uid()
+  );
+$$;
 
 do $$
 declare
@@ -250,7 +207,6 @@ begin
     'milestones', 'feedings', 'diapers'
   ]
   loop
-    -- Курсор синхронизации: «дай всё, что изменилось после ...».
     execute format(
       'create index if not exists %I on public.%I (synced_at)',
       t || '_synced_at_idx', t
@@ -280,8 +236,6 @@ create index if not exists sleep_sessions_start_idx on public.sleep_sessions (ch
 
 alter table public.families enable row level security;
 alter table public.family_members enable row level security;
-
--- Политики (пересоздаём, чтобы скрипт можно было запускать повторно).
 
 drop policy if exists families_read on public.families;
 create policy families_read on public.families

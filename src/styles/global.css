@@ -1,10 +1,4 @@
-/* ---------------------------------------------------------------
-   Малыш — дизайн-токены и базовые стили
-   Тёмная тема по умолчанию: приложением часто пользуются ночью.
-   --------------------------------------------------------------- */
-
 :root {
-  /* Поверхности */
   --bg: #0f0f17;
   --bg-elev: #181824;
   --surface: #1c1c2b;
@@ -12,12 +6,10 @@
   --border: #2e2e46;
   --border-soft: #26263a;
 
-  /* Текст */
   --text: #ecebf5;
   --text-muted: #9b98b2;
   --text-faint: #6a6782;
 
-  /* Смысловые цвета разделов */
   --sleep: #8b7cf6;
   --sleep-soft: #8b7cf62b;
   --growth: #4fd1a5;
@@ -34,7 +26,6 @@
   --accent: var(--sleep);
   --accent-contrast: #14121f;
 
-  /* Форма */
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 20px;
@@ -45,7 +36,6 @@
   --shadow-md: 0 6px 20px -6px rgb(0 0 0 / 0.5);
   --shadow-lg: 0 18px 50px -12px rgb(0 0 0 / 0.6);
 
-  /* Отступы */
   --gap-1: 4px;
   --gap-2: 8px;
   --gap-3: 12px;
@@ -119,7 +109,6 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* Числа в таймерах и таблицах не должны «прыгать» */
 .tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;

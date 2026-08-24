@@ -1,16 +1,3 @@
-/* ---------------------------------------------------------------
-   Синхронизация локальной базы с Supabase.
-
-   Правила простые и предсказуемые:
-     • Локальная база — источник правды для интерфейса. Синхронизация
-       никогда не блокирует ввод данных.
-     • Отправляем всё, что помечено `_dirty`.
-     • Забираем всё, что на сервере изменилось после нашего курсора.
-     • Конфликт решается по `updated_at`: побеждает более поздняя
-       запись. Для семейного дневника этого достаточно — двое родителей
-       редко правят одну и ту же запись в одну и ту же секунду.
-   --------------------------------------------------------------- */
-
 import {
   isSupabaseConfigured,
   supabase,
@@ -30,14 +17,9 @@ import {
 } from "./repo";
 import { TABLES, type Child, type TableMap, type TableName } from "./types";
 
-/* --------------------------------- статус --------------------------------- */
-
 export type SyncState =
-  /** Ещё не знаем, есть ли действующий вход. Показывать экран входа рано. */
   | "checking"
-  /** Ключи Supabase не заданы — работаем полностью локально. */
   | "disabled"
-  /** Ключи есть, но пользователь не вошёл в аккаунт. */
   | "signed_out"
   | "offline"
   | "idle"
@@ -48,9 +30,7 @@ export interface SyncStatus {
   state: SyncState;
   email: string | null;
   familyId: string | null;
-  /** Код, по которому второй родитель присоединяется к семье. */
   inviteCode: string | null;
-  /** Сколько записей ждут отправки. */
   pending: number;
   lastSyncAt: string | null;
   error: string | null;
@@ -88,8 +68,6 @@ async function refreshPending(): Promise<void> {
   setStatus({ pending: await countDirty() });
 }
 
-/* ---------------------------------- вход ---------------------------------- */
-
 function requireClient(): NonNullable<typeof supabase> {
   if (!supabase) {
     throw new Error(
@@ -104,13 +82,6 @@ export interface EnabledProviders {
   email: boolean;
 }
 
-/**
- * Какие способы входа включены в проекте Supabase.
- *
- * Нужно, чтобы не отправлять человека на страницу, которая ответит
- * «provider is not enabled» и оставит его на голой JSON-ошибке без пути
- * назад. Если запрос не удался — не мешаем: показываем кнопку как есть.
- */
 export async function fetchEnabledProviders(): Promise<EnabledProviders | null> {
   if (!isSupabaseConfigured) return null;
   try {
@@ -130,14 +101,6 @@ export async function fetchEnabledProviders(): Promise<EnabledProviders | null> 
   }
 }
 
-/**
- * Вход через Google.
- *
- * Уводит на страницу Google и возвращает обратно с кодом, который
- * supabase-js обменивает на сессию сам. Google client ID и secret
- * задаются в панели Supabase, а не здесь: secret нельзя держать в коде,
- * который уезжает в браузер.
- */
 export async function signInWithGoogle(): Promise<void> {
   const client = requireClient();
 
@@ -150,7 +113,6 @@ export async function signInWithGoogle(): Promise<void> {
     options: {
       redirectTo,
       queryParams: {
-        // Просим выбрать аккаунт: на общем компьютере это важнее удобства.
         prompt: "select_account",
       },
     },
@@ -158,7 +120,6 @@ export async function signInWithGoogle(): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Шаг 1: отправить письмо с кодом входа. */
 export async function requestCode(email: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.auth.signInWithOtp({
@@ -168,7 +129,6 @@ export async function requestCode(email: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Шаг 2: подтвердить код из письма. */
 export async function verifyCode(email: string, code: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.auth.verifyOtp({
@@ -179,14 +139,6 @@ export async function verifyCode(email: string, code: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Выход из аккаунта.
- *
- * Локальные данные намеренно остаются на устройстве: это дневник
- * собственного ребёнка, стирать его при выходе — верный способ
- * потерять записи. Сбрасываем только курсоры, чтобы при следующем
- * входе всё перечиталось с сервера заново.
- */
 export async function signOutSync(): Promise<void> {
   const client = requireClient();
   await client.auth.signOut();
@@ -201,9 +153,6 @@ export async function signOutSync(): Promise<void> {
   });
 }
 
-/* ---------------------------------- семья --------------------------------- */
-
-/** Находит семью пользователя, а если её нет — создаёт. */
 async function ensureFamily(): Promise<string | null> {
   const client = requireClient();
 
@@ -236,19 +185,15 @@ async function ensureFamily(): Promise<string | null> {
   return familyId;
 }
 
-/** Присоединиться к семье второго родителя по коду приглашения. */
 export async function joinFamily(code: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.rpc("join_family", { code: code.trim() });
   if (error) throw new Error(error.message);
 
-  // Семья сменилась — читаем данные новой семьи с самого начала.
   for (const table of TABLES) await metaDelete(cursorKey(table));
   await ensureFamily();
   await syncNow();
 }
-
-/* ------------------------------ синхронизация ------------------------------ */
 
 const EPOCH = "1970-01-01T00:00:00.000Z";
 const PAGE_SIZE = 500;
@@ -257,7 +202,6 @@ function cursorKey(table: TableName): string {
   return `cursor:${table}`;
 }
 
-/** Убираем локальные и серверные служебные поля перед отправкой. */
 function toPayload(row: Record<string, unknown>): Record<string, unknown> {
   const { _dirty, synced_at, ...rest } = row;
   void _dirty;
@@ -265,10 +209,8 @@ function toPayload(row: Record<string, unknown>): Record<string, unknown> {
   return rest;
 }
 
-/** Любая синхронизируемая запись, без привязки к конкретной таблице. */
 type AnyRecord = TableMap[TableName];
 
-/** Убираем серверные поля перед записью в локальную базу. */
 function fromRemote(row: Record<string, unknown>): AnyRecord {
   const { synced_at, ...rest } = row;
   void synced_at;
@@ -282,7 +224,7 @@ async function pushTable(table: TableName, familyId: string): Promise<void> {
 
   const payload = dirty.map((row) => {
     const clean = toPayload(row as unknown as Record<string, unknown>);
-    // Ребёнок мог быть заведён до входа в аккаунт — привязываем к семье.
+
     if (table === "children") clean.family_id = familyId;
     return clean;
   });
@@ -296,12 +238,11 @@ async function pushTable(table: TableName, familyId: string): Promise<void> {
     await clearDirty(table, row.id, row.updated_at);
   }
 
-  // Локальные дети без family_id — дописываем, чтобы состояние сошлось.
   if (table === "children") {
     for (const row of dirty as unknown as Child[]) {
       if (row.family_id) continue;
       const current = await getOne("children", row.id);
-      // Запись успели изменить, пока шёл запрос — не трогаем её флаг.
+
       if (!current || current.family_id || current._dirty === 1) continue;
       const { _dirty, ...rest } = current;
       await applyRemote("children", { ...rest, family_id: familyId });
@@ -330,7 +271,6 @@ async function pullTable(table: TableName): Promise<boolean> {
       const record = fromRemote(row);
       const local = await getOne(table, record.id);
 
-      // Наша версия новее и ещё не отправлена — сохраняем её, уедет позже.
       if (local && local._dirty === 1 && local.updated_at > record.updated_at) {
         continue;
       }
@@ -353,7 +293,6 @@ async function pullTable(table: TableName): Promise<boolean> {
 
 let syncInFlight: Promise<void> | null = null;
 
-/** Полный цикл: отправить своё, забрать чужое. Повторные вызовы схлопываются. */
 export async function syncNow(): Promise<void> {
   if (!isSupabaseConfigured) return;
   if (syncInFlight) return syncInFlight;
@@ -377,7 +316,6 @@ export async function syncNow(): Promise<void> {
       const familyId = status.familyId ?? (await ensureFamily());
       if (!familyId) throw new Error("Не удалось определить семью");
 
-      // Порядок важен: сначала дети, потом всё, что на них ссылается.
       for (const table of TABLES) await pushTable(table, familyId);
 
       let changed = false;
@@ -408,11 +346,8 @@ export async function syncNow(): Promise<void> {
   }
 }
 
-/* ---------------------------------- запуск --------------------------------- */
-
 const AUTO_SYNC_MS = 60_000;
 
-/** Подключает автосинхронизацию. Возвращает функцию отключения. */
 export function initSync(): () => void {
   void refreshPending();
 
@@ -429,7 +364,7 @@ export function initSync(): () => void {
       return;
     }
     setStatus({ email: session.user.email ?? null });
-    // Вошли — значит от работы «только на этом устройстве» отказались.
+
     updateSettings({ localOnly: false });
     void metaGet<string>("family_id").then((saved) => {
       if (saved) setStatus({ familyId: saved });
@@ -444,7 +379,6 @@ export function initSync(): () => void {
 
   window.addEventListener("online", onOnline);
   const onOffline = () => {
-    // Только для вошедшего: иначе потеря сети сбросила бы экран входа.
     if (status.email) setStatus({ state: "offline" });
   };
   window.addEventListener("offline", onOffline);
@@ -464,4 +398,3 @@ export function initSync(): () => void {
     unsubscribeData();
   };
 }
-

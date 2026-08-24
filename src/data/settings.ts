@@ -1,10 +1,3 @@
-/* ---------------------------------------------------------------
-   Настройки приложения.
-
-   Живут в localStorage, а не в IndexedDB: тема нужна синхронно, до
-   первой отрисовки, иначе экран моргает белым — ночью это больно.
-   --------------------------------------------------------------- */
-
 import { DEFAULT_SETTINGS, type Settings } from "./types";
 
 const KEY = "malysh.settings";
@@ -39,13 +32,12 @@ export function updateSettings(patch: Partial<Settings>): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
   } catch {
-    /* приватный режим — просто не сохраняем */
+    void 0;
   }
   applyTheme();
   for (const listener of listeners) listener();
 }
 
-/** Проставляет `data-theme` на <html>. Вызывается и до монтирования React. */
 export function applyTheme(): void {
   const { theme } = current;
   const resolved =
