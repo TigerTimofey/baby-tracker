@@ -6,6 +6,7 @@ export interface SyncFields {
   id: string;
   updated_at: ISODateTime;
   deleted: boolean;
+  created_by: string | null;
 }
 
 export type Local<T> = T & { _dirty: 0 | 1 };
@@ -106,6 +107,7 @@ export interface Settings {
   bedtime: string | null;
   bedtimeWarnMinutes: number;
   localOnly: boolean;
+  notifications: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -114,4 +116,5 @@ export const DEFAULT_SETTINGS: Settings = {
   bedtime: "20:30",
   bedtimeWarnMinutes: 30,
   localOnly: false,
+  notifications: false,
 };

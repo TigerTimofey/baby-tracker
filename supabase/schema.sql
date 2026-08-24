@@ -7,12 +7,16 @@ create table if not exists public.families (
 );
 
 create table if not exists public.family_members (
-  family_id  uuid not null references public.families (id) on delete cascade,
-  user_id    uuid not null references auth.users (id) on delete cascade,
-  role       text not null default 'parent',
-  created_at timestamptz not null default now(),
+  family_id    uuid not null references public.families (id) on delete cascade,
+  user_id      uuid not null references auth.users (id) on delete cascade,
+  role         text not null default 'parent',
+  display_name text,
+  created_at   timestamptz not null default now(),
   primary key (family_id, user_id)
 );
+
+alter table public.family_members
+  add column if not exists display_name text;
 
 create or replace function public.is_family_member(target_family uuid)
 returns boolean
@@ -208,6 +212,10 @@ begin
   ]
   loop
     execute format(
+      'alter table public.%I add column if not exists created_by uuid', t
+    );
+
+    execute format(
       'create index if not exists %I on public.%I (synced_at)',
       t || '_synced_at_idx', t
     );
@@ -253,6 +261,11 @@ create policy family_members_read on public.family_members
 drop policy if exists family_members_leave on public.family_members;
 create policy family_members_leave on public.family_members
   for delete using (user_id = auth.uid());
+
+drop policy if exists family_members_update_self on public.family_members;
+create policy family_members_update_self on public.family_members
+  for update using (user_id = auth.uid())
+              with check (user_id = auth.uid());
 
 drop policy if exists children_all on public.children;
 create policy children_all on public.children

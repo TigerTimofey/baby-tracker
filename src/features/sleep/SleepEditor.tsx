@@ -4,7 +4,8 @@ import { Field, FormActions, Textarea } from "../../components/ui/Form";
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, save, softDelete } from "../../data/repo";
+import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
+import { showToast } from "../../components/ui/toast";
 import type { SleepKind, SleepSession } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
@@ -75,6 +76,7 @@ export function SleepEditor({
       note: trimOrNull(note),
       updated_at: session?.updated_at ?? nowISO(),
       deleted: false,
+      created_by: session?.created_by ?? null,
     };
 
     await save("sleep_sessions", record);
@@ -83,9 +85,13 @@ export function SleepEditor({
 
   async function handleDelete() {
     if (!session) return;
-    if (!window.confirm("Удалить эту запись сна?")) return;
-    await softDelete("sleep_sessions", session.id);
+    const id = session.id;
+    await softDelete("sleep_sessions", id);
     onClose();
+    showToast("Запись сна удалена", {
+      label: "Отменить",
+      run: () => restore("sleep_sessions", id),
+    });
   }
 
   return (

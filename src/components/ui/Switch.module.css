@@ -1,0 +1,37 @@
+.track {
+  position: relative;
+  flex-shrink: 0;
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  transition: background-color 0.18s ease;
+}
+
+.on {
+  background: var(--tone, var(--accent));
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-full);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.on .knob {
+  transform: translateX(20px);
+  background: var(--accent-contrast);
+}
+
+.track:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}

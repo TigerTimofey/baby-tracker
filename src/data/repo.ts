@@ -35,6 +35,12 @@ export function notifyChange(): void {
   channel?.postMessage("changed");
 }
 
+let authorProvider: () => string | null = () => null;
+
+export function setAuthorProvider(provider: () => string | null): void {
+  authorProvider = provider;
+}
+
 export function newId(): string {
   return crypto.randomUUID();
 }
@@ -101,7 +107,11 @@ export async function save<K extends TableName>(
   table: K,
   record: TableMap[K],
 ): Promise<TableMap[K]> {
-  const row = { ...record, updated_at: nowISO() };
+  const row = {
+    ...record,
+    updated_at: nowISO(),
+    created_by: record.created_by ?? authorProvider(),
+  };
 
   const db = await getLooseDB();
   await db.put(table, { ...row, _dirty: 1 });
@@ -120,6 +130,23 @@ export async function softDelete<K extends TableName>(
   await db.put(table, {
     ...existing,
     deleted: true,
+    updated_at: nowISO(),
+    _dirty: 1,
+  });
+  notifyChange();
+}
+
+export async function restore<K extends TableName>(
+  table: K,
+  id: string,
+): Promise<void> {
+  const existing = await getOne(table, id);
+  if (!existing) return;
+
+  const db = await getLooseDB();
+  await db.put(table, {
+    ...existing,
+    deleted: false,
     updated_at: nowISO(),
     _dirty: 1,
   });
@@ -183,28 +210,62 @@ export async function countChildRecords(
   return counts;
 }
 
-export async function deleteChildDeep(childId: string): Promise<void> {
+export interface DeletedChild {
+  childId: string;
+  removed: Partial<Record<TableName, string[]>>;
+}
+
+export async function deleteChildDeep(childId: string): Promise<DeletedChild> {
   const db = await getLooseDB();
   const stamp = nowISO();
+  const removed: Partial<Record<TableName, string[]>> = {};
 
   for (const table of CHILD_TABLES) {
     const rows = (await db.getAllFromIndex(table, "by_child", childId)) as {
+      id: string;
       deleted: boolean;
     }[];
+    const ids: string[] = [];
     for (const row of rows) {
       if (row.deleted) continue;
       await db.put(table, { ...row, deleted: true, updated_at: stamp, _dirty: 1 });
+      ids.push(row.id);
     }
+    if (ids.length) removed[table] = ids;
   }
 
-  const child = await db.get("children", childId);
-  if (child) {
+  const child = (await db.get("children", childId)) as
+    | { deleted: boolean }
+    | undefined;
+  if (child && !child.deleted) {
     await db.put("children", {
       ...child,
       deleted: true,
       updated_at: stamp,
       _dirty: 1,
     });
+    removed.children = [childId];
+  }
+
+  notifyChange();
+  return { childId, removed };
+}
+
+export async function restoreChildDeep(token: DeletedChild): Promise<void> {
+  const db = await getLooseDB();
+  const stamp = nowISO();
+
+  for (const [table, ids] of Object.entries(token.removed)) {
+    for (const id of ids) {
+      const row = await db.get(table, id);
+      if (!row) continue;
+      await db.put(table, {
+        ...row,
+        deleted: false,
+        updated_at: stamp,
+        _dirty: 1,
+      });
+    }
   }
 
   notifyChange();

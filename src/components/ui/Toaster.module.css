@@ -1,0 +1,75 @@
+.wrap {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);
+  z-index: 60;
+  transform: translateX(-50%);
+  width: calc(100% - 2 * var(--page-pad));
+  max-width: 460px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  padding: 11px 12px 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: rise 0.18s ease;
+}
+
+.text {
+  min-width: 0;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.bar {
+  height: 2px;
+  margin: 8px 2px 0;
+  border-radius: 1px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: drain linear forwards;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+@keyframes drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

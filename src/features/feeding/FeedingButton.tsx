@@ -33,6 +33,7 @@ export function FeedingButton({ childId }: { childId: string }) {
       note: null,
       updated_at: nowISO(),
       deleted: false,
+      created_by: null,
     };
     await save("feedings", record);
   }

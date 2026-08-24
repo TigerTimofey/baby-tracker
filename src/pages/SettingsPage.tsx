@@ -4,12 +4,18 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Icon } from "../components/ui/Icon";
 import { Segmented } from "../components/ui/Segmented";
+import { Switch } from "../components/ui/Switch";
 import { useActiveChild, useSettings } from "../data/hooks";
 import { updateSettings } from "../data/settings";
 import type { Settings } from "../data/types";
 import { ChildForm } from "../features/children/ChildForm";
 import { SyncSettings } from "../features/sync/SyncSettings";
 import { downloadBackup, restoreBackup } from "../lib/backup";
+import {
+  notificationPermission,
+  requestNotificationPermission,
+  showNotification,
+} from "../lib/notifications";
 import { formatDate } from "../lib/time";
 import styles from "./SettingsPage.module.css";
 
@@ -25,6 +31,7 @@ export function SettingsPage() {
   const { child } = useActiveChild();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [permission, setPermission] = useState(notificationPermission);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -90,6 +97,57 @@ export function SettingsPage() {
               }
             />
           </div>
+
+          <div className={styles.row}>
+            <div className={styles.rowText}>
+              <div className={styles.rowLabel}>Уведомления</div>
+              <div className={styles.rowHint}>
+                {permission === "unsupported"
+                  ? "Этот браузер не умеет их показывать"
+                  : permission === "denied"
+                    ? "Разрешение отклонено — включите его в настройках браузера"
+                    : "Напомнят про сон и про долгое бодрствование"}
+              </div>
+            </div>
+            <Switch
+              label="Уведомления"
+              disabled={permission === "unsupported" || permission === "denied"}
+              checked={settings.notifications && permission === "granted"}
+              onChange={async (next) => {
+                if (!next) {
+                  updateSettings({ notifications: false });
+                  return;
+                }
+                const granted = await requestNotificationPermission();
+                setPermission(granted);
+                updateSettings({ notifications: granted === "granted" });
+              }}
+            />
+          </div>
+
+          {settings.notifications && permission === "granted" && (
+            <div className={styles.row}>
+              <div className={styles.rowText}>
+                <div className={styles.rowLabel}>Проверить</div>
+                <div className={styles.rowHint}>
+                  Придёт пробное уведомление
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  void showNotification(
+                    "test",
+                    "Проверка",
+                    "Уведомления работают",
+                  )
+                }
+              >
+                Отправить
+              </Button>
+            </div>
+          )}
 
           <div className={styles.row}>
             <div className={styles.rowText}>

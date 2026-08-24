@@ -15,8 +15,10 @@ import {
   deleteChildDeep,
   newId,
   nowISO,
+  restoreChildDeep,
   save,
 } from "../../data/repo";
+import { showToast } from "../../components/ui/toast";
 import { updateSettings } from "../../data/settings";
 import type { Child, Sex } from "../../data/types";
 import styles from "./ChildForm.module.css";
@@ -87,6 +89,7 @@ export function ChildForm({
       birth_height_mm: cmToMm(height),
       updated_at: child?.updated_at ?? nowISO(),
       deleted: false,
+      created_by: child?.created_by ?? null,
     };
 
     await save("children", record);
@@ -115,9 +118,17 @@ export function ChildForm({
     );
     if (!confirmed) return;
 
-    await deleteChildDeep(child.id);
+    const token = await deleteChildDeep(child.id);
+    const name = child.name;
     updateSettings({ activeChildId: null });
     onClose();
+    showToast(`Профиль «${name}» удалён`, {
+      label: "Отменить",
+      run: async () => {
+        await restoreChildDeep(token);
+        updateSettings({ activeChildId: token.childId });
+      },
+    });
   }
 
   return (

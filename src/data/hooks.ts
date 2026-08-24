@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getVersion, listAll, subscribe } from "./repo";
 import { getSettings, subscribeSettings } from "./settings";
+import { authorLabel, getSyncStatus, subscribeSync } from "./sync";
 import type { Child, Settings } from "./types";
 
 export function useDataVersion(): number {
@@ -88,4 +89,14 @@ export function useNow(intervalMs = 1000): number {
     };
   }, [intervalMs]);
   return now;
+}
+
+export function useAuthorLabel(): (createdBy: string | null) => string | null {
+  const status = useSyncExternalStore(
+    subscribeSync,
+    getSyncStatus,
+    getSyncStatus,
+  );
+  void status.members;
+  return authorLabel;
 }

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { Segmented } from "../../components/ui/Segmented";
-import { useNow, useSettings } from "../../data/hooks";
+import { useAuthorLabel, useNow, useSettings } from "../../data/hooks";
 import { newId, nowISO, save } from "../../data/repo";
 import type { Child, SleepKind, SleepSession } from "../../data/types";
 import {
@@ -47,9 +47,11 @@ export function SleepTimerCard({
 }: SleepTimerCardProps) {
   const now = useNow(1000);
   const settings = useSettings();
+  const author = useAuthorLabel();
   const [editorOpen, setEditorOpen] = useState(false);
 
   const active = findActive(sessions);
+  const activeAuthor = active ? author(active.created_by) : null;
   const age = ageOf(birthMoment(child.birth_date, child.birth_time), new Date(now));
   const band = bandFor(age.totalMonths);
 
@@ -64,6 +66,7 @@ export function SleepTimerCard({
       note: null,
       updated_at: nowISO(),
       deleted: false,
+      created_by: null,
     };
     await save("sleep_sessions", record);
   }
@@ -90,7 +93,10 @@ export function SleepTimerCard({
           </span>
 
           <div className={`${styles.big} tnum`}>{formatClock(elapsed)}</div>
-          <p className={styles.sub}>уснул в {formatTime(active.start_at)}</p>
+          <p className={styles.sub}>
+            уснул в {formatTime(active.start_at)}
+            {activeAuthor ? ` · ${activeAuthor}` : ""}
+          </p>
 
           <div className={styles.actions}>
             <Button size="lg" variant="primary" onClick={stopSleep}>

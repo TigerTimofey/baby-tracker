@@ -9,7 +9,8 @@ import {
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, save, softDelete } from "../../data/repo";
+import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
+import { showToast } from "../../components/ui/toast";
 import type { Feeding, FeedingKind } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
@@ -113,6 +114,7 @@ export function FeedingEditor({
       note: trimOrNull(note),
       updated_at: feeding?.updated_at ?? nowISO(),
       deleted: false,
+      created_by: feeding?.created_by ?? null,
     };
 
     await save("feedings", record);
@@ -121,9 +123,13 @@ export function FeedingEditor({
 
   async function handleDelete() {
     if (!feeding) return;
-    if (!window.confirm("Удалить эту запись кормления?")) return;
-    await softDelete("feedings", feeding.id);
+    const id = feeding.id;
+    await softDelete("feedings", id);
     onClose();
+    showToast("Кормление удалено", {
+      label: "Отменить",
+      run: () => restore("feedings", id),
+    });
   }
 
   return (

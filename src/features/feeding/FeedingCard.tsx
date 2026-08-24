@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
-import { useLive, useNow } from "../../data/hooks";
+import { useAuthorLabel, useLive, useNow } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
 import type { Feeding } from "../../data/types";
 import { formatClock, formatDuration, formatTime, plural } from "../../lib/time";
@@ -24,6 +24,7 @@ const DAY_MS = 24 * 3600_000;
 
 export function FeedingCard({ childId }: { childId: string }) {
   const now = useNow(1000);
+  const author = useAuthorLabel();
   const [editing, setEditing] = useState<Feeding | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -67,6 +68,7 @@ export function FeedingCard({ childId }: { childId: string }) {
               <span className={styles.liveTitle}>Кормление идёт</span>
               <span className={styles.liveKind}>
                 {kindLabel(active.kind)} · с {formatTime(active.start_at)}
+                {author(active.created_by) ? ` · ${author(active.created_by)}` : ""}
               </span>
             </span>
             <span className={`${styles.liveTimer} tnum`}>
@@ -102,6 +104,9 @@ export function FeedingCard({ childId }: { childId: string }) {
                     {feeding.end_at
                       ? ` · ${formatDuration(durationMs(feeding, now))}`
                       : " · идёт"}
+                    {author(feeding.created_by)
+                      ? ` · ${author(feeding.created_by)}`
+                      : ""}
                   </span>
                   {feeding.amount_ml != null && (
                     <span className={`${styles.amount} tnum`}>

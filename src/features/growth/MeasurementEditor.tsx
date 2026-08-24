@@ -8,7 +8,8 @@ import {
 } from "../../components/ui/Form";
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, save, softDelete } from "../../data/repo";
+import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
+import { showToast } from "../../components/ui/toast";
 import type { Measurement } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
@@ -89,6 +90,7 @@ export function MeasurementEditor({
       note: trimOrNull(note),
       updated_at: measurement?.updated_at ?? nowISO(),
       deleted: false,
+      created_by: measurement?.created_by ?? null,
     };
 
     await save("measurements", record);
@@ -97,9 +99,13 @@ export function MeasurementEditor({
 
   async function handleDelete() {
     if (!measurement) return;
-    if (!window.confirm("Удалить это измерение?")) return;
-    await softDelete("measurements", measurement.id);
+    const id = measurement.id;
+    await softDelete("measurements", id);
     onClose();
+    showToast("Измерение удалено", {
+      label: "Отменить",
+      run: () => restore("measurements", id),
+    });
   }
 
   return (

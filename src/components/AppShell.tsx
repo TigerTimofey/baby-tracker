@@ -5,6 +5,7 @@ import { notifyChange } from "../data/repo";
 import { updateSettings } from "../data/settings";
 import { syncNow } from "../data/sync";
 import { ChildForm } from "../features/children/ChildForm";
+import { useReminders } from "../features/notify/useReminders";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
 import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
@@ -64,6 +65,8 @@ export function AppShell() {
       }
     }
   }, []);
+
+  useReminders(child);
 
   const tone = toneForPath(location.pathname);
   const toneStyle = {

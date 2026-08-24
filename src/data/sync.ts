@@ -13,6 +13,7 @@ import {
   getOne,
   listDirty,
   notifyChange,
+  setAuthorProvider,
   subscribe as subscribeData,
 } from "./repo";
 import { TABLES, type Child, type TableMap, type TableName } from "./types";
@@ -26,9 +27,16 @@ export type SyncState =
   | "syncing"
   | "error";
 
+export interface FamilyMember {
+  user_id: string;
+  display_name: string | null;
+}
+
 export interface SyncStatus {
   state: SyncState;
   email: string | null;
+  userId: string | null;
+  members: FamilyMember[];
   familyId: string | null;
   inviteCode: string | null;
   pending: number;
@@ -39,6 +47,8 @@ export interface SyncStatus {
 let status: SyncStatus = {
   state: isSupabaseConfigured ? "checking" : "disabled",
   email: null,
+  userId: null,
+  members: [],
   familyId: null,
   inviteCode: null,
   pending: 0,
@@ -147,6 +157,8 @@ export async function signOutSync(): Promise<void> {
   setStatus({
     state: "signed_out",
     email: null,
+    userId: null,
+    members: [],
     familyId: null,
     inviteCode: null,
     error: null,
@@ -182,7 +194,59 @@ async function ensureFamily(): Promise<string | null> {
     inviteCode: (family.data?.invite_code as string | undefined) ?? null,
   });
 
+  await refreshMembers(familyId);
+
   return familyId;
+}
+
+function nameFromSession(user: {
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): string | null {
+  const meta = user.user_metadata ?? {};
+  const full = (meta.full_name ?? meta.name) as string | undefined;
+  if (full && full.trim()) return full.trim();
+  const email = user.email ?? "";
+  return email.includes("@") ? email.split("@")[0] : null;
+}
+
+async function refreshMembers(familyId: string): Promise<void> {
+  const client = requireClient();
+
+  const { data: sessionData } = await client.auth.getSession();
+  const user = sessionData.session?.user;
+  if (!user) return;
+
+  const listed = await client
+    .from("family_members")
+    .select("user_id, display_name")
+    .eq("family_id", familyId);
+  if (listed.error) return;
+
+  let members = (listed.data ?? []) as FamilyMember[];
+  const me = members.find((member) => member.user_id === user.id);
+  const myName = nameFromSession(user);
+
+  if (me && !me.display_name && myName) {
+    await client
+      .from("family_members")
+      .update({ display_name: myName })
+      .eq("family_id", familyId)
+      .eq("user_id", user.id);
+    members = members.map((member) =>
+      member.user_id === user.id ? { ...member, display_name: myName } : member,
+    );
+  }
+
+  setStatus({ members });
+}
+
+/** Как подписать запись в интерфейсе. null — подписывать не нужно. */
+export function authorLabel(createdBy: string | null): string | null {
+  if (!createdBy || status.members.length < 2) return null;
+  if (createdBy === status.userId) return "вы";
+  const member = status.members.find((item) => item.user_id === createdBy);
+  return member?.display_name ?? "второй родитель";
 }
 
 export async function joinFamily(code: string): Promise<void> {
@@ -226,6 +290,7 @@ async function pushTable(table: TableName, familyId: string): Promise<void> {
     const clean = toPayload(row as unknown as Record<string, unknown>);
 
     if (table === "children") clean.family_id = familyId;
+    if (clean.created_by == null) clean.created_by = status.userId;
     return clean;
   });
 
@@ -351,6 +416,7 @@ const CHANGE_SYNC_DELAY_MS = 2500;
 
 export function initSync(): () => void {
   void refreshPending();
+  setAuthorProvider(() => status.userId);
 
   if (!isSupabaseConfigured || !supabase) {
     setStatus({ state: "disabled" });
@@ -364,7 +430,7 @@ export function initSync(): () => void {
       setStatus({ state: "signed_out", email: null, familyId: null });
       return;
     }
-    setStatus({ email: session.user.email ?? null });
+    setStatus({ email: session.user.email ?? null, userId: session.user.id });
 
     updateSettings({ localOnly: false });
     void metaGet<string>("family_id").then((saved) => {
