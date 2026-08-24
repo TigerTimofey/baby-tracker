@@ -3,7 +3,10 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { Toaster } from "./components/ui/Toaster";
 import { useActiveChild, useSettings } from "./data/hooks";
-import { getSyncStatus, initSync, subscribeSync } from "./data/sync";
+import { clearPendingInvite, getPendingInvite } from "./data/invite";
+import { getSyncStatus, initSync, joinFamily, subscribeSync } from "./data/sync";
+import { showToast } from "./components/ui/toast";
+import { ensurePersistentStorageOnce } from "./lib/storage";
 import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
 import { GrowthPage } from "./pages/GrowthPage";
@@ -14,6 +17,9 @@ import { StatsPage } from "./pages/StatsPage";
 
 export default function App() {
   useEffect(() => initSync(), []);
+  useEffect(() => {
+    void ensurePersistentStorageOnce();
+  }, []);
 
   const status = useSyncExternalStore(
     subscribeSync,
@@ -22,6 +28,24 @@ export default function App() {
   );
   const settings = useSettings();
   const { children, loading } = useActiveChild();
+
+  const email = status.email;
+  useEffect(() => {
+    if (!email) return;
+    const code = getPendingInvite();
+    if (!code) return;
+
+    clearPendingInvite();
+    joinFamily(code).then(
+      () => showToast("Вы присоединились к семье", undefined, 4000),
+      (cause: Error) =>
+        showToast(
+          `Не удалось присоединиться: ${cause.message}`,
+          undefined,
+          6000,
+        ),
+    );
+  }, [email]);
 
   if (status.state === "checking") return null;
 

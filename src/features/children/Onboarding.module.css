@@ -48,3 +48,31 @@
   line-height: 1.5;
   color: var(--text-faint);
 }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  max-width: 320px;
+  margin-top: var(--gap-2);
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.link {
+  border: none;
+  background: none;
+  font-size: 15px;
+  color: var(--sleep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

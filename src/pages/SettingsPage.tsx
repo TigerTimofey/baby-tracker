@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -11,6 +11,12 @@ import type { Settings } from "../data/types";
 import { ChildForm } from "../features/children/ChildForm";
 import { SyncSettings } from "../features/sync/SyncSettings";
 import { downloadBackup, restoreBackup } from "../lib/backup";
+import {
+  formatBytes,
+  readStorageStatus,
+  requestPersistentStorage,
+  type StorageStatus,
+} from "../lib/storage";
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -33,6 +39,11 @@ export function SettingsPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [permission, setPermission] = useState(notificationPermission);
+  const [storage, setStorage] = useState<StorageStatus | null>(null);
+
+  useEffect(() => {
+    void readStorageStatus().then(setStorage);
+  }, []);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -205,6 +216,38 @@ export function SettingsPage() {
               Загрузить из файла
             </Button>
           </div>
+          {storage?.supported && (
+            <div className={styles.row} style={{ marginTop: "var(--gap-4)" }}>
+              <div className={styles.rowText}>
+                <div className={styles.rowLabel}>
+                  {storage.persisted
+                    ? "Хранилище защищено"
+                    : "Хранилище не защищено"}
+                </div>
+                <div className={styles.rowHint}>
+                  {storage.persisted
+                    ? "Браузер не удалит записи при нехватке места"
+                    : "Браузер вправе удалить записи при нехватке места"}
+                  {storage.usageBytes != null
+                    ? ` · занято ${formatBytes(storage.usageBytes)}`
+                    : ""}
+                </div>
+              </div>
+              {!storage.persisted && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={async () => {
+                    await requestPersistentStorage();
+                    setStorage(await readStorageStatus());
+                  }}
+                >
+                  Защитить
+                </Button>
+              )}
+            </div>
+          )}
+
           <input
             ref={fileInput}
             type="file"

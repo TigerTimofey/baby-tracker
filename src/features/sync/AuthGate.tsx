@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/Button";
 import { Field, TextInput } from "../../components/ui/Form";
 import { GoogleMark } from "../../components/ui/GoogleMark";
 import { Icon } from "../../components/ui/Icon";
+import { getPendingInvite } from "../../data/invite";
 import { updateSettings } from "../../data/settings";
 import {
   fetchEnabledProviders,
@@ -33,6 +34,7 @@ export function AuthGate({ configured }: AuthGateProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(readErrorFromUrl);
   const [googleReady, setGoogleReady] = useState<boolean | null>(null);
+  const invited = Boolean(getPendingInvite());
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -102,8 +104,9 @@ export function AuthGate({ configured }: AuthGateProps) {
       ) : (
         <>
           <p className={styles.text}>
-            Войдите, чтобы записи хранились в вашем аккаунте и были доступны
-            обоим родителям.
+            {invited
+              ? "Вас пригласили в семью. Войдите — и записи малыша появятся здесь."
+              : "Войдите, чтобы записи хранились в вашем аккаунте и были доступны обоим родителям."}
           </p>
 
           <div className={styles.panel}>

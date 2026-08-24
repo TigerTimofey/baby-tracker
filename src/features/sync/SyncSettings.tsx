@@ -6,7 +6,6 @@ import { GoogleMark } from "../../components/ui/GoogleMark";
 import { Icon } from "../../components/ui/Icon";
 import {
   getSyncStatus,
-  joinFamily,
   requestCode,
   signInWithGoogle,
   signOutSync,
@@ -14,7 +13,9 @@ import {
   syncNow,
   verifyCode,
 } from "../../data/sync";
+import { inviteLink } from "../../data/invite";
 import { formatTime, plural } from "../../lib/time";
+import { JoinFamilyForm } from "./JoinFamilyForm";
 import styles from "./SyncSettings.module.css";
 
 type Step = "email" | "code";
@@ -29,7 +30,6 @@ export function SyncSettings() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [inviteInput, setInviteInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -220,46 +220,30 @@ export function SyncSettings() {
           </div>
           <Button
             size="sm"
-            variant="secondary"
+            variant="primary"
             onClick={() =>
               run(async () => {
-                await navigator.clipboard.writeText(status.inviteCode ?? "");
-              }, "Код скопирован")
+                const link = inviteLink(status.inviteCode ?? "");
+                if (navigator.share) {
+                  await navigator.share({
+                    title: "Sebason",
+                    text: "Приглашение в семью",
+                    url: link,
+                  });
+                  return;
+                }
+                await navigator.clipboard.writeText(link);
+              }, "Ссылка готова — отправьте её второму родителю")
             }
           >
-            Копировать
+            Поделиться
           </Button>
         </div>
       )}
 
-      <Field
-        label="Присоединиться к семье"
-        hint="Введите код со второго телефона, чтобы видеть общие записи"
-      >
-        {(id) => (
-          <TextInput
-            id={id}
-            value={inviteInput}
-            onChange={(e) => setInviteInput(e.target.value.toUpperCase())}
-            placeholder="A1B2C3"
-            autoCapitalize="characters"
-          />
-        )}
-      </Field>
+      <JoinFamilyForm />
 
       <div className={styles.buttons}>
-        <Button
-          variant="secondary"
-          disabled={busy || inviteInput.trim().length < 4}
-          onClick={() =>
-            run(async () => {
-              await joinFamily(inviteInput);
-              setInviteInput("");
-            }, "Готово — данные семьи загружаются")
-          }
-        >
-          Присоединиться
-        </Button>
         <Button
           variant="soft"
           disabled={busy || status.state === "syncing"}

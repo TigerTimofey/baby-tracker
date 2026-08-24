@@ -43,7 +43,7 @@ as $$
   select m.family_id
     from public.family_members m
    where m.user_id = auth.uid()
-   order by m.created_at
+   order by m.created_at desc
    limit 1;
 $$;
 
@@ -79,6 +79,7 @@ set search_path = public
 as $$
 declare
   target uuid;
+  leaving uuid;
 begin
   if auth.uid() is null then
     raise exception 'Требуется вход в аккаунт';
@@ -95,6 +96,25 @@ begin
   insert into public.family_members (family_id, user_id, role)
        values (target, auth.uid(), 'parent')
   on conflict do nothing;
+
+  for leaving in
+    select m.family_id
+      from public.family_members m
+     where m.user_id = auth.uid()
+       and m.family_id <> target
+       and not exists (
+             select 1 from public.children c
+              where c.family_id = m.family_id and c.deleted = false
+           )
+       and (
+             select count(*) from public.family_members x
+              where x.family_id = m.family_id
+           ) = 1
+  loop
+    delete from public.family_members
+     where family_id = leaving and user_id = auth.uid();
+    delete from public.families where id = leaving;
+  end loop;
 
   return target;
 end;

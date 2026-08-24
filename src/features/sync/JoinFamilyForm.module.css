@@ -1,0 +1,14 @@
+.wrap {
+  width: 100%;
+}
+
+.message {
+  margin-top: var(--gap-3);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--danger);
+}

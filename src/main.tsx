@@ -2,9 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
+import { captureInviteFromUrl } from "./data/invite";
 import { applyTheme } from "./data/settings";
 import "./styles/global.css";
 
+captureInviteFromUrl();
 applyTheme();
 window
   .matchMedia("(prefers-color-scheme: dark)")

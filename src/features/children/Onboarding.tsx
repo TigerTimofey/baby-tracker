@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
+import { getSyncStatus, subscribeSync } from "../../data/sync";
+import { JoinFamilySheet } from "../sync/JoinFamilySheet";
 import { ChildForm } from "./ChildForm";
 import styles from "./Onboarding.module.css";
 
 export function Onboarding() {
   const [formOpen, setFormOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const status = useSyncExternalStore(
+    subscribeSync,
+    getSyncStatus,
+    getSyncStatus,
+  );
+  const signedIn = Boolean(status.email);
 
   return (
     <div className={styles.screen}>
@@ -31,8 +40,27 @@ export function Onboarding() {
         позже.
       </p>
 
+      {signedIn && (
+        <>
+          <div className={styles.divider}>или</div>
+          <button
+            type="button"
+            className={styles.link}
+            onClick={() => setJoinOpen(true)}
+          >
+            Присоединиться к семье по коду
+          </button>
+          <p className={styles.note}>
+            Если малыша уже завёл второй родитель — не создавайте его заново.
+          </p>
+        </>
+      )}
+
       {formOpen && (
         <ChildForm open={formOpen} onClose={() => setFormOpen(false)} />
+      )}
+      {joinOpen && (
+        <JoinFamilySheet open={joinOpen} onClose={() => setJoinOpen(false)} />
       )}
     </div>
   );
