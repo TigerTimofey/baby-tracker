@@ -6,6 +6,7 @@ import {
   TextInput,
   Textarea,
 } from "../../components/ui/Form";
+import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, save, softDelete } from "../../data/repo";
 import type { Measurement } from "../../data/types";
@@ -113,16 +114,7 @@ export function MeasurementEditor({
       }
     >
       <form onSubmit={handleSubmit}>
-        <Field label="Когда измеряли">
-          {(id) => (
-            <TextInput
-              id={id}
-              type="datetime-local"
-              value={at}
-              onChange={(event) => setAt(event.target.value)}
-            />
-          )}
-        </Field>
+        <DateTimeField label="Когда измеряли" value={at} onChange={setAt} />
 
         {METRIC_ORDER.map((key) => {
           const info = METRICS[key];

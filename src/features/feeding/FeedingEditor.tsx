@@ -6,6 +6,7 @@ import {
   TextInput,
   Textarea,
 } from "../../components/ui/Form";
+import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, save, softDelete } from "../../data/repo";
@@ -133,27 +134,13 @@ export function FeedingEditor({
       subtitle={feeding ? undefined : "Пригодится, если забыли нажать вовремя"}
     >
       <form onSubmit={handleSubmit}>
-        <Field label="Начало">
-          {(id) => (
-            <TextInput
-              id={id}
-              type="datetime-local"
-              value={start}
-              onChange={(event) => setStart(event.target.value)}
-            />
-          )}
-        </Field>
-
-        <Field label="Окончание" hint={end ? undefined : "пусто — кормление идёт"}>
-          {(id) => (
-            <TextInput
-              id={id}
-              type="datetime-local"
-              value={end}
-              onChange={(event) => setEnd(event.target.value)}
-            />
-          )}
-        </Field>
+        <DateTimeField label="Начало" value={start} onChange={setStart} />
+        <DateTimeField
+          label="Окончание"
+          hint={end ? undefined : "пусто — кормление идёт"}
+          value={end}
+          onChange={setEnd}
+        />
 
         <Field label="Чем кормили">
           {(id) => (

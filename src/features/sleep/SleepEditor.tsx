@@ -1,12 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
-import {
-  Field,
-  FormActions,
-  FormRow,
-  TextInput,
-  Textarea,
-} from "../../components/ui/Form";
+import { Field, FormActions, Textarea } from "../../components/ui/Form";
+import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, save, softDelete } from "../../data/repo";
@@ -103,31 +98,13 @@ export function SleepEditor({
       }
     >
       <form onSubmit={handleSubmit}>
-        <FormRow>
-          <Field label="Уснул">
-            {(id) => (
-              <TextInput
-                id={id}
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-              />
-            )}
-          </Field>
-          <Field
-            label="Проснулся"
-            hint={end ? undefined : "пусто — сон ещё идёт"}
-          >
-            {(id) => (
-              <TextInput
-                id={id}
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-              />
-            )}
-          </Field>
-        </FormRow>
+        <DateTimeField label="Уснул" value={start} onChange={setStart} />
+        <DateTimeField
+          label="Проснулся"
+          hint={end ? undefined : "пусто — сон ещё идёт"}
+          value={end}
+          onChange={setEnd}
+        />
 
         <Field label="Тип">
           {(id) => (
