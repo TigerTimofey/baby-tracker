@@ -347,6 +347,7 @@ export async function syncNow(): Promise<void> {
 }
 
 const AUTO_SYNC_MS = 60_000;
+const CHANGE_SYNC_DELAY_MS = 2500;
 
 export function initSync(): () => void {
   void refreshPending();
@@ -385,7 +386,15 @@ export function initSync(): () => void {
   document.addEventListener("visibilitychange", onVisible);
 
   const timer = setInterval(() => void syncNow(), AUTO_SYNC_MS);
-  const unsubscribeData = subscribeData(() => void refreshPending());
+
+  let changeTimer: ReturnType<typeof setTimeout> | undefined;
+  const unsubscribeData = subscribeData(() => {
+    void refreshPending().then(() => {
+      if (status.pending === 0) return;
+      if (changeTimer) clearTimeout(changeTimer);
+      changeTimer = setTimeout(() => void syncNow(), CHANGE_SYNC_DELAY_MS);
+    });
+  });
 
   void syncNow();
 
@@ -395,6 +404,7 @@ export function initSync(): () => void {
     window.removeEventListener("offline", onOffline);
     document.removeEventListener("visibilitychange", onVisible);
     clearInterval(timer);
+    if (changeTimer) clearTimeout(changeTimer);
     unsubscribeData();
   };
 }

@@ -80,6 +80,7 @@ export function GrowthPage() {
 
   return (
     <>
+      <h1 className="sr-only">Рост и вес</h1>
       <div className={styles.stack}>
         {!anyData ? (
           <Card title="Рост и вес">

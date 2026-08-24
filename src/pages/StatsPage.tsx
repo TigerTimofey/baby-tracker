@@ -215,6 +215,7 @@ export function StatsPage() {
 
   return (
     <>
+      <h1 className="sr-only">Статистика</h1>
       {periods}
 
       <div className={styles.stack}>

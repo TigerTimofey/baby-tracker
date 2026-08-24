@@ -87,6 +87,18 @@ export function dayKey(value: Date | ISODateTime): string {
   ].join("-");
 }
 
+export function resolveLocalInput(
+  value: string,
+  original: ISODateTime | null,
+): Date | null {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (original && toLocalInputValue(original) === value) {
+    return parseISO(original);
+  }
+  return parsed;
+}
+
 export function toLocalInputValue(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
   const pad = (n: number) => String(n).padStart(2, "0");

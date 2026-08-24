@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { Segmented } from "../../components/ui/Segmented";
@@ -27,6 +27,7 @@ import styles from "./SleepTimerCard.module.css";
 interface SleepTimerCardProps {
   child: Child;
   sessions: SleepSession[];
+  action?: ReactNode;
 }
 
 function msUntilBedtime(bedtime: string | null, now: number): number | null {
@@ -39,7 +40,11 @@ function msUntilBedtime(bedtime: string | null, now: number): number | null {
   return target.getTime() - now;
 }
 
-export function SleepTimerCard({ child, sessions }: SleepTimerCardProps) {
+export function SleepTimerCard({
+  child,
+  sessions,
+  action,
+}: SleepTimerCardProps) {
   const now = useNow(1000);
   const settings = useSettings();
   const [editorOpen, setEditorOpen] = useState(false);
@@ -92,6 +97,7 @@ export function SleepTimerCard({ child, sessions }: SleepTimerCardProps) {
               <Icon name="stop" size={18} />
               Проснулся
             </Button>
+            {action}
           </div>
 
           <div style={{ maxWidth: 260, margin: "var(--gap-4) auto 0" }}>
@@ -188,6 +194,7 @@ export function SleepTimerCard({ child, sessions }: SleepTimerCardProps) {
             <Icon name="moon" size={18} />
             Уснул
           </Button>
+          {action}
         </div>
 
         {(bedtimeSoon || bedtimePassed) && (

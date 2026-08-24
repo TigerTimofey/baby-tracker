@@ -12,7 +12,7 @@ import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, save, softDelete } from "../../data/repo";
 import type { SleepKind, SleepSession } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
-import { toLocalInputValue } from "../../lib/time";
+import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
 import { guessKind } from "./sleepUtils";
 
 interface SleepEditorProps {
@@ -43,16 +43,16 @@ export function SleepEditor({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
-    const startDate = new Date(start);
-    if (Number.isNaN(startDate.getTime())) {
+    const startDate = resolveLocalInput(start, session?.start_at ?? null);
+    if (!startDate) {
       setError("Укажите, когда малыш уснул");
       return;
     }
 
     let endDate: Date | null = null;
     if (end) {
-      endDate = new Date(end);
-      if (Number.isNaN(endDate.getTime())) {
+      endDate = resolveLocalInput(end, session?.end_at ?? null);
+      if (!endDate) {
         setError("Не удалось разобрать время пробуждения");
         return;
       }

@@ -10,7 +10,7 @@ import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, save, softDelete } from "../../data/repo";
 import type { Measurement } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
-import { toLocalInputValue } from "../../lib/time";
+import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
 import { METRICS, METRIC_ORDER } from "./growthUtils";
 
 interface MeasurementEditorProps {
@@ -47,8 +47,8 @@ export function MeasurementEditor({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
-    const when = new Date(at);
-    if (Number.isNaN(when.getTime())) {
+    const when = resolveLocalInput(at, measurement?.measured_at ?? null);
+    if (!when) {
       setError("Укажите дату измерения");
       return;
     }

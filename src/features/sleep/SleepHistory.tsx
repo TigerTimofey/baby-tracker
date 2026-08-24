@@ -24,7 +24,7 @@ export function SleepHistory({ childId, sessions }: SleepHistoryProps) {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2 className={styles.title}>История</h2>
+        <h2 className={styles.title}>История сна</h2>
         <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
           <Icon name="plus" size={16} />
           Добавить

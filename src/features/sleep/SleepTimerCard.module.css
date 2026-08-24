@@ -105,9 +105,15 @@
 .actions {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: var(--gap-3);
   margin-top: var(--gap-5);
+}
+
+.actions > * {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .editLink {
