@@ -1,0 +1,143 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-2);
+  margin-bottom: var(--gap-3);
+}
+
+.nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.nav:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.day {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 14.5px;
+  font-weight: 650;
+}
+
+.readout {
+  min-height: 34px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.readoutStrong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.track {
+  position: relative;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.feeds {
+  height: 14px;
+  margin-top: 4px;
+}
+
+.block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: none;
+  padding: 0;
+  border-radius: 4px;
+  background: var(--sleep);
+}
+
+.blockNap {
+  background: var(--nap);
+}
+
+.blockFeed {
+  background: var(--feeding);
+  border-radius: 3px;
+}
+
+.selected {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.now {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--text);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.hours {
+  position: relative;
+  height: 14px;
+  margin-top: 5px;
+}
+
+.hour {
+  position: absolute;
+  top: 0;
+  font-size: 10px;
+  color: var(--text-faint);
+  transform: translateX(-50%);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-3) var(--gap-4);
+  margin-top: var(--gap-3);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.swatchNight {
+  background: var(--sleep);
+}
+.swatchNap {
+  background: var(--nap);
+}
+.swatchFeed {
+  background: var(--feeding);
+}
+
+.empty {
+  padding: var(--gap-4) 0;
+  font-size: 13.5px;
+  color: var(--text-faint);
+  text-align: center;
+}

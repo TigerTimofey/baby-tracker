@@ -4,6 +4,8 @@ import type { SleepSession } from "../data/types";
 import { FeedingButton } from "../features/feeding/FeedingButton";
 import { FeedingCard } from "../features/feeding/FeedingCard";
 import { SleepHistory } from "../features/sleep/SleepHistory";
+import { DayTimeline } from "../features/timeline/DayTimeline";
+import { Card } from "../components/ui/Card";
 import { SleepSummary } from "../features/sleep/SleepSummary";
 import { SleepTimerCard } from "../features/sleep/SleepTimerCard";
 
@@ -31,10 +33,15 @@ export function SleepPage() {
         action={<FeedingButton childId={child.id} />}
       />
       <div style={{ marginTop: "var(--gap-4)" }}>
+        <FeedingCard childId={child.id} />
+      </div>
+      <div style={{ marginTop: "var(--gap-4)" }}>
         <SleepSummary child={child} sessions={sessions} />
       </div>
       <div style={{ marginTop: "var(--gap-4)" }}>
-        <FeedingCard childId={child.id} />
+        <Card title="Лента дня">
+          <DayTimeline childId={child.id} sessions={sessions} />
+        </Card>
       </div>
       <SleepHistory childId={child.id} sessions={sessions} />
     </>

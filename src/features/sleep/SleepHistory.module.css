@@ -81,8 +81,8 @@
 }
 
 .nap {
-  background: var(--feeding-soft);
-  color: var(--feeding);
+  background: var(--nap-soft);
+  color: var(--nap);
 }
 
 .body {

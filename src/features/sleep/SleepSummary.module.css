@@ -26,7 +26,7 @@
 }
 
 .nap {
-  background: var(--feeding);
+  background: var(--nap);
   transition: width 0.5s ease;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .dotNap {
-  background: var(--feeding);
+  background: var(--nap);
 }
 
 .value {

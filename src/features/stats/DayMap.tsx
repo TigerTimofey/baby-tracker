@@ -62,7 +62,7 @@ function Row({ row, showLabel }: { row: DayRow; showLabel: boolean }) {
         const filled = cell.nightMs + cell.napMs;
         const share = Math.min(1, filled / HOUR_MS);
         const isNight = cell.nightMs >= cell.napMs;
-        const tone = isNight ? "var(--sleep)" : "var(--feeding)";
+        const tone = isNight ? "var(--sleep)" : "var(--nap)";
 
         return (
           <span

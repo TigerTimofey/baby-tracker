@@ -17,6 +17,7 @@ import {
   showNotification,
 } from "../lib/notifications";
 import { formatDate } from "../lib/time";
+import { APP_VERSION } from "../lib/version";
 import styles from "./SettingsPage.module.css";
 
 const WARN_OPTIONS = ["15", "30", "60"] as const;
@@ -220,6 +221,7 @@ export function SettingsPage() {
             <p className={`${styles.message} ${styles.messageError}`}>{error}</p>
           )}
         </Card>
+        <p className={styles.version}>Sebason {APP_VERSION}</p>
       </div>
 
       {editOpen && child && (
