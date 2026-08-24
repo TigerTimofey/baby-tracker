@@ -4,7 +4,12 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Segmented } from "../components/ui/Segmented";
 import { useActiveChild, useLive, useNow } from "../data/hooks";
 import { listByChild } from "../data/repo";
-import type { SleepSession } from "../data/types";
+import type { Child, Measurement, SleepSession } from "../data/types";
+import {
+  METRICS,
+  METRIC_ORDER,
+  seriesFor,
+} from "../features/growth/growthUtils";
 import { DayMap } from "../features/stats/DayMap";
 import { Facts } from "../features/stats/Facts";
 import { SleepBars } from "../features/stats/SleepBars";
@@ -14,10 +19,11 @@ import {
   type Period,
 } from "../features/stats/statsUtils";
 import { bandFor } from "../features/sleep/sleepUtils";
-import { ageOf, birthMoment, formatDuration } from "../lib/time";
+import { ageOf, birthMoment, formatDuration, plural } from "../lib/time";
 import styles from "./StatsPage.module.css";
 
 const NO_SESSIONS: SleepSession[] = [];
+const NO_MEASUREMENTS: Measurement[] = [];
 
 export function StatsPage() {
   const { child } = useActiveChild();
@@ -31,6 +37,13 @@ export function StatsPage() {
     [childId],
   );
   const sessions = data ?? NO_SESSIONS;
+
+  const { data: measurementData } = useLive(
+    async () =>
+      childId ? await listByChild("measurements", childId) : NO_MEASUREMENTS,
+    [childId],
+  );
+  const measurements = measurementData ?? NO_MEASUREMENTS;
 
   const stats = useMemo(
     () => computeSleepStats(sessions, period, now),
@@ -58,29 +71,21 @@ export function StatsPage() {
     </div>
   );
 
-  if (daysWithData < 2) {
-    return (
-      <>
-        {periods}
-        <EmptyState
-          icon="stats"
-          title="Пока сравнивать нечего"
-          text={
-            daysWithData === 0
-              ? "Записей сна за этот период нет. Статистика появится, когда наберётся хотя бы пара дней."
-              : "Есть записи всего за один день. Нужно минимум два, иначе средние и сравнения будут врать."
-          }
-        />
-      </>
-    );
-  }
+  const sleepReady = daysWithData >= 2;
 
-  return (
+  const sleepCards = !sleepReady ? (
+    <EmptyState
+      icon="stats"
+      title="По сну сравнивать нечего"
+      text={
+        daysWithData === 0
+          ? "Записей сна за этот период нет. Статистика появится, когда наберётся хотя бы пара дней."
+          : "Есть записи всего за один день. Нужно минимум два, иначе средние и сравнения будут врать."
+      }
+    />
+  ) : (
     <>
-      {periods}
-
-      <div className={styles.stack}>
-        <Card title="Сон по дням">
+      <Card title="Сон по дням">
           <SleepBars
             days={stats.days}
             normMinHours={band.sleepMinH}
@@ -176,7 +181,7 @@ export function StatsPage() {
           />
         </Card>
 
-        <Card title="Бодрствование">
+      <Card title="Бодрствование">
           <Facts
             items={[
               {
@@ -200,12 +205,79 @@ export function StatsPage() {
               },
             ]}
           />
-          <p className={styles.basis}>
-            Промежутки длиннее 16 часов не учитываются — это пропуск в
-            записях, а не бодрствование.
-          </p>
-        </Card>
+        <p className={styles.basis}>
+          Промежутки длиннее 16 часов не учитываются — это пропуск в записях,
+          а не бодрствование.
+        </p>
+      </Card>
+    </>
+  );
+
+  return (
+    <>
+      {periods}
+
+      <div className={styles.stack}>
+        {sleepCards}
+        <GrowthOverPeriod
+          child={child}
+          measurements={measurements}
+          days={Number(period)}
+          now={now}
+        />
       </div>
     </>
+  );
+}
+
+interface GrowthOverPeriodProps {
+  child: Child;
+  measurements: Measurement[];
+  days: number;
+  now: number;
+}
+
+function GrowthOverPeriod({
+  child,
+  measurements,
+  days,
+  now,
+}: GrowthOverPeriodProps) {
+  const from = now - days * 24 * 3600_000;
+
+  const items = METRIC_ORDER.flatMap((key) => {
+    const info = METRICS[key];
+    const all = seriesFor(key, child, measurements);
+    if (all.length < 2) return [];
+
+    const last = all[all.length - 1];
+    if (last.at.getTime() < from) return [];
+
+    const before = [...all]
+      .reverse()
+      .find((point) => point.at.getTime() <= from);
+    const baseline = before ?? all.find((point) => point.at.getTime() >= from);
+    if (!baseline || baseline === last) return [];
+
+    const span = Math.max(
+      1,
+      Math.round((last.at.getTime() - baseline.at.getTime()) / (24 * 3600_000)),
+    );
+
+    return [
+      {
+        label: info.label,
+        value: info.formatDelta(last.raw - baseline.raw),
+        hint: `за ${span} ${plural(span, ["день", "дня", "дней"])} между измерениями`,
+      },
+    ];
+  });
+
+  if (items.length === 0) return null;
+
+  return (
+    <Card title="Прибавки">
+      <Facts items={items} />
+    </Card>
   );
 }

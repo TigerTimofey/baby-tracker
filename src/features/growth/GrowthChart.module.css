@@ -1,0 +1,86 @@
+.wrap {
+  margin-top: 2px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.axis {
+  font-size: 7px;
+  fill: var(--text-faint);
+}
+
+.bandOuter {
+  fill: color-mix(in srgb, var(--text-faint) 13%, transparent);
+}
+
+.bandInner {
+  fill: color-mix(in srgb, var(--text-faint) 20%, transparent);
+}
+
+.median {
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+
+.line {
+  fill: none;
+  stroke: var(--tone, var(--growth));
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dot {
+  fill: var(--tone, var(--growth));
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.grid {
+  stroke: var(--border-soft);
+  stroke-width: 0.6;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-3) var(--gap-4);
+  margin-top: var(--gap-3);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.swatchBand {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-faint) 20%, transparent);
+}
+
+.swatchLine {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--tone, var(--growth));
+}
+
+.hint {
+  margin-top: var(--gap-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

@@ -25,6 +25,10 @@
   animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
+.settling {
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
 @media (min-width: 640px) {
   .overlay {
     align-items: center;
@@ -46,6 +50,12 @@
   margin: 0 auto var(--gap-4);
   border-radius: 2px;
   background: var(--border);
+}
+
+@media (max-width: 639px) {
+  .panel {
+    touch-action: pan-y;
+  }
 }
 
 .header {
@@ -81,7 +91,7 @@
 
 @keyframes fade {
   from {
-    opacity: 0;
+    backdrop-filter: blur(0);
   }
 }
 
