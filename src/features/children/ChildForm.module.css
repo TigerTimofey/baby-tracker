@@ -1,0 +1,5 @@
+.danger {
+  margin-top: var(--gap-4);
+  padding-top: var(--gap-4);
+  border-top: 1px solid var(--border-soft);
+}

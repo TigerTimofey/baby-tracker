@@ -22,7 +22,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { to: "/sleep", label: "Сон", icon: "moon", tone: "sleep" },
-  { to: "/growth", label: "Рост", icon: "growth", tone: "growth" },
+  { to: "/growth", label: "ВОЗ", icon: "growth", tone: "growth" },
   { to: "/milestones", label: "Вехи", icon: "star", tone: "milestone" },
   { to: "/stats", label: "Статистика", icon: "stats", tone: "stats" },
 ];
@@ -209,7 +209,6 @@ export function AppShell() {
           open={formOpen}
           onClose={() => setFormOpen(false)}
           child={editing && child ? child : undefined}
-          canDelete={editing && children.length > 1}
         />
       )}
     </div>

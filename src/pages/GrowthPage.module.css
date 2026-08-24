@@ -1,74 +1,61 @@
-.top {
-  display: flex;
-  gap: var(--gap-3);
-  align-items: center;
-  margin-bottom: var(--gap-4);
-}
-
-.top > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
 .stack {
   display: flex;
   flex-direction: column;
   gap: var(--gap-4);
 }
 
-.current {
-  display: flex;
-  align-items: baseline;
-  gap: var(--gap-3);
-}
-
-.value {
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  color: var(--tone);
-}
-
-.percentile {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border-radius: var(--r-full);
-  background: var(--tone-soft);
-  color: var(--tone);
-  font-size: 12.5px;
-  font-weight: 650;
-}
-
-.meta {
-  margin-top: 6px;
+.when {
   font-size: 13px;
   color: var(--text-muted);
+  margin-bottom: var(--gap-3);
 }
 
-.gains {
+.metrics {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap-3) var(--gap-5);
-  margin-top: var(--gap-4);
-  padding-top: var(--gap-3);
+  flex-direction: column;
+}
+
+.metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  padding: 10px 0;
+}
+
+.metric + .metric {
   border-top: 1px solid var(--border-soft);
 }
 
-.gain {
-  min-width: 0;
+.metricName {
+  display: block;
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
-.gainValue {
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-}
-
-.gainLabel {
-  margin-top: 1px;
+.metricPercentile {
+  display: block;
+  margin-top: 2px;
   font-size: 12px;
   color: var(--text-faint);
+}
+
+.metricValue {
+  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tone);
+}
+
+.switcher {
+  margin-bottom: var(--gap-4);
+}
+
+.gains {
+  margin-top: var(--gap-4);
+  padding-top: var(--gap-2);
+  border-top: 1px solid var(--border-soft);
 }
 
 .disclaimer {
@@ -80,9 +67,12 @@
   color: var(--text-faint);
 }
 
-.historyHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gap-3);
+.intro {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.introAction {
+  margin-top: var(--gap-4);
 }

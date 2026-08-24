@@ -9,6 +9,7 @@ import type { Measurement } from "../data/types";
 import { GrowthChart } from "../features/growth/GrowthChart";
 import { GrowthHistory } from "../features/growth/GrowthHistory";
 import { MeasurementEditor } from "../features/growth/MeasurementEditor";
+import { Facts } from "../features/stats/Facts";
 import {
   METRICS,
   METRIC_ORDER,
@@ -23,7 +24,7 @@ import {
   percentileFromZ,
   zScoreFor,
 } from "../features/growth/whoUtils";
-import { formatDate, plural } from "../lib/time";
+import { ageOf, birthMoment, formatAge, formatDayLabel, plural } from "../lib/time";
 import styles from "./GrowthPage.module.css";
 
 const NO_MEASUREMENTS: Measurement[] = [];
@@ -44,128 +45,167 @@ export function GrowthPage() {
 
   if (!child) return null;
 
-  const info = METRICS[metric];
-  const points = seriesFor(metric, child, measurements);
-  const latest = points.length ? points[points.length - 1] : null;
+  const series = Object.fromEntries(
+    METRIC_ORDER.map((key) => [key, seriesFor(key, child, measurements)]),
+  ) as Record<WhoMetric, ReturnType<typeof seriesFor>>;
+
+  const anyData = METRIC_ORDER.some((key) => series[key].length > 0);
   const ageDaysNow = ageDaysAt(child, new Date(now));
 
-  const z =
-    latest && child.sex
-      ? zScoreFor(metric, child.sex, latest.ageDays, latest.who)
-      : null;
-  const percentile = z === null ? null : percentileFromZ(z);
+  const percentileOf = (key: WhoMetric): string | null => {
+    const points = series[key];
+    if (!points.length || !child.sex) return null;
+    const last = points[points.length - 1];
+    const z = zScoreFor(key, child.sex, last.ageDays, last.who);
+    return z === null ? null : `${formatPercentile(percentileFromZ(z))} перцентиль`;
+  };
 
-  const sincePrevious = gainSincePrevious(points);
-  const rate = weeklyRate(points);
+  const latestOverall = measurements.length
+    ? measurements.reduce((newest, item) =>
+        item.measured_at > newest.measured_at ? item : newest,
+      )
+    : null;
 
   const addButton = (
-    <Button variant="primary" onClick={() => setAdding(true)}>
-      <Icon name="plus" size={17} />
+    <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
+      <Icon name="plus" size={16} />
       Добавить
     </Button>
   );
 
+  const activePoints = series[metric];
+  const activeInfo = METRICS[metric];
+  const sincePrevious = gainSincePrevious(activePoints);
+  const rate = weeklyRate(activePoints);
+
   return (
     <>
-      <div className={styles.top}>
-        <Segmented<WhoMetric>
-          value={metric}
-          onChange={setMetric}
-          ariaLabel="Что показывать"
-          options={METRIC_ORDER.map((key) => ({
-            value: key,
-            label: METRICS[key].label,
-          }))}
-        />
-      </div>
-
       <div className={styles.stack}>
-        {latest ? (
-          <Card title={info.label}>
-            <div className={styles.current}>
-              <span className={`${styles.value} tnum`}>
-                {info.format(latest.raw)}
-              </span>
-              {percentile !== null && (
-                <span className={styles.percentile}>
-                  {formatPercentile(percentile)} перцентиль
-                </span>
-              )}
-            </div>
-
-            <p className={styles.meta}>
-              измерено {formatDate(latest.at)}
-              {percentile !== null &&
-                ` · из 100 детей этого возраста ${Math.round(percentile)} имеют ${info.short} меньше`}
+        {!anyData ? (
+          <Card title="Рост и вес">
+            <p className={styles.intro}>
+              Ни одного измерения. Добавьте первое — приложение посчитает
+              прибавки и покажет, как малыш идёт относительно норм ВОЗ.
             </p>
-
-            {(sincePrevious || rate !== null) && (
-              <div className={styles.gains}>
-                {sincePrevious && (
-                  <div className={styles.gain}>
-                    <div className={`${styles.gainValue} tnum`}>
-                      {info.formatDelta(sincePrevious.deltaRaw)}
-                    </div>
-                    <div className={styles.gainLabel}>
-                      за {sincePrevious.days}{" "}
-                      {plural(sincePrevious.days, ["день", "дня", "дней"])} с
-                      прошлого раза
-                    </div>
-                  </div>
-                )}
-                {rate !== null && (
-                  <div className={styles.gain}>
-                    <div className={`${styles.gainValue} tnum`}>
-                      {info.formatDelta(Math.round(rate))}
-                    </div>
-                    <div className={styles.gainLabel}>в среднем за неделю</div>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className={styles.introAction}>
+              <Button variant="primary" onClick={() => setAdding(true)}>
+                <Icon name="plus" size={17} />
+                Добавить измерение
+              </Button>
+            </div>
           </Card>
         ) : (
-          <Card title={info.label}>
-            <p className={styles.meta}>
-              Ни одного измерения. Добавьте первое — дальше приложение само
-              посчитает прибавки и покажет, как малыш идёт относительно норм
-              ВОЗ.
-            </p>
-            <div style={{ marginTop: "var(--gap-4)" }}>{addButton}</div>
-          </Card>
-        )}
+          <>
+            <Card title="Последнее измерение" action={addButton}>
+              {latestOverall && (
+                <p className={styles.when}>
+                  {formatDayLabel(latestOverall.measured_at)} ·{" "}
+                  {formatAge(
+                    ageOf(
+                      birthMoment(child.birth_date, child.birth_time),
+                      new Date(latestOverall.measured_at),
+                    ),
+                  )}
+                </p>
+              )}
 
-        {points.length > 0 && (
-          <Card title="Динамика">
-            <GrowthChart
-              metric={metric}
-              sex={child.sex}
-              points={points}
-              ageDaysNow={ageDaysNow}
-            />
-            <p className={styles.disclaimer}>
-              Коридоры построены по нормам ВОЗ для {child.sex === "female" ? "девочек" : "мальчиков"}.
-              Попадание в любую точку коридора — вариант нормы; важна не сама
-              цифра, а то, держится ли ребёнок своей линии. Оценивает это
-              педиатр, а не приложение.
-            </p>
-          </Card>
+              <div className={styles.metrics}>
+                {METRIC_ORDER.map((key) => {
+                  const points = series[key];
+                  if (!points.length) return null;
+                  const last = points[points.length - 1];
+                  const percentile = percentileOf(key);
+
+                  return (
+                    <div key={key} className={styles.metric}>
+                      <span>
+                        <span className={styles.metricName}>
+                          {METRICS[key].label}
+                        </span>
+                        {percentile && (
+                          <span className={styles.metricPercentile}>
+                            {percentile}
+                          </span>
+                        )}
+                      </span>
+                      <span className={`${styles.metricValue} tnum`}>
+                        {METRICS[key].format(last.raw)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <Card title="Динамика">
+              <div className={styles.switcher}>
+                <Segmented<WhoMetric>
+                  value={metric}
+                  onChange={setMetric}
+                  ariaLabel="Что показать на графике"
+                  options={METRIC_ORDER.map((key) => ({
+                    value: key,
+                    label: METRICS[key].label,
+                  }))}
+                />
+              </div>
+
+              {activePoints.length === 0 ? (
+                <p className={styles.intro}>
+                  Для этой величины измерений ещё нет.
+                </p>
+              ) : (
+                <>
+                  <GrowthChart
+                    metric={metric}
+                    sex={child.sex}
+                    points={activePoints}
+                    ageDaysNow={ageDaysNow}
+                  />
+
+                  {(sincePrevious || rate !== null) && (
+                    <div className={styles.gains}>
+                      <Facts
+                        items={[
+                          {
+                            label: "С прошлого измерения",
+                            value: sincePrevious
+                              ? activeInfo.formatDelta(sincePrevious.deltaRaw)
+                              : null,
+                            hint: sincePrevious
+                              ? `за ${sincePrevious.days} ${plural(sincePrevious.days, ["день", "дня", "дней"])}`
+                              : undefined,
+                          },
+                          {
+                            label: "В среднем за неделю",
+                            value:
+                              rate === null
+                                ? null
+                                : activeInfo.formatDelta(Math.round(rate)),
+                          },
+                        ]}
+                      />
+                    </div>
+                  )}
+
+                  {child.sex && (
+                    <p className={styles.disclaimer}>
+                      Коридоры построены по нормам ВОЗ для{" "}
+                      {child.sex === "female" ? "девочек" : "мальчиков"}.
+                      Попадание в любую точку коридора — вариант нормы; важна не
+                      сама цифра, а то, держится ли ребёнок своей линии.
+                      Оценивает это педиатр, а не приложение.
+                    </p>
+                  )}
+                </>
+              )}
+            </Card>
+          </>
         )}
 
         <Card
-          title={
-            <span className={styles.historyHeader}>
-              <span>История</span>
-            </span>
-          }
-          action={
-            measurements.length > 0 ? (
-              <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
-                <Icon name="plus" size={16} />
-                Добавить
-              </Button>
-            ) : undefined
-          }
+          title="История"
+          action={measurements.length > 0 ? addButton : undefined}
         >
           <GrowthHistory child={child} measurements={measurements} />
         </Card>

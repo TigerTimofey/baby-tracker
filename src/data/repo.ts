@@ -144,3 +144,68 @@ export async function clearDirty<K extends TableName>(
   if (!current || current.updated_at !== sentUpdatedAt) return;
   await db.put(table, { ...current, _dirty: 0 });
 }
+
+const CHILD_TABLES = [
+  "sleep_sessions",
+  "measurements",
+  "milestones",
+  "feedings",
+  "diapers",
+] as const;
+
+export interface ChildRecordCounts {
+  sleep_sessions: number;
+  measurements: number;
+  milestones: number;
+  feedings: number;
+  diapers: number;
+  total: number;
+}
+
+export async function countChildRecords(
+  childId: string,
+): Promise<ChildRecordCounts> {
+  const counts = {
+    sleep_sessions: 0,
+    measurements: 0,
+    milestones: 0,
+    feedings: 0,
+    diapers: 0,
+    total: 0,
+  };
+
+  for (const table of CHILD_TABLES) {
+    const rows = await listByChild(table, childId);
+    counts[table] = rows.length;
+    counts.total += rows.length;
+  }
+
+  return counts;
+}
+
+export async function deleteChildDeep(childId: string): Promise<void> {
+  const db = await getLooseDB();
+  const stamp = nowISO();
+
+  for (const table of CHILD_TABLES) {
+    const rows = (await db.getAllFromIndex(table, "by_child", childId)) as {
+      deleted: boolean;
+    }[];
+    for (const row of rows) {
+      if (row.deleted) continue;
+      await db.put(table, { ...row, deleted: true, updated_at: stamp, _dirty: 1 });
+    }
+  }
+
+  const child = await db.get("children", childId);
+  if (child) {
+    await db.put("children", {
+      ...child,
+      deleted: true,
+      updated_at: stamp,
+      _dirty: 1,
+    });
+  }
+
+  notifyChange();
+}

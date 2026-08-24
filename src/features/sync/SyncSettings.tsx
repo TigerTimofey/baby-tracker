@@ -14,7 +14,7 @@ import {
   syncNow,
   verifyCode,
 } from "../../data/sync";
-import { formatTime } from "../../lib/time";
+import { formatTime, plural } from "../../lib/time";
 import styles from "./SyncSettings.module.css";
 
 type Step = "email" | "code";
@@ -268,17 +268,31 @@ export function SyncSettings() {
           <Icon name="cloud" size={16} />
           Синхронизировать
         </Button>
+      </div>
+
+      <div className={styles.signOut}>
         <Button
-          variant="ghost"
+          variant="danger"
+          block
           disabled={busy}
-          onClick={() =>
-            run(async () => {
+          onClick={() => {
+            const pending =
+              status.pending > 0
+                ? `\n\n${status.pending} ${plural(status.pending, ["запись ещё не отправлена", "записи ещё не отправлены", "записей ещё не отправлены"])} на сервер. Они останутся на устройстве и уедут при следующем входе.`
+                : "";
+            const confirmed = window.confirm(
+              `Выйти из аккаунта ${status.email ?? ""}?` +
+                "\n\nЗаписи останутся на этом устройстве, но перестанут синхронизироваться со вторым телефоном." +
+                pending,
+            );
+            if (!confirmed) return;
+            void run(async () => {
               await signOutSync();
               setStep("email");
-            })
-          }
+            });
+          }}
         >
-          Выйти
+          Выйти из аккаунта
         </Button>
       </div>
 

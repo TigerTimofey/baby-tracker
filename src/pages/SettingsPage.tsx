@@ -22,7 +22,7 @@ export function SettingsPage() {
 
   const goBack = () =>
     location.key === "default" ? navigate("/sleep") : navigate(-1);
-  const { child, children } = useActiveChild();
+  const { child } = useActiveChild();
 
   const [editOpen, setEditOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -170,7 +170,6 @@ export function SettingsPage() {
           open={editOpen}
           onClose={() => setEditOpen(false)}
           child={child}
-          canDelete={children.length > 1}
         />
       )}
     </>

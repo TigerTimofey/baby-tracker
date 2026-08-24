@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { plural } from "../../lib/time";
 import { Button } from "../../components/ui/Button";
 import {
   Field,
@@ -6,11 +7,19 @@ import {
   FormRow,
   TextInput,
 } from "../../components/ui/Form";
+import { Icon } from "../../components/ui/Icon";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, save, softDelete } from "../../data/repo";
+import {
+  countChildRecords,
+  deleteChildDeep,
+  newId,
+  nowISO,
+  save,
+} from "../../data/repo";
 import { updateSettings } from "../../data/settings";
 import type { Child, Sex } from "../../data/types";
+import styles from "./ChildForm.module.css";
 import {
   cmToMm,
   gramsToKgInput,
@@ -38,7 +47,6 @@ export function ChildForm({
   open,
   onClose,
   child,
-  canDelete = false,
 }: ChildFormProps) {
   const [name, setName] = useState(child?.name ?? "");
   const [birthDate, setBirthDate] = useState(child?.birth_date ?? todayISO());
@@ -89,11 +97,25 @@ export function ChildForm({
 
   async function handleDelete() {
     if (!child) return;
+
+    const counts = await countChildRecords(child.id);
+    const details = [
+      counts.sleep_sessions &&
+        `${counts.sleep_sessions} ${plural(counts.sleep_sessions, ["запись сна", "записи сна", "записей сна"])}`,
+      counts.measurements &&
+        `${counts.measurements} ${plural(counts.measurements, ["измерение", "измерения", "измерений"])}`,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     const confirmed = window.confirm(
-      `Удалить профиль «${child.name}» вместе со всеми записями?`,
+      `Удалить профиль «${child.name}»?` +
+        (details ? `\n\nВместе с ним удалится: ${details}.` : "") +
+        "\n\nОтменить это будет нельзя.",
     );
     if (!confirmed) return;
-    await softDelete("children", child.id);
+
+    await deleteChildDeep(child.id);
     updateSettings({ activeChildId: null });
     onClose();
   }
@@ -193,19 +215,22 @@ export function ChildForm({
         )}
 
         <FormActions>
-          {canDelete && child ? (
-            <Button variant="danger" onClick={handleDelete}>
-              Удалить
-            </Button>
-          ) : (
-            <Button variant="secondary" onClick={onClose}>
-              Отмена
-            </Button>
-          )}
+          <Button variant="secondary" onClick={onClose}>
+            Отмена
+          </Button>
           <Button type="submit" variant="primary">
             Сохранить
           </Button>
         </FormActions>
+
+        {child && (
+          <div className={styles.danger}>
+            <Button variant="danger" block onClick={handleDelete}>
+              <Icon name="trash" size={17} />
+              Удалить профиль
+            </Button>
+          </div>
+        )}
       </form>
     </Sheet>
   );
