@@ -1,0 +1,94 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(3px);
+  animation: fade 0.18s ease;
+}
+
+.panel {
+  width: 100%;
+  max-width: 520px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: var(--gap-4);
+  padding-bottom: calc(var(--gap-5) + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+/* На широком экране это уже не «шторка», а обычное окно по центру. */
+@media (min-width: 640px) {
+  .overlay {
+    align-items: center;
+    padding: var(--gap-4);
+  }
+  .panel {
+    border-radius: var(--r-xl);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--gap-5);
+  }
+  .grabber {
+    display: none;
+  }
+}
+
+.grabber {
+  width: 38px;
+  height: 4px;
+  margin: 0 auto var(--gap-4);
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  margin-bottom: var(--gap-4);
+}
+
+.title {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.close {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}

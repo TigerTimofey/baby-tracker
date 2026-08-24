@@ -1,0 +1,124 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  padding: var(--gap-5) var(--gap-4);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-xl);
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--tone-soft), transparent 70%),
+    var(--surface);
+  text-align: center;
+}
+
+/* Мягкое «дыхание», пока малыш спит. */
+.card.sleeping::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 200px;
+  background: radial-gradient(closest-side, var(--tone-soft), transparent);
+  animation: breathe 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.status {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.big {
+  position: relative;
+  margin-top: 8px;
+  font-size: clamp(38px, 12.5vw, 54px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+/* Записей ещё нет — вместо крупной цифры короткая подсказка. */
+.lead {
+  position: relative;
+  max-width: 30ch;
+  margin: 14px auto 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.sub {
+  position: relative;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.bar {
+  position: relative;
+  max-width: 260px;
+  height: 6px;
+  margin: var(--gap-4) auto 0;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--tone);
+  transition: width 0.5s ease;
+}
+
+/* Бодрствует дольше обычного — подсвечиваем, но не тревожно. */
+.barOver {
+  background: var(--feeding);
+}
+
+.hint {
+  position: relative;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.hintWarn {
+  color: var(--feeding);
+}
+
+.actions {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: var(--gap-3);
+  margin-top: var(--gap-5);
+}
+
+.editLink {
+  position: relative;
+  margin-top: var(--gap-3);
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

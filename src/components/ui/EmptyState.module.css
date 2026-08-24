@@ -1,0 +1,30 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--gap-3);
+  padding: var(--gap-6) var(--gap-4);
+  color: var(--text-muted);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-full);
+  background: var(--tone-soft, var(--surface-2));
+  color: var(--tone, var(--text-faint));
+}
+
+.title {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.text {
+  font-size: 14px;
+  max-width: 30ch;
+  line-height: 1.5;
+}

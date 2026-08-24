@@ -1,0 +1,90 @@
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  margin-bottom: var(--gap-4);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -8px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.title {
+  font-size: 24px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-4);
+}
+
+.row + .row {
+  margin-top: var(--gap-4);
+}
+
+.rowText {
+  min-width: 0;
+}
+
+.rowLabel {
+  font-size: 15px;
+  font-weight: 550;
+}
+
+.rowHint {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.timeInput {
+  width: 118px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-3);
+}
+
+.buttons > * {
+  flex: 1 1 150px;
+}
+
+.about {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-faint);
+}
+
+.message {
+  margin-top: var(--gap-3);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.messageError {
+  color: var(--danger);
+}

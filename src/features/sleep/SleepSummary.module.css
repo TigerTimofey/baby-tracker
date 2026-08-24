@@ -1,0 +1,75 @@
+.total {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.totalEmpty {
+  font-size: 20px;
+  color: var(--text-faint);
+}
+
+/* Полоса заполнена относительно верхней границы возрастной нормы. */
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin-top: var(--gap-3);
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.night {
+  background: var(--sleep);
+  transition: width 0.5s ease;
+}
+
+.nap {
+  background: var(--feeding);
+  transition: width 0.5s ease;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-4);
+  margin-top: 10px;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+}
+
+.dotNight {
+  background: var(--sleep);
+}
+
+.dotNap {
+  background: var(--feeding);
+}
+
+.value {
+  font-weight: 650;
+  color: var(--text);
+}
+
+.norm {
+  margin-top: var(--gap-3);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--border-soft);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

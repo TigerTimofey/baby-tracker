@@ -1,0 +1,139 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-4);
+  min-height: 100dvh;
+  padding: var(--gap-6) var(--gap-5);
+  padding-top: calc(var(--gap-6) + env(safe-area-inset-top));
+  text-align: center;
+  background:
+    radial-gradient(90% 55% at 50% 0%, var(--sleep-soft), transparent 70%),
+    var(--bg);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 24px;
+  background: linear-gradient(150deg, var(--sleep), var(--milestone));
+  color: #fffaf3;
+  box-shadow: var(--shadow-md);
+}
+
+.title {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+
+.text {
+  max-width: 32ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.panel {
+  width: 100%;
+  max-width: 340px;
+  margin-top: var(--gap-3);
+  text-align: left;
+}
+
+/* Кнопка Google: белая с тёмным текстом в обеих темах — так требует Google. */
+.google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  height: 54px;
+  border: 1px solid #dadce0;
+  border-radius: var(--r-full);
+  background: #fff;
+  color: #1f1f1f;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.12s ease;
+}
+
+.google:active {
+  transform: scale(0.98);
+}
+
+.google:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  margin: var(--gap-4) 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.link {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.skip {
+  margin-top: var(--gap-5);
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.message {
+  margin-top: var(--gap-3);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.setup {
+  width: 100%;
+  max-width: 380px;
+  padding: var(--gap-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.setup code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+}

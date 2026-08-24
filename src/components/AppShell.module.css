@@ -1,0 +1,195 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ------------------------------- шапка ------------------------------- */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-top: env(safe-area-inset-top);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 9px var(--page-pad);
+}
+
+.childButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 4px 8px 4px 4px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  text-align: left;
+}
+
+.childButton:active {
+  background: var(--surface-2);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-full);
+  background: var(--tone-soft, var(--surface-2));
+  color: var(--tone, var(--text));
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.childText {
+  min-width: 0;
+}
+
+.childName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.childAge {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.iconButton:active {
+  background: var(--surface-2);
+}
+
+/* ----------------------------- содержимое ---------------------------- */
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: var(--gap-4) var(--page-pad);
+  /* Место под нижнюю панель, чтобы её ничего не перекрывало. */
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--gap-5));
+}
+
+/* ------------------------------ навигация ---------------------------- */
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--bg-elev) 90%, transparent);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-soft);
+}
+
+.navInner {
+  display: flex;
+  width: 100%;
+  max-width: 620px;
+}
+
+.navItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: var(--nav-h);
+  color: var(--text-faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.navItemActive {
+  color: var(--navTone);
+}
+
+/* --------------------------- выбор ребёнка --------------------------- */
+
+.childList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+  margin-bottom: var(--gap-4);
+}
+
+.childRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  text-align: left;
+}
+
+.childRowActive {
+  border-color: var(--tone, var(--accent));
+  background: var(--tone-soft, var(--surface-2));
+}
+
+.childRowName {
+  font-weight: 600;
+}
+
+.childRowAge {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sheetActions {
+  display: flex;
+  gap: var(--gap-3);
+}
+
+.sheetActions > * {
+  flex: 1;
+}

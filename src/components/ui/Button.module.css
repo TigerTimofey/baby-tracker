@@ -1,0 +1,81 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition:
+    transform 0.12s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Размеры */
+.sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+.md {
+  height: 46px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+.lg {
+  height: 56px;
+  padding: 0 26px;
+  font-size: 17px;
+}
+
+/* Варианты. --tone задаёт цвет раздела: сон, рост, вехи. */
+.primary {
+  background: var(--tone, var(--accent));
+  color: var(--accent-contrast);
+}
+
+.soft {
+  background: var(--tone-soft, var(--sleep-soft));
+  color: var(--tone, var(--accent));
+}
+
+.secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.ghost:hover {
+  color: var(--text);
+}
+
+.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.block {
+  width: 100%;
+}
+
+.iconOnly {
+  padding: 0;
+  aspect-ratio: 1;
+}
