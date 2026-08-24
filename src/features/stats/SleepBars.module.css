@@ -1,0 +1,139 @@
+.wrap {
+  margin-top: 2px;
+}
+
+.readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  min-height: 40px;
+  margin-bottom: var(--gap-3);
+}
+
+.readoutMain {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.readoutSub {
+  margin-top: 1px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.delta {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.deltaUp {
+  color: var(--growth);
+  background: var(--growth-soft);
+}
+
+.deltaDown {
+  color: var(--feeding);
+  background: var(--feeding-soft);
+}
+
+.chart {
+  position: relative;
+  height: 132px;
+}
+
+.norm {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--border);
+  pointer-events: none;
+}
+
+.normLabel {
+  position: absolute;
+  right: 0;
+  top: -15px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  background: var(--surface);
+  padding: 0 3px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  gap: 1px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 3px;
+}
+
+.col:disabled {
+  pointer-events: none;
+}
+
+.selected {
+  background: var(--surface-2);
+}
+
+.night {
+  background: var(--sleep);
+  border-radius: 0 0 2px 2px;
+  min-height: 0;
+}
+
+.nap {
+  background: var(--feeding);
+  border-radius: 2px 2px 0 0;
+  min-height: 0;
+}
+
+.today .night,
+.today .nap {
+  opacity: 0.55;
+}
+
+.empty {
+  height: 2px;
+  background: var(--border-soft);
+  border-radius: 1px;
+}
+
+.ticks {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.tick {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-faint);
+  overflow: hidden;
+}
+
+.tickToday {
+  color: var(--tone);
+  font-weight: 700;
+}

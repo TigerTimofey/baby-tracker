@@ -1,0 +1,67 @@
+.grid {
+  display: grid;
+  grid-template-columns: 26px repeat(24, 1fr);
+  gap: 1px;
+  align-items: center;
+}
+
+.hourLabel {
+  grid-row: 1;
+  font-size: 9.5px;
+  color: var(--text-faint);
+  text-align: left;
+}
+
+.dayLabel {
+  font-size: 9.5px;
+  color: var(--text-faint);
+  text-align: right;
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+.dayLabelToday {
+  color: var(--tone);
+  font-weight: 700;
+}
+
+.cell {
+  height: 11px;
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-4);
+  margin-top: var(--gap-4);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--border-soft);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.swatchNight {
+  background: var(--sleep);
+}
+
+.swatchNap {
+  background: var(--feeding);
+}
+
+.swatchEmpty {
+  background: var(--surface-2);
+}
