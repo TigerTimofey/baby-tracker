@@ -19,7 +19,8 @@ export type IconName =
   | "chevron-right"
   | "chevron-down"
   | "bottle"
-  | "clock";
+  | "clock"
+  | "spinner";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a7.5 7.5 0 1 0 10.5 10.5Z" />,
@@ -93,6 +94,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M8.5 12h7" />
     </>
   ),
+  spinner: <path d="M12 3a9 9 0 1 0 9 9" />,
   clock: (
     <>
       <circle cx="12" cy="12" r="9" />

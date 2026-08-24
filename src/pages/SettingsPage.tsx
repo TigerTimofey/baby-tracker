@@ -162,19 +162,6 @@ export function SettingsPage() {
             <p className={`${styles.message} ${styles.messageError}`}>{error}</p>
           )}
         </Card>
-
-        <Card title="О приложении">
-          <p className={styles.about}>
-            «Малыш» — дневник роста и сна.
-            <br />
-            Профилей: {children.length}. Данные хранятся на устройстве и, если
-            настроена синхронизация, в вашем проекте Supabase.
-            <br />
-            <br />
-            Возрастные ориентиры в приложении — усреднённые справочные значения.
-            Они не заменяют консультацию педиатра.
-          </p>
-        </Card>
       </div>
 
       {editOpen && child && (

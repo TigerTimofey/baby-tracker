@@ -11,8 +11,8 @@ export default defineConfig({
       injectRegister: "auto",
       includeAssets: ["favicon.svg", "icon-180.png"],
       manifest: {
-        name: "Малыш — дневник роста",
-        short_name: "Малыш",
+        name: "Sebason — дневник роста",
+        short_name: "Sebason",
         description: "Сон, вес, рост и первые достижения малыша",
         lang: "ru",
         dir: "ltr",

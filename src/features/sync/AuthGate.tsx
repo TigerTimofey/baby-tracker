@@ -78,7 +78,7 @@ export function AuthGate({ configured }: AuthGateProps) {
         <Icon name="moon" size={38} />
       </span>
 
-      <h1 className={styles.title}>Малыш</h1>
+      <h1 className={styles.title}>Sebason</h1>
 
       {!configured ? (
         <>

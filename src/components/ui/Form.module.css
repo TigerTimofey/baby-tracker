@@ -50,8 +50,7 @@ textarea.control {
 
 .row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--gap-3);
+  grid-template-columns: 1fr;
 }
 
 .actions {

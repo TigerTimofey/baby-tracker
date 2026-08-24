@@ -18,7 +18,7 @@ export function SyncBadge() {
   const view = (() => {
     switch (status.state) {
       case "syncing":
-        return { icon: "cloud", tone: "", text: "Обмен", spin: true };
+        return { icon: "spinner", tone: "", text: "Обмен", spin: true };
       case "offline":
         return { icon: "cloud-off", tone: styles.warn, text: "Офлайн" };
       case "signed_out":
@@ -42,7 +42,7 @@ export function SyncBadge() {
       title={status.error ?? undefined}
     >
       <Icon
-        name={view.icon as "cloud" | "cloud-off"}
+        name={view.icon as "cloud" | "cloud-off" | "spinner"}
         size={15}
         className={view.spin ? styles.spinning : undefined}
       />

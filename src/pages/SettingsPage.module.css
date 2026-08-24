@@ -73,12 +73,6 @@
   flex: 1 1 150px;
 }
 
-.about {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-faint);
-}
-
 .message {
   margin-top: var(--gap-3);
   font-size: 13px;

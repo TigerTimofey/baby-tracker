@@ -1,0 +1,39 @@
+.strip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  overflow: hidden;
+}
+
+.settling {
+  transition: height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--tone, var(--accent));
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.ready {
+  transform: rotate(180deg);
+}
+
+.busy {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

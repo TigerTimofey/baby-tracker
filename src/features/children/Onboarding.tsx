@@ -13,7 +13,7 @@ export function Onboarding() {
         <Icon name="moon" size={38} />
       </span>
 
-      <h1 className={styles.title}>Малыш</h1>
+      <h1 className={styles.title}>Sebason</h1>
       <p className={styles.text}>
         Дневник сна, роста и первых достижений. Записи хранятся на устройстве и
         работают без интернета.

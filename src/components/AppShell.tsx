@@ -1,9 +1,12 @@
-import { useState, type CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useActiveChild, useNow } from "../data/hooks";
+import { notifyChange } from "../data/repo";
 import { updateSettings } from "../data/settings";
+import { syncNow } from "../data/sync";
 import { ChildForm } from "../features/children/ChildForm";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
+import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
 import { Button } from "./ui/Button";
 import { Icon, type IconName } from "./ui/Icon";
@@ -37,6 +40,30 @@ export function AppShell() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  const settingsOpen = location.pathname.startsWith("/settings");
+
+  const toggleSettings = () => {
+    if (!settingsOpen) {
+      navigate("/settings");
+      return;
+    }
+    if (location.key === "default") navigate("/sleep");
+    else navigate(-1);
+  };
+
+  const refresh = useCallback(async () => {
+    await syncNow();
+    notifyChange();
+    if ("serviceWorker" in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        await registration?.update();
+      } catch {
+        void 0;
+      }
+    }
+  }, []);
 
   const tone = toneForPath(location.pathname);
   const toneStyle = {
@@ -74,13 +101,16 @@ export function AppShell() {
           <button
             type="button"
             className={styles.iconButton}
-            onClick={() => navigate("/settings")}
-            aria-label="Настройки"
+            onClick={toggleSettings}
+            aria-label={settingsOpen ? "Закрыть настройки" : "Настройки"}
+            aria-expanded={settingsOpen}
           >
             <Icon name="settings" size={21} />
           </button>
         </div>
       </header>
+
+      <PullToRefresh onRefresh={refresh} />
 
       <main className={styles.main}>
         <Outlet />

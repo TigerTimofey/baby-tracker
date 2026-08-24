@@ -6,7 +6,7 @@ const FORMAT_VERSION = 1;
 
 interface Backup {
   format: number;
-  app: "malysh";
+  app: "sebason" | "malysh";
   exportedAt: string;
   settings: Settings;
   tables: Record<string, unknown[]>;
@@ -23,7 +23,7 @@ export async function buildBackup(): Promise<Backup> {
 
   return {
     format: FORMAT_VERSION,
-    app: "malysh",
+    app: "sebason",
     exportedAt: new Date().toISOString(),
     settings: getSettings(),
     tables,
@@ -40,7 +40,7 @@ export async function downloadBackup(): Promise<void> {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `malysh-${stamp}.json`;
+  link.download = `sebason-${stamp}.json`;
   document.body.append(link);
   link.click();
   link.remove();
@@ -60,8 +60,9 @@ export async function restoreBackup(text: string): Promise<ImportResult> {
     throw new Error("Это не файл резервной копии");
   }
 
-  if (parsed.app !== "malysh" || typeof parsed.tables !== "object") {
-    throw new Error("Файл не похож на копию «Малыша»");
+  const known = parsed.app === "sebason" || parsed.app === "malysh";
+  if (!known || typeof parsed.tables !== "object") {
+    throw new Error("Файл не похож на копию «Sebason»");
   }
   if (parsed.format > FORMAT_VERSION) {
     throw new Error("Файл создан более новой версией приложения");
