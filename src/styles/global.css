@@ -26,6 +26,8 @@
   --accent: var(--sleep);
   --accent-contrast: #14121f;
 
+  --big-number: #fed12a;
+
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 20px;
@@ -80,6 +82,8 @@
 
   --accent-contrast: #ffffff;
 
+  --big-number: #a87e00;
+
   --shadow-sm: 0 1px 2px rgb(30 20 60 / 0.06);
   --shadow-md: 0 6px 20px -8px rgb(30 20 60 / 0.18);
   --shadow-lg: 0 18px 50px -14px rgb(30 20 60 / 0.22);
@@ -95,6 +99,11 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+html,
+body {
+  touch-action: pan-x pan-y;
 }
 
 body {

@@ -10,6 +10,10 @@ window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", applyTheme);
 
+for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+  document.addEventListener(type, (event) => event.preventDefault());
+}
+
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
 

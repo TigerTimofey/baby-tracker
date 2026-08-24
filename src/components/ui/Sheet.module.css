@@ -19,7 +19,7 @@
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: var(--r-xl) var(--r-xl) 0 0;
-  padding: var(--gap-4);
+  padding: var(--gap-5);
   padding-bottom: calc(var(--gap-5) + env(safe-area-inset-bottom));
   box-shadow: var(--shadow-lg);
   animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);

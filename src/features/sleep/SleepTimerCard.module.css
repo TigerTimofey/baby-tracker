@@ -1,7 +1,7 @@
 .card {
   position: relative;
   overflow: hidden;
-  padding: var(--gap-5) var(--gap-4);
+  padding: var(--gap-5) var(--gap-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--r-xl);
   background:
@@ -47,6 +47,7 @@
 .big {
   position: relative;
   margin-top: 8px;
+  color: var(--big-number);
   font-size: clamp(38px, 12.5vw, 54px);
   font-weight: 700;
   letter-spacing: -0.035em;
