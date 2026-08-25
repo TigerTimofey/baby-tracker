@@ -1,5 +1,5 @@
 import { parseISO } from "date-fns";
-import type { SleepSession } from "../../data/types";
+import type { NightFeedingKind, SleepSession } from "../../data/types";
 
 export const HOUR_MS = 3_600_000;
 export const DAY_MS = 24 * HOUR_MS;
@@ -74,6 +74,10 @@ export interface SleepStats {
   avgNapDurationMs: number | null;
   avgWakeWindowMs: number | null;
   longestWakeWindowMs: number | null;
+  /** Среднее число кормлений за ночь — по ночам, где это отмечено. */
+  avgNightFeedings: number | null;
+  nightsWithFeedingNote: number;
+  nightFeedingKind: NightFeedingKind | null;
 }
 
 function median(values: number[]): number {
@@ -258,6 +262,18 @@ export function computeSleepStats(
 
   const windows = wakeWindows(inWindow, now);
 
+  const noted = nights.filter((session) => session.night_feedings != null);
+  const kindTally = new Map<NightFeedingKind, number>();
+  for (const session of noted) {
+    if (!session.night_feeding_kind) continue;
+    kindTally.set(
+      session.night_feeding_kind,
+      (kindTally.get(session.night_feeding_kind) ?? 0) + 1,
+    );
+  }
+  const topKind =
+    [...kindTally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
   const MIN_NIGHTS = 3;
 
   return {
@@ -283,6 +299,12 @@ export function computeSleepStats(
       ? windows.reduce((a, b) => a + b, 0) / windows.length
       : null,
     longestWakeWindowMs: windows.length ? Math.max(...windows) : null,
+    avgNightFeedings: noted.length
+      ? noted.reduce((sum, item) => sum + (item.night_feedings ?? 0), 0) /
+        noted.length
+      : null,
+    nightsWithFeedingNote: noted.length,
+    nightFeedingKind: topKind,
   };
 }
 

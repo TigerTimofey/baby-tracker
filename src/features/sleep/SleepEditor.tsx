@@ -3,10 +3,15 @@ import { Button } from "../../components/ui/Button";
 import { Field, FormActions, Textarea } from "../../components/ui/Form";
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
+import { NightFeedingsFields } from "../feeding/NightFeedingsFields";
 import { Sheet } from "../../components/ui/Sheet";
 import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
 import { showToast } from "../../components/ui/toast";
-import type { SleepKind, SleepSession } from "../../data/types";
+import type {
+  NightFeedingKind,
+  SleepKind,
+  SleepSession,
+} from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
 import { guessKind } from "./sleepUtils";
@@ -34,6 +39,13 @@ export function SleepEditor({
   );
   const [kind, setKind] = useState<SleepKind>(session?.kind ?? guessKind(now));
   const [note, setNote] = useState(session?.note ?? "");
+  const [nightCount, setNightCount] = useState(session?.night_feedings ?? 0);
+  const [nightKind, setNightKind] = useState<NightFeedingKind>(
+    session?.night_feeding_kind ?? "breast",
+  );
+  const [nightMl, setNightMl] = useState(
+    session?.night_feeding_ml == null ? "" : String(session.night_feeding_ml),
+  );
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent) {
@@ -67,12 +79,29 @@ export function SleepEditor({
       return;
     }
 
+    let nightMlValue: number | null = null;
+    if (kind === "night" && nightCount > 0 && nightKind === "bottle" && nightMl.trim()) {
+      const parsed = Number(nightMl.trim().replace(",", "."));
+      if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 2000) {
+        setError("Объём ночного кормления похож на опечатку");
+        return;
+      }
+      nightMlValue = Math.round(parsed);
+    }
+
     const record: SleepSession = {
       id: session?.id ?? newId(),
       child_id: childId,
       start_at: startDate.toISOString(),
       end_at: endDate ? endDate.toISOString() : null,
       kind,
+      night_feedings: kind === "night" ? nightCount : null,
+      night_feeding_kind:
+        kind === "night" && nightCount > 0 ? nightKind : null,
+      night_feeding_ml:
+        kind === "night" && nightCount > 0 && nightKind === "bottle"
+          ? nightMlValue
+          : null,
       note: trimOrNull(note),
       updated_at: session?.updated_at ?? nowISO(),
       deleted: false,
@@ -126,6 +155,19 @@ export function SleepEditor({
             />
           )}
         </Field>
+
+        {kind === "night" && (
+          <NightFeedingsFields
+            min={0}
+            countLabel="Кормлений за ночь"
+            count={nightCount}
+            onCount={setNightCount}
+            kind={nightKind}
+            onKind={setNightKind}
+            amount={nightMl}
+            onAmount={setNightMl}
+          />
+        )}
 
         <Field label="Заметка" hint="Как засыпал, что помогло">
           {(id) => (

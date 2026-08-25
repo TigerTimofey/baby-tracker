@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 import { useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
@@ -13,6 +14,7 @@ import {
   formatTime,
   parseTimeOfDay,
 } from "../../lib/time";
+import { NightFeedingsSheet } from "../feeding/NightFeedingsSheet";
 import { SleepEditor } from "./SleepEditor";
 import {
   bandFor,
@@ -23,6 +25,8 @@ import {
   startMs,
 } from "./sleepUtils";
 import styles from "./SleepTimerCard.module.css";
+
+const ASK_ABOUT_FEEDINGS_MS = 2 * 3600_000;
 
 interface SleepTimerCardProps {
   child: Child;
@@ -49,6 +53,7 @@ export function SleepTimerCard({
   const settings = useSettings();
   const author = useAuthorLabel();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [nightSleep, setNightSleep] = useState<SleepSession | null>(null);
 
   const active = findActive(sessions);
   const activeAuthor = active ? author(active.created_by) : null;
@@ -63,6 +68,9 @@ export function SleepTimerCard({
       start_at: at.toISOString(),
       end_at: null,
       kind: guessKind(at),
+      night_feedings: null,
+      night_feeding_kind: null,
+      night_feeding_ml: null,
       note: null,
       updated_at: nowISO(),
       deleted: false,
@@ -73,7 +81,19 @@ export function SleepTimerCard({
 
   async function stopSleep() {
     if (!active) return;
-    await save("sleep_sessions", { ...active, end_at: new Date().toISOString() });
+
+    const finished = await save("sleep_sessions", {
+      ...active,
+      end_at: new Date().toISOString(),
+    });
+
+    const length =
+      parseISO(finished.end_at as string).getTime() -
+      parseISO(finished.start_at).getTime();
+
+    if (finished.kind === "night" && length > ASK_ABOUT_FEEDINGS_MS) {
+      setNightSleep(finished);
+    }
   }
 
   async function changeKind(kind: SleepKind) {
@@ -133,6 +153,13 @@ export function SleepTimerCard({
             onClose={() => setEditorOpen(false)}
             childId={child.id}
             session={active}
+          />
+        )}
+        {nightSleep && (
+          <NightFeedingsSheet
+            open
+            onClose={() => setNightSleep(null)}
+            session={nightSleep}
           />
         )}
       </>
@@ -216,6 +243,14 @@ export function SleepTimerCard({
           </p>
         )}
       </div>
+
+      {nightSleep && (
+        <NightFeedingsSheet
+          open
+          onClose={() => setNightSleep(null)}
+          session={nightSleep}
+        />
+      )}
     </>
   );
 }

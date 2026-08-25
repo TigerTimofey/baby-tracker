@@ -18,7 +18,7 @@ import {
   formatClockMinutes,
   type Period,
 } from "../features/stats/statsUtils";
-import { bandFor } from "../features/sleep/sleepUtils";
+import { bandFor, nightFeedingWord } from "../features/sleep/sleepUtils";
 import { ageOf, birthMoment, formatDuration, plural } from "../lib/time";
 import styles from "./StatsPage.module.css";
 
@@ -135,6 +135,23 @@ export function StatsPage() {
                   stats.longestNightMs === null
                     ? null
                     : formatDuration(stats.longestNightMs),
+              },
+              {
+                label: "Кормлений за ночь",
+                value:
+                  stats.avgNightFeedings === null
+                    ? null
+                    : stats.avgNightFeedings.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 1,
+                      }),
+                hint: `в среднем по ${stats.nightsWithFeedingNote} ${plural(
+                  stats.nightsWithFeedingNote,
+                  ["ночи", "ночам", "ночам"],
+                )} с отметкой${
+                  stats.nightFeedingKind
+                    ? ` · чаще ${nightFeedingWord(stats.nightFeedingKind)}`
+                    : ""
+                }`,
               },
               {
                 label: "Ночей с записями",

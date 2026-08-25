@@ -6,7 +6,7 @@ import { useAuthorLabel, useNow } from "../../data/hooks";
 import type { SleepSession } from "../../data/types";
 import { formatDayLabel, formatDuration, formatTime } from "../../lib/time";
 import { SleepEditor } from "./SleepEditor";
-import { durationMs, groupByDay } from "./sleepUtils";
+import { durationMs, groupByDay, nightFeedingsLabel } from "./sleepUtils";
 import styles from "./SleepHistory.module.css";
 
 interface SleepHistoryProps {
@@ -76,9 +76,17 @@ export function SleepHistory({ childId, sessions }: SleepHistoryProps) {
                         {formatTime(session.start_at)} →{" "}
                         {session.end_at ? formatTime(session.end_at) : "сейчас"}
                       </span>
-                      {(session.note || author(session.created_by)) && (
+                      {[
+                        nightFeedingsLabel(session),
+                        session.note,
+                        author(session.created_by),
+                      ].filter(Boolean).length > 0 && (
                         <span className={styles.note}>
-                          {[session.note, author(session.created_by)]
+                          {[
+                            nightFeedingsLabel(session),
+                            session.note,
+                            author(session.created_by),
+                          ]
                             .filter(Boolean)
                             .join(" · ")}
                         </span>

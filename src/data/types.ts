@@ -25,11 +25,16 @@ export interface Child extends SyncFields {
 
 export type SleepKind = "night" | "nap";
 
+export type NightFeedingKind = "breast" | "bottle" | "solid";
+
 export interface SleepSession extends SyncFields {
   child_id: string;
   start_at: ISODateTime;
   end_at: ISODateTime | null;
   kind: SleepKind;
+  night_feedings: number | null;
+  night_feeding_kind: NightFeedingKind | null;
+  night_feeding_ml: number | null;
   note: string | null;
 }
 

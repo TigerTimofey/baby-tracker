@@ -150,6 +150,9 @@ create table if not exists public.sleep_sessions (
   start_at   timestamptz not null,
   end_at     timestamptz,
   kind       text not null default 'nap' check (kind in ('night', 'nap')),
+  night_feedings      integer,
+  night_feeding_kind  text,
+  night_feeding_ml    integer,
   note       text,
   updated_at timestamptz not null default now(),
   deleted    boolean not null default false,
@@ -234,6 +237,24 @@ begin
     execute format(
       'alter table public.%I add column if not exists created_by uuid', t
     );
+  end loop;
+end;
+$$;
+
+alter table public.sleep_sessions
+  add column if not exists night_feedings integer,
+  add column if not exists night_feeding_kind text,
+  add column if not exists night_feeding_ml integer;
+
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'children', 'sleep_sessions', 'measurements',
+    'milestones', 'feedings', 'diapers'
+  ]
+  loop
 
     execute format(
       'create index if not exists %I on public.%I (synced_at)',
