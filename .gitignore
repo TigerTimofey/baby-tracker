@@ -1,9 +1,16 @@
 node_modules
 dist
 dist-ssr
+*.tsbuildinfo
 *.local
 .env
 .env.local
+
+# содержит CRON_SECRET — в открытый репозиторий нельзя
+supabase/cron.sql
+
+# служебное от Supabase CLI
+supabase/.temp/
 .DS_Store
 *.log
 .vscode/*

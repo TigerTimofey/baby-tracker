@@ -21,6 +21,10 @@ export interface Child extends SyncFields {
   sex: Sex | null;
   birth_weight_g: number | null;
   birth_height_mm: number | null;
+  /** Время отхода ко сну хранится у ребёнка: оно общее для обоих родителей
+   * и нужно серверу, который рассылает напоминания. */
+  bedtime: string | null;
+  bedtime_warn_minutes: number | null;
 }
 
 export type SleepKind = "night" | "nap";

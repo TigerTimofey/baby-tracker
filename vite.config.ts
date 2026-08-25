@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon.svg", "icon-180.png"],

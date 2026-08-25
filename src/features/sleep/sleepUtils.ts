@@ -1,5 +1,11 @@
 import { parseISO } from "date-fns";
-import type { NightFeedingKind, SleepKind, SleepSession } from "../../data/types";
+import type {
+  Child,
+  NightFeedingKind,
+  Settings,
+  SleepKind,
+  SleepSession,
+} from "../../data/types";
 import { plural } from "../../lib/time";
 import { dayKey } from "../../lib/time";
 
@@ -12,6 +18,21 @@ export function guessKind(at: Date): SleepKind {
 
 export function kindLabel(kind: SleepKind): string {
   return kind === "night" ? "Ночной сон" : "Дневной сон";
+}
+
+export interface BedtimeSetting {
+  time: string | null;
+  warnMinutes: number;
+}
+
+export function bedtimeOf(
+  child: Child | null,
+  settings: Settings,
+): BedtimeSetting {
+  return {
+    time: child?.bedtime ?? settings.bedtime,
+    warnMinutes: child?.bedtime_warn_minutes ?? settings.bedtimeWarnMinutes,
+  };
 }
 
 export function nightFeedingWord(kind: NightFeedingKind): string {

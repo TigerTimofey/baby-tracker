@@ -14,7 +14,7 @@ import {
   formatDuration,
   parseTimeOfDay,
 } from "../../lib/time";
-import { bandFor, findActive, lastWakeMs } from "../sleep/sleepUtils";
+import { bandFor, bedtimeOf, findActive, lastWakeMs } from "../sleep/sleepUtils";
 
 const CHECK_MS = 30_000;
 const BEDTIME_WINDOW_MS = 60 * 60_000;
@@ -46,8 +46,9 @@ export function useReminders(child: Child | null): void {
 
       if (findActive(sessions)) return;
 
-      const bedtimeMinutes = settings.bedtime
-        ? parseTimeOfDay(settings.bedtime)
+      const schedule = bedtimeOf(child, settings);
+      const bedtimeMinutes = schedule.time
+        ? parseTimeOfDay(schedule.time)
         : null;
 
       if (bedtimeMinutes !== null) {
@@ -59,7 +60,7 @@ export function useReminders(child: Child | null): void {
           0,
         );
         const untilBed = bedtime.getTime() - now.getTime();
-        const warnMs = settings.bedtimeWarnMinutes * 60_000;
+        const warnMs = schedule.warnMinutes * 60_000;
 
         if (untilBed > 0 && untilBed <= warnMs) {
           const key = `bedtime-warn:${dayKey(now)}`;
@@ -80,7 +81,7 @@ export function useReminders(child: Child | null): void {
             void showNotification(
               "bedtime",
               "Пора укладываться",
-              `${child.name}: время сна — ${settings.bedtime}`,
+              `${child.name}: время сна — ${schedule.time}`,
             );
           }
         }

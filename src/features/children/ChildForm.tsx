@@ -87,6 +87,8 @@ export function ChildForm({
       sex: sex === "unset" ? null : sex,
       birth_weight_g: kgToGrams(weight),
       birth_height_mm: cmToMm(height),
+      bedtime: child?.bedtime ?? null,
+      bedtime_warn_minutes: child?.bedtime_warn_minutes ?? null,
       updated_at: child?.updated_at ?? nowISO(),
       deleted: false,
       created_by: child?.created_by ?? null,

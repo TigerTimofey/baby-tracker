@@ -18,6 +18,7 @@ import { NightFeedingsSheet } from "../feeding/NightFeedingsSheet";
 import { SleepEditor } from "./SleepEditor";
 import {
   bandFor,
+  bedtimeOf,
   findActive,
   guessKind,
   kindLabel,
@@ -175,9 +176,10 @@ export function SleepTimerCard({
     awakeMs === null ? 0 : Math.min(1, awakeMs / windowMs);
   const overdue = awakeMs !== null && awakeMs > windowMs;
 
-  const untilBedtime = msUntilBedtime(settings.bedtime, now);
+  const bedtime = bedtimeOf(child, settings);
+  const untilBedtime = msUntilBedtime(bedtime.time, now);
   const bedtimeSoon =
-    untilBedtime !== null && untilBedtime > 0 && untilBedtime <= settings.bedtimeWarnMinutes * 60_000;
+    untilBedtime !== null && untilBedtime > 0 && untilBedtime <= bedtime.warnMinutes * 60_000;
   const bedtimePassed = untilBedtime !== null && untilBedtime <= 0;
 
   return (
@@ -235,13 +237,13 @@ export function SleepTimerCard({
         {(bedtimeSoon || bedtimePassed) && (
           <p className={`${styles.hint} ${styles.hintWarn}`}>
             {bedtimePassed
-              ? `время сна было в ${settings.bedtime}`
+              ? `время сна было в ${bedtime.time}`
               : `до сна ${formatDuration(untilBedtime ?? 0)}`}
           </p>
         )}
         {!bedtimeSoon && !bedtimePassed && untilBedtime !== null && untilBedtime > 0 && (
           <p className={styles.hint}>
-            отход ко сну в {settings.bedtime} — через {formatDuration(untilBedtime)}
+            отход ко сну в {bedtime.time} — через {formatDuration(untilBedtime)}
           </p>
         )}
       </div>

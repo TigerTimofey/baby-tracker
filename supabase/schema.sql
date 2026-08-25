@@ -288,6 +288,41 @@ begin
 end;
 $$;
 
+create table if not exists public.push_subscriptions (
+  endpoint     text primary key,
+  user_id      uuid not null references auth.users (id) on delete cascade,
+  family_id    uuid references public.families (id) on delete cascade,
+  p256dh       text not null,
+  auth         text not null,
+  timezone     text,
+  created_at   timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_family_idx
+  on public.push_subscriptions (family_id);
+
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists push_subscriptions_own on public.push_subscriptions;
+create policy push_subscriptions_own on public.push_subscriptions
+  for all using (user_id = auth.uid())
+          with check (user_id = auth.uid());
+
+create table if not exists public.push_log (
+  child_id uuid not null references public.children (id) on delete cascade,
+  kind     text not null,
+  key      text not null,
+  sent_at  timestamptz not null default now(),
+  primary key (child_id, kind, key)
+);
+
+alter table public.push_log enable row level security;
+
+alter table public.children
+  add column if not exists bedtime text,
+  add column if not exists bedtime_warn_minutes integer;
+
 create index if not exists children_family_idx on public.children (family_id);
 create index if not exists sleep_sessions_start_idx on public.sleep_sessions (child_id, start_at desc);
 

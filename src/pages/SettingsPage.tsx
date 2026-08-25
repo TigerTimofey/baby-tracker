@@ -7,6 +7,15 @@ import { Segmented } from "../components/ui/Segmented";
 import { Switch } from "../components/ui/Switch";
 import { useActiveChild, useSettings } from "../data/hooks";
 import { isNightWindow, updateSettings } from "../data/settings";
+import { save } from "../data/repo";
+import { bedtimeOf } from "../features/sleep/sleepUtils";
+import {
+  disablePush,
+  enablePush,
+  pushConfigured,
+  pushSupported,
+} from "../lib/push";
+import { getSyncStatus } from "../data/sync";
 import type { Settings } from "../data/types";
 import { ChildForm } from "../features/children/ChildForm";
 import { FamilyCard } from "../features/sync/FamilyCard";
@@ -41,6 +50,19 @@ export function SettingsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [permission, setPermission] = useState(notificationPermission);
   const [storage, setStorage] = useState<StorageStatus | null>(null);
+  const [pushNote, setPushNote] = useState<string | null>(null);
+
+  const bedtime = bedtimeOf(child, settings);
+
+  const setBedtime = (value: string | null) => {
+    if (child) void save("children", { ...child, bedtime: value });
+    else updateSettings({ bedtime: value });
+  };
+
+  const setWarnMinutes = (value: number) => {
+    if (child) void save("children", { ...child, bedtime_warn_minutes: value });
+    else updateSettings({ bedtimeWarnMinutes: value });
+  };
 
   useEffect(() => {
     void readStorageStatus().then(setStorage);
@@ -105,11 +127,10 @@ export function SettingsPage() {
             </div>
             <input
               type="time"
+              aria-label="Время отхода ко сну"
               className={styles.timeInput}
-              value={settings.bedtime ?? ""}
-              onChange={(e) =>
-                updateSettings({ bedtime: e.target.value || null })
-              }
+              value={bedtime.time ?? ""}
+              onChange={(event) => setBedtime(event.target.value || null)}
             />
           </div>
 
@@ -131,14 +152,42 @@ export function SettingsPage() {
               onChange={async (next) => {
                 if (!next) {
                   updateSettings({ notifications: false });
+                  setPushNote(null);
+                  await disablePush();
                   return;
                 }
+
                 const granted = await requestNotificationPermission();
                 setPermission(granted);
                 updateSettings({ notifications: granted === "granted" });
+                if (granted !== "granted") return;
+
+                if (!pushSupported()) {
+                  setPushNote(
+                    "Этот браузер не умеет получать уведомления с сервера — напоминания придут, только пока приложение открыто.",
+                  );
+                  return;
+                }
+                if (!pushConfigured()) {
+                  setPushNote(
+                    "Серверные уведомления не настроены: нет VITE_VAPID_PUBLIC_KEY. Напоминания придут, только пока приложение открыто.",
+                  );
+                  return;
+                }
+
+                const result = await enablePush(getSyncStatus().familyId);
+                setPushNote(
+                  result.ok
+                    ? "Уведомления придут, даже если приложение закрыто."
+                    : result.reason === "no-account"
+                      ? "Войдите в аккаунт, чтобы уведомления приходили при закрытом приложении."
+                      : "Не удалось подписаться на серверные уведомления. Напоминания придут, пока приложение открыто.",
+                );
               }}
             />
           </div>
+
+          {pushNote && <p className={styles.rowHint}>{pushNote}</p>}
 
           {settings.notifications && permission === "granted" && (
             <div className={styles.row}>
@@ -171,10 +220,8 @@ export function SettingsPage() {
             </div>
             <div style={{ width: 170 }}>
               <Segmented
-                value={String(settings.bedtimeWarnMinutes)}
-                onChange={(value) =>
-                  updateSettings({ bedtimeWarnMinutes: Number(value) })
-                }
+                value={String(bedtime.warnMinutes)}
+                onChange={(value) => setWarnMinutes(Number(value))}
                 ariaLabel="За сколько предупредить"
                 options={WARN_OPTIONS.map((value) => ({
                   value,
