@@ -6,7 +6,7 @@ import { Icon } from "../components/ui/Icon";
 import { Segmented } from "../components/ui/Segmented";
 import { Switch } from "../components/ui/Switch";
 import { useActiveChild, useSettings } from "../data/hooks";
-import { updateSettings } from "../data/settings";
+import { isNightWindow, updateSettings } from "../data/settings";
 import type { Settings } from "../data/types";
 import { ChildForm } from "../features/children/ChildForm";
 import { FamilyCard } from "../features/sync/FamilyCard";
@@ -196,6 +196,61 @@ export function SettingsPage() {
               { value: "system", label: "Как в системе" },
             ]}
           />
+
+          <div className={styles.row} style={{ marginTop: "var(--gap-4)" }}>
+            <div className={styles.rowText}>
+              <div className={styles.rowLabel}>Ночной режим</div>
+              <div className={styles.rowHint}>
+                Тёплые тона без синего света и крупные кнопки. Включается сам в
+                заданные часы и перекрывает выбранную тему.
+              </div>
+            </div>
+            <Switch
+              label="Ночной режим"
+              checked={settings.nightMode}
+              onChange={(nightMode) => updateSettings({ nightMode })}
+            />
+          </div>
+
+          {settings.nightMode && (
+            <>
+              <div className={styles.row}>
+                <div className={styles.rowText}>
+                  <div className={styles.rowLabel}>Включать</div>
+                  <div className={styles.rowHint}>
+                    {isNightWindow(settings.nightFrom, settings.nightTo)
+                      ? "сейчас активен"
+                      : `сейчас день — включится в ${settings.nightFrom}`}
+                  </div>
+                </div>
+                <input
+                  type="time"
+                  aria-label="Начало ночного режима"
+                  className={styles.timeInput}
+                  value={settings.nightFrom}
+                  onChange={(event) =>
+                    updateSettings({ nightFrom: event.target.value || "00:00" })
+                  }
+                />
+              </div>
+
+              <div className={styles.row}>
+                <div className={styles.rowText}>
+                  <div className={styles.rowLabel}>Выключать</div>
+                  <div className={styles.rowHint}>утром, когда встаёте</div>
+                </div>
+                <input
+                  type="time"
+                  aria-label="Конец ночного режима"
+                  className={styles.timeInput}
+                  value={settings.nightTo}
+                  onChange={(event) =>
+                    updateSettings({ nightTo: event.target.value || "07:00" })
+                  }
+                />
+              </div>
+            </>
+          )}
         </Card>
 
         <SyncSettings />

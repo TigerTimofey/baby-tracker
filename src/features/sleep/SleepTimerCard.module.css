@@ -126,3 +126,17 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+:global(html[data-night="on"]) .actions {
+  gap: var(--gap-4);
+}
+
+:global(html[data-night="on"]) .actions > * {
+  height: 68px;
+  padding: 0 30px;
+  font-size: 19px;
+}
+
+:global(html[data-night="on"]) .big {
+  font-size: clamp(44px, 15vw, 62px);
+}

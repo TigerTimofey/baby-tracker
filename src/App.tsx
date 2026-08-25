@@ -6,6 +6,7 @@ import { useActiveChild, useSettings } from "./data/hooks";
 import { clearPendingInvite, getPendingInvite } from "./data/invite";
 import { getSyncStatus, initSync, joinFamily, subscribeSync } from "./data/sync";
 import { showToast } from "./components/ui/toast";
+import { applyTheme } from "./data/settings";
 import { ensurePersistentStorageOnce } from "./lib/storage";
 import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
@@ -19,6 +20,16 @@ export default function App() {
   useEffect(() => initSync(), []);
   useEffect(() => {
     void ensurePersistentStorageOnce();
+  }, []);
+
+  useEffect(() => {
+    const tick = () => applyTheme();
+    const timer = setInterval(tick, 30_000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
   }, []);
 
   const status = useSyncExternalStore(

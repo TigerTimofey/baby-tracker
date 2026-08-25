@@ -115,6 +115,10 @@ export interface Settings {
   bedtimeWarnMinutes: number;
   localOnly: boolean;
   notifications: boolean;
+  /** Включать ночной режим по расписанию. */
+  nightMode: boolean;
+  nightFrom: string;
+  nightTo: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -124,4 +128,7 @@ export const DEFAULT_SETTINGS: Settings = {
   bedtimeWarnMinutes: 30,
   localOnly: false,
   notifications: false,
+  nightMode: false,
+  nightFrom: "00:00",
+  nightTo: "07:00",
 };
