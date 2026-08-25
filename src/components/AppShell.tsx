@@ -9,6 +9,7 @@ import { useReminders } from "../features/notify/useReminders";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
 import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
+import { useTabSwipe } from "./useTabSwipe";
 import { Button } from "./ui/Button";
 import { Icon, type IconName } from "./ui/Icon";
 import { Sheet } from "./ui/Sheet";
@@ -66,6 +67,36 @@ export function AppShell() {
     }
   }, []);
 
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  const rememberDirection = useCallback(
+    (to: string) => {
+      const from = TABS.findIndex((tab) => location.pathname.startsWith(tab.to));
+      const target = TABS.findIndex((tab) => tab.to === to);
+      if (from !== -1 && target !== -1) {
+        setDirection(target >= from ? 1 : -1);
+      }
+    },
+    [location.pathname],
+  );
+
+  const goToNeighbour = useCallback(
+    (step: 1 | -1) => {
+      const index = TABS.findIndex((tab) =>
+        location.pathname.startsWith(tab.to),
+      );
+      if (index === -1) return;
+
+      const next = index + step;
+      if (next < 0 || next >= TABS.length) return;
+
+      setDirection(step);
+      navigate(TABS[next].to);
+    },
+    [location.pathname, navigate],
+  );
+
+  useTabSwipe(goToNeighbour);
   useReminders(child);
 
   const tone = toneForPath(location.pathname);
@@ -116,7 +147,12 @@ export function AppShell() {
       <PullToRefresh onRefresh={refresh} />
 
       <main className={styles.main}>
-        <Outlet />
+        <div
+          key={location.pathname}
+          className={direction > 0 ? styles.pageIn : styles.pageBack}
+        >
+          <Outlet />
+        </div>
       </main>
 
       <nav className={styles.nav}>
@@ -131,6 +167,7 @@ export function AppShell() {
                   .join(" ")
               }
               style={{ ["--navTone" as string]: `var(--${tab.tone})` }}
+              onClick={() => rememberDirection(tab.to)}
             >
               <Icon name={tab.icon} size={22} />
               {tab.label}

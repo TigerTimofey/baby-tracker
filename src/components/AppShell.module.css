@@ -110,6 +110,28 @@
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--gap-5));
 }
 
+.pageIn {
+  animation: slideFromRight 0.2s ease;
+}
+
+.pageBack {
+  animation: slideFromLeft 0.2s ease;
+}
+
+@keyframes slideFromRight {
+  from {
+    transform: translateX(22px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideFromLeft {
+  from {
+    transform: translateX(-22px);
+    opacity: 0;
+  }
+}
+
 .nav {
   position: fixed;
   bottom: 0;
