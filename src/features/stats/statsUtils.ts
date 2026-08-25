@@ -12,13 +12,13 @@ function overlap(fromA: number, toA: number, fromB: number, toB: number): number
   return Math.max(0, Math.min(toA, toB) - Math.max(fromA, fromB));
 }
 
-function startOfDay(value: Date): Date {
+export function startOfDay(value: Date): Date {
   const copy = new Date(value);
   copy.setHours(0, 0, 0, 0);
   return copy;
 }
 
-function addDays(value: Date, amount: number): Date {
+export function addDays(value: Date, amount: number): Date {
   const copy = new Date(value);
   copy.setDate(copy.getDate() + amount);
   copy.setHours(0, 0, 0, 0);
@@ -55,29 +55,33 @@ export interface DayRow {
   hours: HourCell[];
 }
 
-export interface SleepStats {
-  days: DayBucket[];
-  rows: DayRow[];
-  /** Завершённые сутки с записями — только по ним считаются средние. */
+export interface WindowMetrics {
   daysCounted: number;
   avgTotalMs: number | null;
   avgNightMs: number | null;
   avgNapMs: number | null;
   avgNapCount: number | null;
-  /** Изменение среднего по сравнению с предыдущим таким же отрезком. */
-  deltaMs: number | null;
   longestNightMs: number | null;
-  /** Медианное время засыпания на ночь, минуты от полуночи. */
+
   bedtimeMinutes: number | null;
   wakeMinutes: number | null;
   nightCount: number;
   avgNapDurationMs: number | null;
+  napSamples: number;
   avgWakeWindowMs: number | null;
   longestWakeWindowMs: number | null;
-  /** Среднее число кормлений за ночь — по ночам, где это отмечено. */
+  wakeWindowSamples: number;
+
   avgNightFeedings: number | null;
   nightsWithFeedingNote: number;
   nightFeedingKind: NightFeedingKind | null;
+}
+
+export interface SleepStats extends WindowMetrics {
+  days: DayBucket[];
+  rows: DayRow[];
+  deltaMs: number | null;
+  previous: WindowMetrics;
 }
 
 function median(values: number[]): number {
@@ -88,10 +92,6 @@ function median(values: number[]): number {
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-/**
- * Медиана времени суток. Значения раньше pivot переносятся на сутки
- * вперёд, иначе засыпания в 23:40 и в 00:20 усреднились бы в полдень.
- */
 function medianClock(values: number[], pivot: number): number {
   const shifted = values.map((value) => (value < pivot ? value + 1440 : value));
   return Math.round(median(shifted)) % 1440;
@@ -190,8 +190,6 @@ function averageOfCompleteDays(days: DayBucket[]): {
   nap: number | null;
   naps: number | null;
 } {
-  // Сегодняшний день ещё не закончился — в среднее он не идёт, иначе
-  // утром среднее занижалось бы каждым запуском.
   const usable = days.filter((day) => !day.isToday && day.hasData);
   if (usable.length === 0) {
     return { counted: 0, total: null, night: null, nap: null, naps: null };
@@ -209,39 +207,22 @@ function averageOfCompleteDays(days: DayBucket[]): {
   };
 }
 
-export function computeSleepStats(
-  allSessions: SleepSession[],
-  period: Period,
+const MIN_DAYS_FOR_COMPARISON = 3;
+const MIN_NIGHTS = 3;
+
+export function windowMetrics(
+  sessions: SleepSession[],
+  days: DayBucket[],
+  from: number,
+  to: number,
   now: number,
-): SleepStats {
-  const count = Number(period);
-  const today = startOfDay(new Date(now));
-  const windowStart = addDays(today, -(count - 1)).getTime();
-  const previousStart = addDays(today, -(count * 2 - 1)).getTime();
+): WindowMetrics {
+  const averages = averageOfCompleteDays(days);
 
-  const relevant = allSessions.filter(
-    (session) => sessionEnd(session, now) > previousStart,
-  );
-
-  const days = buildDays(relevant, count, now);
-  const rows = buildRows(relevant, days, now);
-  const current = averageOfCompleteDays(days);
-
-  const previousDays = buildDays(relevant, count * 2, now).slice(0, count);
-  const previous = averageOfCompleteDays(previousDays);
-
-  const MIN_DAYS_FOR_COMPARISON = 3;
-  const deltaMs =
-    current.total !== null &&
-    previous.total !== null &&
-    current.counted >= MIN_DAYS_FOR_COMPARISON &&
-    previous.counted >= MIN_DAYS_FOR_COMPARISON
-      ? current.total - previous.total
-      : null;
-
-  const inWindow = relevant.filter(
-    (session) => sessionEnd(session, now) > windowStart,
-  );
+  const inWindow = sessions.filter((session) => {
+    const end = sessionEnd(session, now);
+    return end > from && end <= to;
+  });
 
   const nights = inWindow.filter(
     (session) => session.kind === "night" && session.end_at !== null,
@@ -274,17 +255,12 @@ export function computeSleepStats(
   const topKind =
     [...kindTally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
-  const MIN_NIGHTS = 3;
-
   return {
-    days,
-    rows,
-    daysCounted: current.counted,
-    avgTotalMs: current.total,
-    avgNightMs: current.night,
-    avgNapMs: current.nap,
-    avgNapCount: current.naps,
-    deltaMs,
+    daysCounted: averages.counted,
+    avgTotalMs: averages.total,
+    avgNightMs: averages.night,
+    avgNapMs: averages.nap,
+    avgNapCount: averages.naps,
     longestNightMs: nights.length
       ? Math.max(...nights.map((s) => sessionEnd(s, now) - sessionStart(s)))
       : null,
@@ -295,10 +271,12 @@ export function computeSleepStats(
     avgNapDurationMs: napDurations.length
       ? napDurations.reduce((a, b) => a + b, 0) / napDurations.length
       : null,
+    napSamples: napDurations.length,
     avgWakeWindowMs: windows.length
       ? windows.reduce((a, b) => a + b, 0) / windows.length
       : null,
     longestWakeWindowMs: windows.length ? Math.max(...windows) : null,
+    wakeWindowSamples: windows.length,
     avgNightFeedings: noted.length
       ? noted.reduce((sum, item) => sum + (item.night_feedings ?? 0), 0) /
         noted.length
@@ -308,12 +286,44 @@ export function computeSleepStats(
   };
 }
 
-/**
- * Промежутки бодрствования между соседними снами.
- *
- * Промежутки длиннее 16 часов отбрасываются: это не марафон без сна,
- * а пропуск в записях, и он изуродовал бы среднее.
- */
+export function computeSleepStats(
+  allSessions: SleepSession[],
+  period: Period,
+  now: number,
+): SleepStats {
+  const count = Number(period);
+  const today = startOfDay(new Date(now));
+  const windowStart = addDays(today, -(count - 1)).getTime();
+  const previousStart = addDays(today, -(count * 2 - 1)).getTime();
+
+  const relevant = allSessions.filter(
+    (session) => sessionEnd(session, now) > previousStart,
+  );
+
+  const days = buildDays(relevant, count, now);
+  const rows = buildRows(relevant, days, now);
+  const current = windowMetrics(relevant, days, windowStart, Infinity, now);
+
+  const previousDays = buildDays(relevant, count * 2, now).slice(0, count);
+  const previous = windowMetrics(
+    relevant,
+    previousDays,
+    previousStart,
+    windowStart,
+    now,
+  );
+
+  const deltaMs =
+    current.avgTotalMs !== null &&
+    previous.avgTotalMs !== null &&
+    current.daysCounted >= MIN_DAYS_FOR_COMPARISON &&
+    previous.daysCounted >= MIN_DAYS_FOR_COMPARISON
+      ? current.avgTotalMs - previous.avgTotalMs
+      : null;
+
+  return { days, rows, deltaMs, previous, ...current };
+}
+
 export function wakeWindows(sessions: SleepSession[], now: number): number[] {
   const finished = sessions
     .filter((session) => session.end_at !== null)

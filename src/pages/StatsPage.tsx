@@ -15,6 +15,8 @@ import {
   METRIC_ORDER,
   seriesFor,
 } from "../features/growth/growthUtils";
+import { Changes } from "../features/stats/Changes";
+import { buildChanges } from "../features/stats/changesData";
 import { DayMap } from "../features/stats/DayMap";
 import { SummaryCard } from "../features/stats/SummaryCard";
 import { buildSummary } from "../features/stats/summaryData";
@@ -69,6 +71,8 @@ export function StatsPage() {
   const age = ageOf(birthMoment(child.birth_date, child.birth_time), new Date(now));
   const band = bandFor(age.totalMonths);
   const daysWithData = stats.days.filter((day) => day.hasData).length;
+
+  const changes = buildChanges(stats, feedings, period, now);
 
   const summary = buildSummary(
     child,
@@ -261,6 +265,10 @@ export function StatsPage() {
       <div className={styles.stack}>
         <Card title={`Итоги ${summary.periodLabel}`}>
           <SummaryCard data={summary} />
+        </Card>
+
+        <Card title="Что изменилось">
+          <Changes data={changes} />
         </Card>
 
         {sleepCards}
