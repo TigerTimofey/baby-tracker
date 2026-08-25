@@ -189,6 +189,46 @@ export function SettingsPage() {
 
           {pushNote && <p className={styles.rowHint}>{pushNote}</p>}
 
+          {settings.notifications && permission === "granted" && child && (
+            <>
+              <div className={styles.row}>
+                <div className={styles.rowText}>
+                  <div className={styles.rowLabel}>Напомнить об отходе ко сну</div>
+                  <div className={styles.rowHint}>
+                    За {bedtime.warnMinutes} мин до {bedtime.time ?? "—"} и в
+                    само время сна
+                  </div>
+                </div>
+                <Switch
+                  label="Напоминание об отходе ко сну"
+                  checked={child.notify_bedtime}
+                  onChange={(value) =>
+                    void save("children", { ...child, notify_bedtime: value })
+                  }
+                />
+              </div>
+
+              <div className={styles.row}>
+                <div className={styles.rowText}>
+                  <div className={styles.rowLabel}>Если долго не спит</div>
+                  <div className={styles.rowHint}>
+                    Когда бодрствует дольше возрастного ориентира
+                  </div>
+                </div>
+                <Switch
+                  label="Напоминание о долгом бодрствовании"
+                  checked={child.notify_wake_window}
+                  onChange={(value) =>
+                    void save("children", {
+                      ...child,
+                      notify_wake_window: value,
+                    })
+                  }
+                />
+              </div>
+            </>
+          )}
+
           {settings.notifications && permission === "granted" && (
             <div className={styles.row}>
               <div className={styles.rowText}>

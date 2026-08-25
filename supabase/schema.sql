@@ -321,7 +321,9 @@ alter table public.push_log enable row level security;
 
 alter table public.children
   add column if not exists bedtime text,
-  add column if not exists bedtime_warn_minutes integer;
+  add column if not exists bedtime_warn_minutes integer,
+  add column if not exists notify_bedtime boolean not null default true,
+  add column if not exists notify_wake_window boolean not null default true;
 
 create index if not exists children_family_idx on public.children (family_id);
 create index if not exists sleep_sessions_start_idx on public.sleep_sessions (child_id, start_at desc);

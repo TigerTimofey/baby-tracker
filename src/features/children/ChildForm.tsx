@@ -89,6 +89,8 @@ export function ChildForm({
       birth_height_mm: cmToMm(height),
       bedtime: child?.bedtime ?? null,
       bedtime_warn_minutes: child?.bedtime_warn_minutes ?? null,
+      notify_bedtime: child?.notify_bedtime ?? true,
+      notify_wake_window: child?.notify_wake_window ?? true,
       updated_at: child?.updated_at ?? nowISO(),
       deleted: false,
       created_by: child?.created_by ?? null,

@@ -16,6 +16,8 @@ interface Child {
   birth_date: string;
   bedtime: string | null;
   bedtime_warn_minutes: number | null;
+  notify_bedtime: boolean;
+  notify_wake_window: boolean;
 }
 
 interface Sleep {
@@ -115,7 +117,7 @@ function remindersFor(
   const bedtimeMinutes = child.bedtime ? parseTimeOfDay(child.bedtime) : null;
   const warn = child.bedtime_warn_minutes ?? 30;
 
-  if (bedtimeMinutes !== null) {
+  if (bedtimeMinutes !== null && child.notify_bedtime !== false) {
     const until = bedtimeMinutes - local.minutes;
     if (until > 0 && until <= warn) {
       out.push({
@@ -139,7 +141,7 @@ function remindersFor(
     .map((sleep) => (sleep.end_at ? Date.parse(sleep.end_at) : 0))
     .reduce((max, value) => Math.max(max, value), 0);
 
-  if (lastWake > 0) {
+  if (lastWake > 0 && child.notify_wake_window !== false) {
     const awake = now.getTime() - lastWake;
     const limit = wakeMaxMinutes(monthsSince(child.birth_date, now)) * 60_000;
     if (awake > limit) {
@@ -192,7 +194,9 @@ Deno.serve(async (request) => {
 
   const { data: children } = await supabase
     .from("children")
-    .select("id, family_id, name, birth_date, bedtime, bedtime_warn_minutes")
+    .select(
+      "id, family_id, name, birth_date, bedtime, bedtime_warn_minutes, notify_bedtime, notify_wake_window",
+    )
     .in("family_id", [...byFamily.keys()])
     .eq("deleted", false);
 

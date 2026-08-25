@@ -25,6 +25,8 @@ export interface Child extends SyncFields {
    * и нужно серверу, который рассылает напоминания. */
   bedtime: string | null;
   bedtime_warn_minutes: number | null;
+  notify_bedtime: boolean;
+  notify_wake_window: boolean;
 }
 
 export type SleepKind = "night" | "nap";

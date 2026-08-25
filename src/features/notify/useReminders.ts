@@ -51,7 +51,7 @@ export function useReminders(child: Child | null): void {
         ? parseTimeOfDay(schedule.time)
         : null;
 
-      if (bedtimeMinutes !== null) {
+      if (bedtimeMinutes !== null && child.notify_bedtime) {
         const bedtime = new Date(now);
         bedtime.setHours(
           Math.floor(bedtimeMinutes / 60),
@@ -86,6 +86,8 @@ export function useReminders(child: Child | null): void {
           }
         }
       }
+
+      if (!child.notify_wake_window) return;
 
       const wakeAt = lastWakeMs(sessions);
       if (wakeAt === null) return;
