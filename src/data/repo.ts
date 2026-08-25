@@ -41,6 +41,10 @@ export function setAuthorProvider(provider: () => string | null): void {
   authorProvider = provider;
 }
 
+export function currentAuthor(): string | null {
+  return authorProvider();
+}
+
 export function newId(): string {
   return crypto.randomUUID();
 }

@@ -5,7 +5,16 @@ import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { NightFeedingsFields } from "../feeding/NightFeedingsFields";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
+import { useRecordPeople } from "../../data/hooks";
+import styles from "./SleepEditor.module.css";
+import {
+  currentAuthor,
+  newId,
+  nowISO,
+  restore,
+  save,
+  softDelete,
+} from "../../data/repo";
 import { showToast } from "../../components/ui/toast";
 import type {
   NightFeedingKind,
@@ -47,6 +56,10 @@ export function SleepEditor({
     session?.night_feeding_ml == null ? "" : String(session.night_feeding_ml),
   );
   const [error, setError] = useState<string | null>(null);
+  const people = useRecordPeople();
+  const who = session
+    ? people(session.created_by, session.ended_by, "уложили", "подняли")
+    : null;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -95,6 +108,9 @@ export function SleepEditor({
       start_at: startDate.toISOString(),
       end_at: endDate ? endDate.toISOString() : null,
       kind,
+      ended_by: endDate
+        ? (session?.ended_by ?? currentAuthor())
+        : null,
       night_feedings: kind === "night" ? nightCount : null,
       night_feeding_kind:
         kind === "night" && nightCount > 0 ? nightKind : null,
@@ -198,6 +214,8 @@ export function SleepEditor({
             Сохранить
           </Button>
         </FormActions>
+
+        {who && <p className={styles.people}>{who}</p>}
       </form>
     </Sheet>
   );

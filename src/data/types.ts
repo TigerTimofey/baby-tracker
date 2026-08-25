@@ -32,6 +32,7 @@ export interface SleepSession extends SyncFields {
   start_at: ISODateTime;
   end_at: ISODateTime | null;
   kind: SleepKind;
+  ended_by: string | null;
   night_feedings: number | null;
   night_feeding_kind: NightFeedingKind | null;
   night_feeding_ml: number | null;
@@ -72,6 +73,7 @@ export interface Feeding extends SyncFields {
   start_at: ISODateTime;
   end_at: ISODateTime | null;
   kind: FeedingKind;
+  ended_by: string | null;
   amount_ml: number | null;
   food: string | null;
   note: string | null;

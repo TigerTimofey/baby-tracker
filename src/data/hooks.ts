@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getVersion, listAll, subscribe } from "./repo";
 import { getSettings, subscribeSettings } from "./settings";
-import { authorLabel, getSyncStatus, subscribeSync } from "./sync";
+import {
+  authorLabel,
+  authorName,
+  getSyncStatus,
+  subscribeSync,
+} from "./sync";
 import type { Child, Settings } from "./types";
 
 export function useDataVersion(): number {
@@ -99,4 +104,46 @@ export function useAuthorLabel(): (createdBy: string | null) => string | null {
   );
   void status.members;
   return authorLabel;
+}
+
+export function useAuthorPair(): (
+  createdBy: string | null,
+  endedBy: string | null,
+  startVerb: string,
+  endVerb: string,
+) => string | null {
+  const label = useAuthorLabel();
+
+  return (createdBy, endedBy, startVerb, endVerb) => {
+    const started = label(createdBy);
+    if (!started) return null;
+
+    const ended = label(endedBy);
+    if (!ended || ended === started) return started;
+
+    return `${startVerb} ${started} · ${endVerb} ${ended}`;
+  };
+}
+
+export function useRecordPeople(): (
+  createdBy: string | null,
+  endedBy: string | null,
+  startVerb: string,
+  endVerb: string,
+) => string | null {
+  const status = useSyncExternalStore(
+    subscribeSync,
+    getSyncStatus,
+    getSyncStatus,
+  );
+  void status.members;
+
+  return (createdBy, endedBy, startVerb, endVerb) => {
+    const started = authorName(createdBy);
+    const ended = authorName(endedBy);
+    if (!started && !ended) return null;
+    if (!ended || ended === started) return `${startVerb} ${started}`;
+    if (!started) return `${endVerb} ${ended}`;
+    return `${startVerb} ${started} · ${endVerb} ${ended}`;
+  };
 }

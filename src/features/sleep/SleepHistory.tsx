@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Icon } from "../../components/ui/Icon";
-import { useAuthorLabel, useNow } from "../../data/hooks";
+import { useAuthorPair, useNow } from "../../data/hooks";
 import type { SleepSession } from "../../data/types";
 import { formatDayLabel, formatDuration, formatTime } from "../../lib/time";
 import { SleepEditor } from "./SleepEditor";
@@ -16,7 +16,7 @@ interface SleepHistoryProps {
 
 export function SleepHistory({ childId, sessions }: SleepHistoryProps) {
   const now = useNow(30_000);
-  const author = useAuthorLabel();
+  const people = useAuthorPair();
   const [editing, setEditing] = useState<SleepSession | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -76,21 +76,23 @@ export function SleepHistory({ childId, sessions }: SleepHistoryProps) {
                         {formatTime(session.start_at)} →{" "}
                         {session.end_at ? formatTime(session.end_at) : "сейчас"}
                       </span>
-                      {[
-                        nightFeedingsLabel(session),
-                        session.note,
-                        author(session.created_by),
-                      ].filter(Boolean).length > 0 && (
-                        <span className={styles.note}>
-                          {[
-                            nightFeedingsLabel(session),
-                            session.note,
-                            author(session.created_by),
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      )}
+                      {(() => {
+                        const parts = [
+                          nightFeedingsLabel(session),
+                          session.note,
+                          people(
+                            session.created_by,
+                            session.ended_by,
+                            "уложили",
+                            "подняли",
+                          ),
+                        ].filter(Boolean);
+                        return parts.length === 0 ? null : (
+                          <span className={styles.note}>
+                            {parts.join(" · ")}
+                          </span>
+                        );
+                      })()}
                     </span>
 
                     <span

@@ -11,12 +11,14 @@ create table if not exists public.family_members (
   user_id      uuid not null references auth.users (id) on delete cascade,
   role         text not null default 'parent',
   display_name text,
+  avatar_url   text,
   created_at   timestamptz not null default now(),
   primary key (family_id, user_id)
 );
 
 alter table public.family_members
-  add column if not exists display_name text;
+  add column if not exists display_name text,
+  add column if not exists avatar_url text;
 
 create or replace function public.is_family_member(target_family uuid)
 returns boolean
@@ -150,6 +152,7 @@ create table if not exists public.sleep_sessions (
   start_at   timestamptz not null,
   end_at     timestamptz,
   kind       text not null default 'nap' check (kind in ('night', 'nap')),
+  ended_by   uuid,
   night_feedings      integer,
   night_feeding_kind  text,
   night_feeding_ml    integer,
@@ -190,6 +193,7 @@ create table if not exists public.feedings (
   start_at   timestamptz not null,
   end_at     timestamptz,
   kind       text not null check (kind in ('breast_left', 'breast_right', 'bottle', 'solid')),
+  ended_by   uuid,
   amount_ml  integer,
   food       text,
   note       text,
@@ -244,7 +248,11 @@ $$;
 alter table public.sleep_sessions
   add column if not exists night_feedings integer,
   add column if not exists night_feeding_kind text,
-  add column if not exists night_feeding_ml integer;
+  add column if not exists night_feeding_ml integer,
+  add column if not exists ended_by uuid;
+
+alter table public.feedings
+  add column if not exists ended_by uuid;
 
 do $$
 declare

@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { Segmented } from "../../components/ui/Segmented";
 import { useAuthorLabel, useNow, useSettings } from "../../data/hooks";
-import { newId, nowISO, save } from "../../data/repo";
+import { currentAuthor, newId, nowISO, save } from "../../data/repo";
 import type { Child, SleepKind, SleepSession } from "../../data/types";
 import {
   ageOf,
@@ -68,6 +68,7 @@ export function SleepTimerCard({
       start_at: at.toISOString(),
       end_at: null,
       kind: guessKind(at),
+      ended_by: null,
       night_feedings: null,
       night_feeding_kind: null,
       night_feeding_ml: null,
@@ -85,6 +86,7 @@ export function SleepTimerCard({
     const finished = await save("sleep_sessions", {
       ...active,
       end_at: new Date().toISOString(),
+      ended_by: currentAuthor(),
     });
 
     const length =

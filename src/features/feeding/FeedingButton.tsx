@@ -2,7 +2,13 @@ import type { CSSProperties } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { useLive } from "../../data/hooks";
-import { listByChild, newId, nowISO, save } from "../../data/repo";
+import {
+  currentAuthor,
+  listByChild,
+  newId,
+  nowISO,
+  save,
+} from "../../data/repo";
 import type { Feeding } from "../../data/types";
 import { findActive, suggestKind } from "./feedingUtils";
 
@@ -28,6 +34,7 @@ export function FeedingButton({ childId }: { childId: string }) {
       start_at: new Date().toISOString(),
       end_at: null,
       kind: suggestKind(feedings),
+      ended_by: null,
       amount_ml: null,
       food: null,
       note: null,
@@ -40,7 +47,11 @@ export function FeedingButton({ childId }: { childId: string }) {
 
   async function stop() {
     if (!active) return;
-    await save("feedings", { ...active, end_at: new Date().toISOString() });
+    await save("feedings", {
+      ...active,
+      end_at: new Date().toISOString(),
+      ended_by: currentAuthor(),
+    });
   }
 
   if (active) {

@@ -9,7 +9,16 @@ import {
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
-import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
+import { useRecordPeople } from "../../data/hooks";
+import styles from "./FeedingEditor.module.css";
+import {
+  currentAuthor,
+  newId,
+  nowISO,
+  restore,
+  save,
+  softDelete,
+} from "../../data/repo";
 import { showToast } from "../../components/ui/toast";
 import type { Feeding, FeedingKind } from "../../data/types";
 import { trimOrNull } from "../../lib/parse";
@@ -62,6 +71,10 @@ export function FeedingEditor({
   const [food, setFood] = useState(feeding?.food ?? "");
   const [note, setNote] = useState(feeding?.note ?? "");
   const [error, setError] = useState<string | null>(null);
+  const people = useRecordPeople();
+  const who = feeding
+    ? people(feeding.created_by, feeding.ended_by, "начали", "закончили")
+    : null;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -109,6 +122,7 @@ export function FeedingEditor({
       start_at: startDate.toISOString(),
       end_at: endDate ? endDate.toISOString() : null,
       kind: joinKind(family, side),
+      ended_by: endDate ? (feeding?.ended_by ?? currentAuthor()) : null,
       amount_ml: amountMl,
       food: family === "solid" ? trimOrNull(food) : null,
       note: trimOrNull(note),
@@ -238,6 +252,8 @@ export function FeedingEditor({
             Сохранить
           </Button>
         </FormActions>
+
+        {who && <p className={styles.people}>{who}</p>}
       </form>
     </Sheet>
   );

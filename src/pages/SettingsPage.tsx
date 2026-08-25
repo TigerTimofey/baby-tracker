@@ -9,6 +9,7 @@ import { useActiveChild, useSettings } from "../data/hooks";
 import { updateSettings } from "../data/settings";
 import type { Settings } from "../data/types";
 import { ChildForm } from "../features/children/ChildForm";
+import { FamilyCard } from "../features/sync/FamilyCard";
 import { SyncSettings } from "../features/sync/SyncSettings";
 import { downloadBackup, restoreBackup } from "../lib/backup";
 import {
@@ -76,6 +77,8 @@ export function SettingsPage() {
       </div>
 
       <div className={styles.stack}>
+        <FamilyCard />
+
         <Card title="Малыш">
           <div className={styles.row}>
             <div className={styles.rowText}>

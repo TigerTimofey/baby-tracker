@@ -1,0 +1,8 @@
+.people {
+  margin-top: var(--gap-4);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--border-soft);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

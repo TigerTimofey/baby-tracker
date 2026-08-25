@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
-import { useAuthorLabel, useLive, useNow } from "../../data/hooks";
+import { useAuthorLabel, useAuthorPair, useLive, useNow } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
 import type { Feeding } from "../../data/types";
 import { formatClock, formatDuration, formatTime, plural } from "../../lib/time";
@@ -25,6 +25,7 @@ const DAY_MS = 24 * 3600_000;
 export function FeedingCard({ childId }: { childId: string }) {
   const now = useNow(1000);
   const author = useAuthorLabel();
+  const people = useAuthorPair();
   const [editing, setEditing] = useState<Feeding | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -98,15 +99,25 @@ export function FeedingCard({ childId }: { childId: string }) {
                   <span className={`${styles.time} tnum`}>
                     {formatTime(feeding.start_at)}
                   </span>
-                  <span className={styles.kind}>
-                    {kindShort(feeding.kind)}
-                    {feeding.food ? ` · ${feeding.food}` : ""}
-                    {feeding.end_at
-                      ? ` · ${formatDuration(durationMs(feeding, now))}`
-                      : " · идёт"}
-                    {author(feeding.created_by)
-                      ? ` · ${author(feeding.created_by)}`
-                      : ""}
+                  <span className={styles.body}>
+                    <span className={styles.kind}>
+                      {kindShort(feeding.kind)}
+                      {feeding.food ? ` · ${feeding.food}` : ""}
+                      {feeding.end_at
+                        ? ` · ${formatDuration(durationMs(feeding, now))}`
+                        : " · идёт"}
+                    </span>
+                    {(() => {
+                      const who = people(
+                        feeding.created_by,
+                        feeding.ended_by,
+                        "начали",
+                        "закончили",
+                      );
+                      return who ? (
+                        <span className={styles.who}>{who}</span>
+                      ) : null;
+                    })()}
                   </span>
                   {feeding.amount_ml != null && (
                     <span className={`${styles.amount} tnum`}>

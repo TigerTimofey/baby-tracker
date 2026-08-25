@@ -30,6 +30,7 @@ export type SyncState =
 export interface FamilyMember {
   user_id: string;
   display_name: string | null;
+  avatar_url: string | null;
 }
 
 export interface SyncStatus {
@@ -199,15 +200,23 @@ async function ensureFamily(): Promise<string | null> {
   return familyId;
 }
 
-function nameFromSession(user: {
+interface SessionUser {
   email?: string | null;
   user_metadata?: Record<string, unknown>;
-}): string | null {
+}
+
+function nameFromSession(user: SessionUser): string | null {
   const meta = user.user_metadata ?? {};
   const full = (meta.full_name ?? meta.name) as string | undefined;
   if (full && full.trim()) return full.trim();
   const email = user.email ?? "";
   return email.includes("@") ? email.split("@")[0] : null;
+}
+
+function avatarFromSession(user: SessionUser): string | null {
+  const meta = user.user_metadata ?? {};
+  const url = (meta.avatar_url ?? meta.picture) as string | undefined;
+  return url && url.startsWith("http") ? url : null;
 }
 
 async function refreshMembers(familyId: string): Promise<void> {
@@ -219,29 +228,42 @@ async function refreshMembers(familyId: string): Promise<void> {
 
   const listed = await client
     .from("family_members")
-    .select("user_id, display_name")
+    .select("user_id, display_name, avatar_url")
     .eq("family_id", familyId);
   if (listed.error) return;
 
   let members = (listed.data ?? []) as FamilyMember[];
   const me = members.find((member) => member.user_id === user.id);
   const myName = nameFromSession(user);
+  const myAvatar = avatarFromSession(user);
 
-  if (me && !me.display_name && myName) {
+  const patch: { display_name?: string; avatar_url?: string } = {};
+  if (myName && me?.display_name !== myName) patch.display_name = myName;
+  if (myAvatar && me?.avatar_url !== myAvatar) patch.avatar_url = myAvatar;
+
+  if (me && Object.keys(patch).length > 0) {
     await client
       .from("family_members")
-      .update({ display_name: myName })
+      .update(patch)
       .eq("family_id", familyId)
       .eq("user_id", user.id);
     members = members.map((member) =>
-      member.user_id === user.id ? { ...member, display_name: myName } : member,
+      member.user_id === user.id ? { ...member, ...patch } : member,
     );
   }
 
   setStatus({ members });
 }
 
-/** Как подписать запись в интерфейсе. null — подписывать не нужно. */
+/** Имя участника без оглядки на состав семьи — для подробного просмотра записи. */
+export function authorName(userId: string | null): string | null {
+  if (!userId) return null;
+  if (userId === status.userId) return "вы";
+  const member = status.members.find((item) => item.user_id === userId);
+  return member?.display_name ?? "второй родитель";
+}
+
+/** Как подписать запись в списке. null — подписывать не нужно. */
 export function authorLabel(createdBy: string | null): string | null {
   if (!createdBy || status.members.length < 2) return null;
   if (createdBy === status.userId) return "вы";
