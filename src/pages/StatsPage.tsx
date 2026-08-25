@@ -16,6 +16,7 @@ import {
   seriesFor,
 } from "../features/growth/growthUtils";
 import { Changes } from "../features/stats/Changes";
+import { DayComposition } from "../features/stats/DayComposition";
 import { buildChanges } from "../features/stats/changesData";
 import { DayMap } from "../features/stats/DayMap";
 import { SummaryCard } from "../features/stats/SummaryCard";
@@ -114,6 +115,10 @@ export function StatsPage() {
     />
   ) : (
     <>
+      <Card title="Из чего состоят сутки">
+        <DayComposition stats={stats} />
+      </Card>
+
       <Card title="Сон по дням">
           <SleepBars
             days={stats.days}
@@ -124,8 +129,9 @@ export function StatsPage() {
           />
           <p className={styles.basis}>
             Столбик — сон, попавший в эти сутки: фиолетовый ночной, зелёный
-            дневной. Сегодняшний день показан бледнее и в средние не входит —
-            он ещё не закончился.
+            дневной. Пунктир — ориентир {band.sleepMinH} ч сна в сутки для
+            этого возраста. Сегодняшний день показан бледнее и в средние не
+            входит — он ещё не закончился.
             {stats.deltaMs !== null &&
               " Значок справа — насколько изменилось среднее по сравнению с предыдущим таким же отрезком."}
           </p>

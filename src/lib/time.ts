@@ -39,6 +39,14 @@ export function formatDuration(ms: number): string {
   return `${hours} ч ${minutes} мин`;
 }
 
+export function formatHoursMinutes(ms: number): string {
+  if (ms < 0) ms = 0;
+  const total = Math.round(ms / 60_000);
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  return `${hours}:${String(minutes).padStart(2, "0")} ч`;
+}
+
 export function formatClock(ms: number): string {
   if (ms < 0) ms = 0;
   const total = Math.floor(ms / 1000);

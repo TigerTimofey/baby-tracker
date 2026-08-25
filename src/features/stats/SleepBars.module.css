@@ -56,16 +56,6 @@
   pointer-events: none;
 }
 
-.normLabel {
-  position: absolute;
-  right: 0;
-  top: -15px;
-  font-size: 10.5px;
-  color: var(--text-faint);
-  background: var(--surface);
-  padding: 0 3px;
-}
-
 .bars {
   display: flex;
   align-items: flex-end;

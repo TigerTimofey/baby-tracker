@@ -12,6 +12,7 @@ interface SleepBarsProps {
 }
 
 const MIN_SCALE_MS = 12 * HOUR_MS;
+const HEADROOM = 1.15;
 
 export function SleepBars({
   days,
@@ -23,8 +24,12 @@ export function SleepBars({
   const [picked, setPicked] = useState<string | null>(null);
 
   const maxTotal = Math.max(...days.map((day) => day.totalMs), 0);
-  const scaleMs = Math.max(MIN_SCALE_MS, Math.ceil(maxTotal / HOUR_MS) * HOUR_MS);
-  const normPercent = Math.min(100, ((normMinHours * HOUR_MS) / scaleMs) * 100);
+  const needed = Math.max(maxTotal, normMinHours * HOUR_MS) * HEADROOM;
+  const scaleMs = Math.max(
+    MIN_SCALE_MS,
+    Math.ceil(needed / HOUR_MS) * HOUR_MS,
+  );
+  const normPercent = ((normMinHours * HOUR_MS) / scaleMs) * 100;
 
   const selected = days.find((day) => day.key === picked) ?? null;
   const showEveryLabel = days.length <= 14;
@@ -71,9 +76,7 @@ export function SleepBars({
       </div>
 
       <div className={styles.chart}>
-        <div className={styles.norm} style={{ bottom: `${normPercent}%` }}>
-          <span className={styles.normLabel}>ориентир {normMinHours} ч</span>
-        </div>
+        <div className={styles.norm} style={{ bottom: `${normPercent}%` }} />
 
         <div className={styles.bars}>
           {days.map((day) => {
