@@ -1,0 +1,30 @@
+.frame {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #12121b;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-3);
+  margin-top: var(--gap-4);
+}
+
+.actions > * {
+  flex: 1 1 140px;
+}
+
+.note {
+  margin-top: var(--gap-3);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

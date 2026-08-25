@@ -229,3 +229,27 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+
+  [data-print-root] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+  }
+}

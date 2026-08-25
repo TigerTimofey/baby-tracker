@@ -4,13 +4,20 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Segmented } from "../components/ui/Segmented";
 import { useActiveChild, useLive, useNow } from "../data/hooks";
 import { listByChild } from "../data/repo";
-import type { Child, Measurement, SleepSession } from "../data/types";
+import type {
+  Child,
+  Feeding,
+  Measurement,
+  SleepSession,
+} from "../data/types";
 import {
   METRICS,
   METRIC_ORDER,
   seriesFor,
 } from "../features/growth/growthUtils";
 import { DayMap } from "../features/stats/DayMap";
+import { SummaryCard } from "../features/stats/SummaryCard";
+import { buildSummary } from "../features/stats/summaryData";
 import { Facts } from "../features/stats/Facts";
 import { SleepBars } from "../features/stats/SleepBars";
 import {
@@ -24,6 +31,7 @@ import styles from "./StatsPage.module.css";
 
 const NO_SESSIONS: SleepSession[] = [];
 const NO_MEASUREMENTS: Measurement[] = [];
+const NO_FEEDINGS: Feeding[] = [];
 
 export function StatsPage() {
   const { child } = useActiveChild();
@@ -45,6 +53,12 @@ export function StatsPage() {
   );
   const measurements = measurementData ?? NO_MEASUREMENTS;
 
+  const { data: feedingData } = useLive(
+    async () => (childId ? await listByChild("feedings", childId) : NO_FEEDINGS),
+    [childId],
+  );
+  const feedings = feedingData ?? NO_FEEDINGS;
+
   const stats = useMemo(
     () => computeSleepStats(sessions, period, now),
     [sessions, period, now],
@@ -55,6 +69,15 @@ export function StatsPage() {
   const age = ageOf(birthMoment(child.birth_date, child.birth_time), new Date(now));
   const band = bandFor(age.totalMonths);
   const daysWithData = stats.days.filter((day) => day.hasData).length;
+
+  const summary = buildSummary(
+    child,
+    sessions,
+    feedings,
+    measurements,
+    period,
+    now,
+  );
 
   const periods = (
     <div className={styles.periods}>
@@ -236,6 +259,10 @@ export function StatsPage() {
       {periods}
 
       <div className={styles.stack}>
+        <Card title={`Итоги ${summary.periodLabel}`}>
+          <SummaryCard data={summary} />
+        </Card>
+
         {sleepCards}
         <GrowthOverPeriod
           child={child}
