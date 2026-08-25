@@ -9,7 +9,6 @@ import { useReminders } from "../features/notify/useReminders";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
 import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
-import { useTabSwipe } from "./useTabSwipe";
 import { Button } from "./ui/Button";
 import { Icon, type IconName } from "./ui/Icon";
 import { Sheet } from "./ui/Sheet";
@@ -80,23 +79,6 @@ export function AppShell() {
     [location.pathname],
   );
 
-  const goToNeighbour = useCallback(
-    (step: 1 | -1) => {
-      const index = TABS.findIndex((tab) =>
-        location.pathname.startsWith(tab.to),
-      );
-      if (index === -1) return;
-
-      const next = index + step;
-      if (next < 0 || next >= TABS.length) return;
-
-      setDirection(step);
-      navigate(TABS[next].to);
-    },
-    [location.pathname, navigate],
-  );
-
-  useTabSwipe(goToNeighbour);
   useReminders(child);
 
   const tone = toneForPath(location.pathname);
