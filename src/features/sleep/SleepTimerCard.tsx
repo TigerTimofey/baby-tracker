@@ -3,9 +3,15 @@ import { useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { Segmented } from "../../components/ui/Segmented";
-import { useAuthorLabel, useNow, useSettings } from "../../data/hooks";
-import { currentAuthor, newId, nowISO, save } from "../../data/repo";
-import type { Child, SleepKind, SleepSession } from "../../data/types";
+import { useAuthorLabel, useLive, useNow, useSettings } from "../../data/hooks";
+import {
+  currentAuthor,
+  listByChild,
+  newId,
+  nowISO,
+  save,
+} from "../../data/repo";
+import type { Child, Feeding, SleepKind, SleepSession } from "../../data/types";
 import {
   ageOf,
   birthMoment,
@@ -14,7 +20,10 @@ import {
   formatTime,
   parseTimeOfDay,
 } from "../../lib/time";
+import { findActive as findActiveFeeding } from "../feeding/feedingUtils";
+import { notificationPermission } from "../../lib/notifications";
 import { NightFeedingsSheet } from "../feeding/NightFeedingsSheet";
+import { forecastNextSleep } from "./forecast";
 import { SleepEditor } from "./SleepEditor";
 import {
   bandFor,
@@ -28,6 +37,7 @@ import {
 import styles from "./SleepTimerCard.module.css";
 
 const ASK_ABOUT_FEEDINGS_MS = 2 * 3600_000;
+const NO_FEEDINGS: Feeding[] = [];
 
 interface SleepTimerCardProps {
   child: Child;
@@ -55,6 +65,12 @@ export function SleepTimerCard({
   const author = useAuthorLabel();
   const [editorOpen, setEditorOpen] = useState(false);
   const [nightSleep, setNightSleep] = useState<SleepSession | null>(null);
+
+  const { data: feedingData } = useLive(
+    async () => await listByChild("feedings", child.id),
+    [child.id],
+  );
+  const feedingNow = Boolean(findActiveFeeding(feedingData ?? NO_FEEDINGS));
 
   const active = findActive(sessions);
   const activeAuthor = active ? author(active.created_by) : null;
@@ -176,6 +192,14 @@ export function SleepTimerCard({
     awakeMs === null ? 0 : Math.min(1, awakeMs / windowMs);
   const overdue = awakeMs !== null && awakeMs > windowMs;
 
+  const remindersOn =
+    settings.notifications && notificationPermission() === "granted";
+  const forecast =
+    remindersOn && !feedingNow
+      ? forecastNextSleep(sessions, age.totalMonths, now)
+      : null;
+  const forecastDue = forecast !== null && forecast.at <= now;
+
   const bedtime = bedtimeOf(child, settings);
   const untilBedtime = msUntilBedtime(bedtime.time, now);
   const bedtimeSoon =
@@ -214,15 +238,34 @@ export function SleepTimerCard({
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </div>
-            <p className={`${styles.hint} ${overdue ? styles.hintWarn : ""}`}>
-              {overdue
-                ? "бодрствует дольше обычного для этого возраста"
-                : `в ${age.totalMonths} мес обычно бодрствуют ${
-                    band.wakeMin >= 60
-                      ? `${(band.wakeMin / 60).toLocaleString("ru-RU")}–${(band.wakeMax / 60).toLocaleString("ru-RU")} ч`
-                      : `${band.wakeMin}–${band.wakeMax} мин`
-                  }`}
-            </p>
+            {forecast ? (
+              <>
+                <p
+                  className={`${styles.hint} ${forecastDue ? styles.hintWarn : ""}`}
+                >
+                  {forecastDue
+                    ? "пора укладывать — обычно уже засыпает"
+                    : `следующий сон примерно в ${formatTime(
+                        new Date(forecast.at),
+                      )} · через ${formatDuration(forecast.at - now)}`}
+                </p>
+                <p className={styles.basis}>
+                  {forecast.basedOn === "history"
+                    ? `по ${forecast.samples} последним промежуткам между снами`
+                    : "по возрастному ориентиру — своих записей пока мало"}
+                </p>
+              </>
+            ) : (
+              <p className={`${styles.hint} ${overdue ? styles.hintWarn : ""}`}>
+                {overdue
+                  ? "бодрствует дольше обычного для этого возраста"
+                  : `в ${age.totalMonths} мес обычно бодрствуют ${
+                      band.wakeMin >= 60
+                        ? `${(band.wakeMin / 60).toLocaleString("ru-RU")}–${(band.wakeMax / 60).toLocaleString("ru-RU")} ч`
+                        : `${band.wakeMin}–${band.wakeMax} мин`
+                    }`}
+              </p>
+            )}
           </>
         )}
 

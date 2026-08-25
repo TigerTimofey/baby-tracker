@@ -140,3 +140,10 @@
 :global(html[data-night="on"]) .big {
   font-size: clamp(44px, 15vw, 62px);
 }
+
+.basis {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
