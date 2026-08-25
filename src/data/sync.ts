@@ -207,8 +207,13 @@ interface SessionUser {
 
 function nameFromSession(user: SessionUser): string | null {
   const meta = user.user_metadata ?? {};
+
+  const given = meta.given_name as string | undefined;
+  if (given && given.trim()) return given.trim();
+
   const full = (meta.full_name ?? meta.name) as string | undefined;
-  if (full && full.trim()) return full.trim();
+  if (full && full.trim()) return full.trim().split(/\s+/)[0];
+
   const email = user.email ?? "";
   return email.includes("@") ? email.split("@")[0] : null;
 }
@@ -255,7 +260,6 @@ async function refreshMembers(familyId: string): Promise<void> {
   setStatus({ members });
 }
 
-/** Имя участника без оглядки на состав семьи — для подробного просмотра записи. */
 export function authorName(userId: string | null): string | null {
   if (!userId) return null;
   if (userId === status.userId) return "вы";
@@ -263,7 +267,6 @@ export function authorName(userId: string | null): string | null {
   return member?.display_name ?? "второй родитель";
 }
 
-/** Как подписать запись в списке. null — подписывать не нужно. */
 export function authorLabel(createdBy: string | null): string | null {
   if (!createdBy || status.members.length < 2) return null;
   if (createdBy === status.userId) return "вы";

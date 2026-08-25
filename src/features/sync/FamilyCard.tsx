@@ -12,7 +12,7 @@ import styles from "./FamilyCard.module.css";
 
 function Avatar({ member }: { member: FamilyMember }) {
   const [broken, setBroken] = useState(false);
-  const initial = (member.display_name ?? "?").slice(0, 1).toUpperCase();
+  const initial = member.display_name?.trim().slice(0, 1).toUpperCase();
 
   if (member.avatar_url && !broken) {
     return (
@@ -28,7 +28,11 @@ function Avatar({ member }: { member: FamilyMember }) {
     );
   }
 
-  return <span className={styles.circle}>{initial}</span>;
+  return (
+    <span className={styles.circle}>
+      {initial ?? <Icon name="baby" size={24} />}
+    </span>
+  );
 }
 
 export function FamilyCard() {
@@ -70,7 +74,7 @@ export function FamilyCard() {
             <div key={member.user_id} className={styles.member}>
               <Avatar member={member} />
               <span className={`${styles.name} ${isMe ? styles.me : ""}`}>
-                {isMe ? "вы" : (member.display_name ?? "второй родитель")}
+                {member.display_name ?? (isMe ? "вы" : "второй родитель")}
               </span>
             </div>
           );
