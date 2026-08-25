@@ -1,5 +1,9 @@
 import { parseISO } from "date-fns";
-import type { NightFeedingKind, SleepSession } from "../../data/types";
+import type {
+  Feeding,
+  NightFeedingKind,
+  SleepSession,
+} from "../../data/types";
 
 export const HOUR_MS = 3_600_000;
 export const DAY_MS = 24 * HOUR_MS;
@@ -45,14 +49,16 @@ export interface DayBucket {
   hasData: boolean;
 }
 
-export interface HourCell {
-  nightMs: number;
-  napMs: number;
+export interface DaySpan {
+  from: number;
+  to: number;
+  night: boolean;
 }
 
-export interface DayRow {
+export interface DayTimelineRow {
   day: DayBucket;
-  hours: HourCell[];
+  sleep: DaySpan[];
+  feedings: number[];
 }
 
 export interface WindowMetrics {
@@ -79,7 +85,6 @@ export interface WindowMetrics {
 
 export interface SleepStats extends WindowMetrics {
   days: DayBucket[];
-  rows: DayRow[];
   deltaMs: number | null;
   previous: WindowMetrics;
 }
@@ -145,42 +150,6 @@ function buildDays(
   }
 
   return buckets;
-}
-
-function buildRows(
-  sessions: SleepSession[],
-  days: DayBucket[],
-  now: number,
-): DayRow[] {
-  return days.map((day) => {
-    const hours: HourCell[] = [];
-
-    for (let hour = 0; hour < 24; hour += 1) {
-      const from = new Date(day.date);
-      from.setHours(hour, 0, 0, 0);
-      const to = new Date(day.date);
-      to.setHours(hour + 1, 0, 0, 0);
-
-      let nightMs = 0;
-      let napMs = 0;
-
-      for (const session of sessions) {
-        const inside = overlap(
-          sessionStart(session),
-          sessionEnd(session, now),
-          from.getTime(),
-          to.getTime(),
-        );
-        if (inside <= 0) continue;
-        if (session.kind === "night") nightMs += inside;
-        else napMs += inside;
-      }
-
-      hours.push({ nightMs, napMs });
-    }
-
-    return { day, hours };
-  });
 }
 
 function averageOfCompleteDays(days: DayBucket[]): {
@@ -301,7 +270,6 @@ export function computeSleepStats(
   );
 
   const days = buildDays(relevant, count, now);
-  const rows = buildRows(relevant, days, now);
   const current = windowMetrics(relevant, days, windowStart, Infinity, now);
 
   const previousDays = buildDays(relevant, count * 2, now).slice(0, count);
@@ -321,7 +289,44 @@ export function computeSleepStats(
       ? current.avgTotalMs - previous.avgTotalMs
       : null;
 
-  return { days, rows, deltaMs, previous, ...current };
+  return { days, deltaMs, previous, ...current };
+}
+
+export function buildTimelines(
+  sessions: SleepSession[],
+  feedings: Feeding[],
+  days: DayBucket[],
+  now: number,
+): DayTimelineRow[] {
+  return days.map((day) => {
+    const from = startOfDay(day.date).getTime();
+    const to = addDays(day.date, 1).getTime();
+    const span = to - from;
+
+    const sleep: DaySpan[] = [];
+    for (const session of sessions) {
+      const clipFrom = Math.max(sessionStart(session), from);
+      const clipTo = Math.min(sessionEnd(session, now), to);
+      if (clipTo <= clipFrom) continue;
+      sleep.push({
+        from: (clipFrom - from) / span,
+        to: (clipTo - from) / span,
+        night: session.kind === "night",
+      });
+    }
+
+    const marks: number[] = [];
+    for (const feeding of feedings) {
+      const at = parseISO(feeding.start_at).getTime();
+      if (at >= from && at < to) marks.push((at - from) / span);
+    }
+
+    return {
+      day,
+      sleep: sleep.sort((a, b) => a.from - b.from),
+      feedings: marks.sort((a, b) => a - b),
+    };
+  });
 }
 
 export function wakeWindows(sessions: SleepSession[], now: number): number[] {

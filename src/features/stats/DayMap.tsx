@@ -1,85 +1,81 @@
-import { HOUR_MS, type DayRow } from "./statsUtils";
+import type { DayTimelineRow } from "./statsUtils";
 import styles from "./DayMap.module.css";
 
+const HOURS = [0, 6, 12, 18, 24];
+const MIN_SPAN_PERCENT = 0.7;
+
 interface DayMapProps {
-  rows: DayRow[];
+  rows: DayTimelineRow[];
+  withFeedings: boolean;
 }
 
-const HOUR_MARKS = [0, 6, 12, 18];
-
-export function DayMap({ rows }: DayMapProps) {
-  const showEveryLabel = rows.length <= 14;
+export function DayMap({ rows, withFeedings }: DayMapProps) {
+  const labelEvery = rows.length <= 14;
 
   return (
     <div>
-      <div className={styles.grid}>
+      <div className={styles.axis}>
         <span />
-        {Array.from({ length: 24 }, (_, hour) => (
-          <span key={`h-${hour}`} className={styles.hourLabel}>
-            {HOUR_MARKS.includes(hour) ? String(hour).padStart(2, "0") : ""}
-          </span>
-        ))}
-
-        {rows.map((row, index) => (
-          <Row
-            key={row.day.key}
-            row={row}
-            showLabel={showEveryLabel || index % 5 === 0 || row.day.isToday}
-          />
-        ))}
+        <div className={styles.axisTrack}>
+          {HOURS.map((hour) => (
+            <span
+              key={hour}
+              className={styles.axisMark}
+              style={{
+                left: `${(hour / 24) * 100}%`,
+                transform:
+                  hour === 0
+                    ? "none"
+                    : hour === 24
+                      ? "translateX(-100%)"
+                      : "translateX(-50%)",
+              }}
+            >
+              {String(hour % 24).padStart(2, "0")}
+            </span>
+          ))}
+        </div>
       </div>
 
-      <div className={styles.legend}>
-        <span className={styles.legendItem}>
-          <i className={`${styles.swatch} ${styles.swatchNight}`} />
-          ночной сон
-        </span>
-        <span className={styles.legendItem}>
-          <i className={`${styles.swatch} ${styles.swatchNap}`} />
-          дневной
-        </span>
-        <span className={styles.legendItem}>
-          <i className={`${styles.swatch} ${styles.swatchEmpty}`} />
-          не спит или нет записи
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Row({ row, showLabel }: { row: DayRow; showLabel: boolean }) {
-  return (
-    <>
-      <span
-        className={`${styles.dayLabel} ${
-          row.day.isToday ? styles.dayLabelToday : ""
-        }`}
-      >
-        {showLabel ? row.day.label : ""}
-      </span>
-
-      {row.hours.map((cell, hour) => {
-        const filled = cell.nightMs + cell.napMs;
-        const share = Math.min(1, filled / HOUR_MS);
-        const isNight = cell.nightMs >= cell.napMs;
-        const tone = isNight ? "var(--sleep)" : "var(--nap)";
-
-        return (
+      {rows.map((row, index) => (
+        <div key={row.day.key} className={styles.row}>
           <span
-            key={`${row.day.key}-${hour}`}
-            className={styles.cell}
-            style={
-              share > 0
-                ? {
-                    background: `color-mix(in srgb, ${tone} ${Math.round(
-                      20 + share * 80,
-                    )}%, var(--surface-2))`,
-                  }
-                : undefined
-            }
-          />
-        );
-      })}
-    </>
+            className={`${styles.dayLabel} ${row.day.isToday ? styles.today : ""}`}
+          >
+            {labelEvery || index % 5 === 0 || row.day.isToday
+              ? row.day.label
+              : ""}
+          </span>
+
+          <div>
+            <div className={styles.sleepLane}>
+              {row.sleep.map((span, spanIndex) => (
+                <i
+                  key={spanIndex}
+                  className={span.night ? styles.night : styles.nap}
+                  style={{
+                    left: `${span.from * 100}%`,
+                    width: `${Math.max(MIN_SPAN_PERCENT, (span.to - span.from) * 100)}%`,
+                  }}
+                />
+              ))}
+            </div>
+
+            {withFeedings && (
+              <div className={styles.feedLane}>
+                {row.feedings.map((at, markIndex) => (
+                  <i
+                    key={markIndex}
+                    className={styles.feed}
+                    style={{ left: `${at * 100}%` }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+    </div>
   );
 }

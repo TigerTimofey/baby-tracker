@@ -23,6 +23,7 @@ import { buildSummary } from "../features/stats/summaryData";
 import { Facts } from "../features/stats/Facts";
 import { SleepBars } from "../features/stats/SleepBars";
 import {
+  buildTimelines,
   computeSleepStats,
   formatClockMinutes,
   type Period,
@@ -72,6 +73,7 @@ export function StatsPage() {
   const band = bandFor(age.totalMonths);
   const daysWithData = stats.days.filter((day) => day.hasData).length;
 
+  const timelines = buildTimelines(sessions, feedings, stats.days, now);
   const changes = buildChanges(stats, feedings, period, now);
 
   const summary = buildSummary(
@@ -121,7 +123,7 @@ export function StatsPage() {
             deltaMs={stats.deltaMs}
           />
           <p className={styles.basis}>
-            Столбик — сон, попавший в эти сутки: фиолетовый ночной, жёлтый
+            Столбик — сон, попавший в эти сутки: фиолетовый ночной, зелёный
             дневной. Сегодняшний день показан бледнее и в средние не входит —
             он ещё не закончился.
             {stats.deltaMs !== null &&
@@ -130,11 +132,10 @@ export function StatsPage() {
         </Card>
 
         <Card title="Режим суток">
-          <DayMap rows={stats.rows} />
+          <DayMap rows={timelines} withFeedings={feedings.length > 0} />
           <p className={styles.basis}>
-            Каждая строка — сутки, каждая клетка — час. Чем плотнее цвет, тем
-            большую часть часа малыш спал. По вертикальным полосам видно,
-            насколько режим устойчив.
+            Строка — сутки. Фиолетовый — ночной сон, зелёный — дневной,
+            точки — кормления.
           </p>
         </Card>
 
