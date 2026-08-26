@@ -9,7 +9,7 @@ import {
 import { DateTimeField } from "../../components/ui/DateTimeField";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
-import { useRecordPeople } from "../../data/hooks";
+import { useRecordPeople, useSettings } from "../../data/hooks";
 import styles from "./FeedingEditor.module.css";
 import {
   currentAuthor,
@@ -25,19 +25,22 @@ import { trimOrNull } from "../../lib/parse";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
 
 type Family = "breast" | "bottle" | "solid";
-type Side = "left" | "right";
+type Side = "left" | "right" | "any";
 
 const MAX_FEEDING_MS = 6 * 3600_000;
 
 function splitKind(kind: FeedingKind): { family: Family; side: Side } {
   if (kind === "breast_left") return { family: "breast", side: "left" };
   if (kind === "breast_right") return { family: "breast", side: "right" };
-  return { family: kind, side: "left" };
+  if (kind === "breast") return { family: "breast", side: "any" };
+  return { family: kind, side: "any" };
 }
 
 function joinKind(family: Family, side: Side): FeedingKind {
-  if (family === "breast") return side === "left" ? "breast_left" : "breast_right";
-  return family;
+  if (family !== "breast") return family;
+  if (side === "left") return "breast_left";
+  if (side === "right") return "breast_right";
+  return "breast";
 }
 
 interface FeedingEditorProps {
@@ -53,9 +56,16 @@ export function FeedingEditor({
   onClose,
   childId,
   feeding,
-  initialKind = "breast_left",
+  initialKind,
 }: FeedingEditorProps) {
-  const initial = splitKind(feeding?.kind ?? initialKind);
+  const settings = useSettings();
+  const trackSide = settings.trackBreastSide;
+  const initial = splitKind(
+    feeding?.kind ?? initialKind ?? (trackSide ? "breast_left" : "breast"),
+  );
+  // Существующую запись со стороной не прячем даже при выключенной настройке,
+  // иначе сохранение молча стёрло бы то, что родитель однажды отметил.
+  const showSide = trackSide || initial.side !== "any";
 
   const [start, setStart] = useState(
     toLocalInputValue(feeding?.start_at ?? new Date()),
@@ -178,7 +188,7 @@ export function FeedingEditor({
           )}
         </Field>
 
-        {family === "breast" && (
+        {family === "breast" && showSide && (
           <Field label="Сторона">
             {(id) => (
               <Segmented<Side>
@@ -189,6 +199,7 @@ export function FeedingEditor({
                 options={[
                   { value: "left", label: "Левая" },
                   { value: "right", label: "Правая" },
+                  { value: "any", label: "Не важно" },
                 ]}
               />
             )}

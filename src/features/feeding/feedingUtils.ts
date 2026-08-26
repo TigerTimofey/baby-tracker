@@ -2,6 +2,7 @@ import { parseISO } from "date-fns";
 import type { Feeding, FeedingKind } from "../../data/types";
 
 export const FEEDING_KINDS: FeedingKind[] = [
+  "breast",
   "breast_left",
   "breast_right",
   "bottle",
@@ -10,6 +11,8 @@ export const FEEDING_KINDS: FeedingKind[] = [
 
 export function kindLabel(kind: FeedingKind): string {
   switch (kind) {
+    case "breast":
+      return "Грудь";
     case "breast_left":
       return "Грудь, левая";
     case "breast_right":
@@ -23,6 +26,8 @@ export function kindLabel(kind: FeedingKind): string {
 
 export function kindShort(kind: FeedingKind): string {
   switch (kind) {
+    case "breast":
+      return "грудь";
     case "breast_left":
       return "левая";
     case "breast_right":
@@ -35,7 +40,9 @@ export function kindShort(kind: FeedingKind): string {
 }
 
 export function isBreast(kind: FeedingKind): boolean {
-  return kind === "breast_left" || kind === "breast_right";
+  return (
+    kind === "breast" || kind === "breast_left" || kind === "breast_right"
+  );
 }
 
 export function startMs(feeding: Feeding): number {
@@ -67,13 +74,24 @@ export function lastFinished(feedings: Feeding[]): Feeding | null {
 /**
  * Чем начать следующее кормление.
  *
- * Повторяем то, чем кормили в прошлый раз, а грудь чередуем — так и делают.
+ * Повторяем то, чем кормили в прошлый раз. Если стороны груди записываются,
+ * ещё и чередуем их — так и делают.
  */
-export function suggestKind(feedings: Feeding[]): FeedingKind {
+export function suggestKind(
+  feedings: Feeding[],
+  trackSide: boolean,
+): FeedingKind {
   const previous = lastFinished(feedings) ?? sortedByStartDesc(feedings)[0];
+
+  if (!trackSide) {
+    if (!previous) return "breast";
+    return isBreast(previous.kind) ? "breast" : previous.kind;
+  }
+
   if (!previous) return "breast_left";
   if (previous.kind === "breast_left") return "breast_right";
   if (previous.kind === "breast_right") return "breast_left";
+  if (previous.kind === "breast") return "breast_left";
   return previous.kind;
 }
 

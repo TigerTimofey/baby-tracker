@@ -72,7 +72,12 @@ export interface Milestone extends SyncFields {
   note: string | null;
 }
 
-export type FeedingKind = "breast_left" | "breast_right" | "bottle" | "solid";
+export type FeedingKind =
+  | "breast"
+  | "breast_left"
+  | "breast_right"
+  | "bottle"
+  | "solid";
 
 export interface Feeding extends SyncFields {
   child_id: string;
@@ -125,6 +130,8 @@ export interface Settings {
   nightMode: boolean;
   nightFrom: string;
   nightTo: string;
+  /** Записывать, из какой груди кормили. Выключено — просто «грудь». */
+  trackBreastSide: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -137,4 +144,5 @@ export const DEFAULT_SETTINGS: Settings = {
   nightMode: false,
   nightFrom: "00:00",
   nightTo: "07:00",
+  trackBreastSide: false,
 };

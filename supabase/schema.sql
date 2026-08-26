@@ -192,7 +192,7 @@ create table if not exists public.feedings (
   child_id   uuid not null references public.children (id) on delete cascade,
   start_at   timestamptz not null,
   end_at     timestamptz,
-  kind       text not null check (kind in ('breast_left', 'breast_right', 'bottle', 'solid')),
+  kind       text not null,
   ended_by   uuid,
   amount_ml  integer,
   food       text,
@@ -253,6 +253,14 @@ alter table public.sleep_sessions
 
 alter table public.feedings
   add column if not exists ended_by uuid;
+
+-- 'breast' без стороны появился, когда различать левую и правую стало
+-- необязательным. Пересоздаём проверку, а не создаём — иначе на базе,
+-- залитой раньше, старое ограничение отвергнет новые записи.
+alter table public.feedings drop constraint if exists feedings_kind_check;
+alter table public.feedings
+  add constraint feedings_kind_check
+  check (kind in ('breast', 'breast_left', 'breast_right', 'bottle', 'solid'));
 
 do $$
 declare

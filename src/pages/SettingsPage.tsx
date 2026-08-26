@@ -277,6 +277,26 @@ export function SettingsPage() {
 
         </Card>
 
+        <Card title="Кормление">
+          <div className={styles.row}>
+            <div className={styles.rowText}>
+              <div className={styles.rowLabel}>Различать грудь</div>
+              <div className={styles.rowHint}>
+                {settings.trackBreastSide
+                  ? "Записываем левую и правую отдельно и предлагаем чередовать"
+                  : "Записываем просто «грудь», без стороны"}
+              </div>
+            </div>
+            <Switch
+              label="Различать левую и правую грудь"
+              checked={settings.trackBreastSide}
+              onChange={(trackBreastSide) =>
+                updateSettings({ trackBreastSide })
+              }
+            />
+          </div>
+        </Card>
+
         <Card title="Вид">
           <Segmented<Settings["theme"]>
             value={settings.theme}

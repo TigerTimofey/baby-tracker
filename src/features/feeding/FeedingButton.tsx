@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
-import { useLive } from "../../data/hooks";
+import { useLive, useSettings } from "../../data/hooks";
 import {
   currentAuthor,
   listByChild,
@@ -20,6 +20,7 @@ const TONE = {
 } as CSSProperties;
 
 export function FeedingButton({ childId }: { childId: string }) {
+  const settings = useSettings();
   const { data } = useLive(
     async () => await listByChild("feedings", childId),
     [childId],
@@ -33,7 +34,7 @@ export function FeedingButton({ childId }: { childId: string }) {
       child_id: childId,
       start_at: new Date().toISOString(),
       end_at: null,
-      kind: suggestKind(feedings),
+      kind: suggestKind(feedings, settings.trackBreastSide),
       ended_by: null,
       amount_ml: null,
       food: null,
