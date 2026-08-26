@@ -117,26 +117,10 @@ export function SettingsPage() {
           </div>
         </Card>
 
-        <Card title="Сон">
+        <Card title="Уведомления">
           <div className={styles.row}>
             <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Отход ко сну</div>
-              <div className={styles.rowHint}>
-                Приложение напомнит, что пора укладываться
-              </div>
-            </div>
-            <input
-              type="time"
-              aria-label="Время отхода ко сну"
-              className={styles.timeInput}
-              value={bedtime.time ?? ""}
-              onChange={(event) => setBedtime(event.target.value || null)}
-            />
-          </div>
-
-          <div className={styles.row}>
-            <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Уведомления</div>
+              <div className={styles.rowLabel}>Включить</div>
               <div className={styles.rowHint}>
                 {permission === "unsupported"
                   ? "Этот браузер не умеет их показывать"
@@ -208,6 +192,44 @@ export function SettingsPage() {
                 />
               </div>
 
+              {child.notify_bedtime && (
+                <div className={styles.row}>
+                  <div className={styles.rowText}>
+                    <div className={styles.rowLabel}>Отход ко сну</div>
+                    <div className={styles.rowHint}>
+                      во сколько напомнить, что пора укладываться
+                    </div>
+                  </div>
+                  <input
+                    type="time"
+                    aria-label="Время отхода ко сну"
+                    className={styles.timeInput}
+                    value={bedtime.time ?? ""}
+                    onChange={(event) => setBedtime(event.target.value || null)}
+                  />
+                </div>
+              )}
+
+              {child.notify_bedtime && (
+                <div className={styles.row}>
+                  <div className={styles.rowText}>
+                    <div className={styles.rowLabel}>Предупредить заранее</div>
+                    <div className={styles.rowHint}>минут до отхода ко сну</div>
+                  </div>
+                  <div style={{ width: 170 }}>
+                    <Segmented
+                      value={String(bedtime.warnMinutes)}
+                      onChange={(value) => setWarnMinutes(Number(value))}
+                      ariaLabel="За сколько предупредить"
+                      options={WARN_OPTIONS.map((value) => ({
+                        value,
+                        label: value,
+                      }))}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className={styles.row}>
                 <div className={styles.rowText}>
                   <div className={styles.rowLabel}>Если долго не спит</div>
@@ -253,23 +275,6 @@ export function SettingsPage() {
             </div>
           )}
 
-          <div className={styles.row}>
-            <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Предупредить заранее</div>
-              <div className={styles.rowHint}>минут до отхода ко сну</div>
-            </div>
-            <div style={{ width: 170 }}>
-              <Segmented
-                value={String(bedtime.warnMinutes)}
-                onChange={(value) => setWarnMinutes(Number(value))}
-                ariaLabel="За сколько предупредить"
-                options={WARN_OPTIONS.map((value) => ({
-                  value,
-                  label: value,
-                }))}
-              />
-            </div>
-          </div>
         </Card>
 
         <Card title="Вид">

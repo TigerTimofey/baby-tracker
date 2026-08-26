@@ -275,7 +275,7 @@ export function StatsPage() {
       <div className={styles.stack}>
         <Checkup data={checkup} />
 
-        <Card title={`Итоги ${summary.periodLabel}`}>
+        <Card title={`Итоги ${summary.periodLabel}`} collapsible>
           <SummaryCard data={summary} />
         </Card>
 

@@ -277,14 +277,18 @@ export function SleepTimerCard({
           {action}
         </div>
 
-        {(bedtimeSoon || bedtimePassed) && (
+        {child.notify_bedtime && (bedtimeSoon || bedtimePassed) && (
           <p className={`${styles.hint} ${styles.hintWarn}`}>
             {bedtimePassed
               ? `время сна было в ${bedtime.time}`
               : `до сна ${formatDuration(untilBedtime ?? 0)}`}
           </p>
         )}
-        {!bedtimeSoon && !bedtimePassed && untilBedtime !== null && untilBedtime > 0 && (
+        {child.notify_bedtime &&
+          !bedtimeSoon &&
+          !bedtimePassed &&
+          untilBedtime !== null &&
+          untilBedtime > 0 && (
           <p className={styles.hint}>
             отход ко сну в {bedtime.time} — через {formatDuration(untilBedtime)}
           </p>
