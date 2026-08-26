@@ -16,6 +16,8 @@ import {
   seriesFor,
 } from "../features/growth/growthUtils";
 import { Changes } from "../features/stats/Changes";
+import { Checkup } from "../features/stats/Checkup";
+import { buildCheckup } from "../features/stats/checkupData";
 import { DayComposition } from "../features/stats/DayComposition";
 import { buildChanges } from "../features/stats/changesData";
 import { DayMap } from "../features/stats/DayMap";
@@ -76,6 +78,7 @@ export function StatsPage() {
 
   const timelines = buildTimelines(sessions, feedings, stats.days, now);
   const changes = buildChanges(stats, feedings, period, now);
+  const checkup = buildCheckup(child, measurements, stats, age.totalMonths, now);
 
   const summary = buildSummary(
     child,
@@ -270,6 +273,8 @@ export function StatsPage() {
       {periods}
 
       <div className={styles.stack}>
+        <Checkup data={checkup} />
+
         <Card title={`Итоги ${summary.periodLabel}`}>
           <SummaryCard data={summary} />
         </Card>

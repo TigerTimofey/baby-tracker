@@ -2,7 +2,7 @@ import { differenceInCalendarDays, parseISO } from "date-fns";
 import type { Child, Feeding, Measurement, SleepSession } from "../../data/types";
 import { ageOf, birthMoment, formatAge } from "../../lib/time";
 import { METRICS, seriesFor } from "../growth/growthUtils";
-import { formatPercentile, percentileFromZ, zScoreFor } from "../growth/whoUtils";
+import { percentileLabel, percentileFromZ, zScoreFor } from "../growth/whoUtils";
 import { computeSleepStats, formatClockMinutes, type Period } from "./statsUtils";
 
 export interface SummaryLine {
@@ -129,7 +129,7 @@ export function buildSummary(
     if (child.sex) {
       const z = zScoreFor(key, child.sex, last.ageDays, last.who);
       if (z !== null) {
-        hint = `${formatPercentile(percentileFromZ(z))} перцентиль`;
+        hint = percentileLabel(percentileFromZ(z));
       }
     }
 

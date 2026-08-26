@@ -108,6 +108,12 @@ export function percentileFromZ(z: number): number {
   return 0.5 * (1 + erf(z / Math.SQRT2)) * 100;
 }
 
+export function percentileLabel(percentile: number): string {
+  if (percentile < 1) return "меньше 1-го перцентиля";
+  if (percentile > 99) return "больше 99-го перцентиля";
+  return `${Math.round(percentile)}-й перцентиль`;
+}
+
 export function formatPercentile(percentile: number): string {
   if (percentile < 1) return "меньше 1-го";
   if (percentile > 99) return "больше 99-го";

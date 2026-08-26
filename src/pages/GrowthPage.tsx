@@ -20,7 +20,7 @@ import {
 } from "../features/growth/growthUtils";
 import type { WhoMetric } from "../features/growth/whoData";
 import {
-  formatPercentile,
+  percentileLabel,
   percentileFromZ,
   zScoreFor,
 } from "../features/growth/whoUtils";
@@ -57,7 +57,7 @@ export function GrowthPage() {
     if (!points.length || !child.sex) return null;
     const last = points[points.length - 1];
     const z = zScoreFor(key, child.sex, last.ageDays, last.who);
-    return z === null ? null : `${formatPercentile(percentileFromZ(z))} перцентиль`;
+    return z === null ? null : percentileLabel(percentileFromZ(z));
   };
 
   const latestOverall = measurements.length
