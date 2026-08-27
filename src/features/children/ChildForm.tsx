@@ -54,7 +54,8 @@ export function ChildForm({
 }: ChildFormProps) {
   const [name, setName] = useState(child?.name ?? "");
   const [photo, setPhoto] = useState<string | null>(child?.photo ?? null);
-  const photoInput = useRef<HTMLInputElement>(null);
+  const pickInput = useRef<HTMLInputElement>(null);
+  const shotInput = useRef<HTMLInputElement>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState(child?.birth_date ?? todayISO());
@@ -67,6 +68,24 @@ export function ChildForm({
     mmToCmInput(child?.birth_height_mm ?? null),
   );
   const [error, setError] = useState<string | null>(null);
+
+  async function takePhoto(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    setPhotoBusy(true);
+    setPhotoError(null);
+    try {
+      setPhoto(await squarePhotoFromFile(file));
+    } catch (cause) {
+      setPhotoError(
+        cause instanceof Error ? cause.message : "Не удалось обработать фото",
+      );
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -168,9 +187,18 @@ export function ChildForm({
                 size="sm"
                 variant="secondary"
                 disabled={photoBusy}
-                onClick={() => photoInput.current?.click()}
+                onClick={() => shotInput.current?.click()}
               >
-                {photoBusy ? "Готовлю…" : photo ? "Заменить" : "Выбрать"}
+                {photoBusy ? "Готовлю…" : "Снять"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={photoBusy}
+                onClick={() => pickInput.current?.click()}
+              >
+                Загрузить
               </Button>
               {photo && (
                 <Button
@@ -188,30 +216,23 @@ export function ChildForm({
               )}
             </div>
           </div>
+          {/* Два поля вместо одного: capture просит телефон открыть камеру
+              сразу, без него — галерею. На компьютере capture игнорируется,
+              и обе кнопки ведут к выбору файла. */}
           <input
-            ref={photoInput}
+            ref={shotInput}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(event) => void takePhoto(event.target)}
+          />
+          <input
+            ref={pickInput}
             type="file"
             accept="image/*"
             hidden
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (!file) return;
-
-              setPhotoBusy(true);
-              setPhotoError(null);
-              try {
-                setPhoto(await squarePhotoFromFile(file));
-              } catch (cause) {
-                setPhotoError(
-                  cause instanceof Error
-                    ? cause.message
-                    : "Не удалось обработать фото",
-                );
-              } finally {
-                setPhotoBusy(false);
-              }
-            }}
+            onChange={(event) => void takePhoto(event.target)}
           />
         </div>
 
