@@ -143,6 +143,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--gap-3);
+  margin-top: var(--gap-4);
 }
 
 /* Как на карточке сна: кнопки сохраняют свою ширину и переносятся друг под

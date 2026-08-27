@@ -151,41 +151,66 @@ export function IllnessPage() {
               )}{" "}
               Это ориентиры, а не диагноз — решает педиатр.
             </p>
+
+          <div className={styles.actions}>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                setPicked(null);
+                setTempOpen(true);
+              }}
+            >
+              <Icon name="thermometer" size={18} />
+              Температура
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => {
+                setPickedDose(null);
+                setMedOpen(true);
+              }}
+            >
+              <Icon name="bottle" size={18} />
+              Лекарство
+            </Button>
+          </div>
           </Card>
         ) : (
           <Card title="Сейчас">
             <p className={styles.lead}>
               {readings.length === 0
-                ? "Записей пока нет. Нажмите «Записать температуру», когда будете мерить."
+                ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
                 : "Последний замер был давно — похоже, всё позади."}
             </p>
+
+          <div className={styles.actions}>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                setPicked(null);
+                setTempOpen(true);
+              }}
+            >
+              <Icon name="thermometer" size={18} />
+              Температура
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => {
+                setPickedDose(null);
+                setMedOpen(true);
+              }}
+            >
+              <Icon name="bottle" size={18} />
+              Лекарство
+            </Button>
+          </div>
           </Card>
         )}
-
-        <div className={styles.actions}>
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => {
-              setPicked(null);
-              setTempOpen(true);
-            }}
-          >
-            <Icon name="thermometer" size={18} />
-            Температура
-          </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => {
-              setPickedDose(null);
-              setMedOpen(true);
-            }}
-          >
-            <Icon name="bottle" size={18} />
-            Лекарство
-          </Button>
-        </div>
 
         {entries.length === 0 ? (
           <EmptyState
