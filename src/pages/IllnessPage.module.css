@@ -140,11 +140,16 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--gap-3);
 }
 
+/* Как на карточке сна: кнопки сохраняют свою ширину и переносятся друг под
+   друга, когда в строку не влезают, — а не сжимаются до неузнаваемости. */
 .actions > * {
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .pill {
