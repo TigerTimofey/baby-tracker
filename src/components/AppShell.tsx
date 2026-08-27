@@ -25,7 +25,7 @@ interface Tab {
 const TABS: Tab[] = [
   { to: "/sleep", label: "Сон", icon: "moon", tone: "sleep" },
   { to: "/growth", label: "ВОЗ", icon: "growth", tone: "growth" },
-  { to: "/milestones", label: "Вехи", icon: "star", tone: "milestone" },
+  { to: "/illness", label: "Болезнь", icon: "thermometer", tone: "illness" },
   { to: "/stats", label: "Статистика", icon: "stats", tone: "stats" },
 ];
 

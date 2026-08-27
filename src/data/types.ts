@@ -101,6 +101,27 @@ export interface Diaper extends SyncFields {
   note: string | null;
 }
 
+export type TempMethod = "forehead" | "armpit" | "rectal";
+
+export interface Temperature extends SyncFields {
+  child_id: string;
+  measured_at: ISODateTime;
+  celsius: number;
+  method: TempMethod;
+  note: string | null;
+}
+
+export type DoseUnit = "mg" | "ml";
+
+export interface Medicine extends SyncFields {
+  child_id: string;
+  given_at: ISODateTime;
+  name: string;
+  amount: number | null;
+  unit: DoseUnit;
+  note: string | null;
+}
+
 export interface TableMap {
   children: Child;
   sleep_sessions: SleepSession;
@@ -108,6 +129,8 @@ export interface TableMap {
   milestones: Milestone;
   feedings: Feeding;
   diapers: Diaper;
+  temperatures: Temperature;
+  medicines: Medicine;
 }
 
 export type TableName = keyof TableMap;
@@ -119,6 +142,8 @@ export const TABLES: TableName[] = [
   "milestones",
   "feedings",
   "diapers",
+  "temperatures",
+  "medicines",
 ];
 
 export interface Settings {

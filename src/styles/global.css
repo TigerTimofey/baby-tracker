@@ -18,8 +18,10 @@
   --growth-soft: #4fd1a52b;
   --feeding: #f5b25e;
   --feeding-soft: #f5b25e2b;
-  --milestone: #f08bb4;
-  --milestone-soft: #f08bb42b;
+  --ok: #36d25f;
+  --ok-soft: #36d25f2b;
+  --illness: #f08bb4;
+  --illness-soft: #f08bb42b;
   --stats: #63b3ed;
   --stats-soft: #63b3ed2b;
   --danger: #f2727f;
@@ -77,8 +79,10 @@
   --growth-soft: #17a97b1f;
   --feeding: #d6902f;
   --feeding-soft: #d6902f1f;
-  --milestone: #d95c93;
-  --milestone-soft: #d95c931f;
+  --ok: #0f7a35;
+  --ok-soft: #0f7a351f;
+  --illness: #d95c93;
+  --illness-soft: #d95c931f;
   --stats: #2b7fc4;
   --stats-soft: #2b7fc41f;
   --danger: #d94a5c;
@@ -113,8 +117,10 @@
   --nap-soft: #b9823c22;
   --growth: #b58c3e;
   --growth-soft: #b58c3e22;
-  --milestone: #c68d4a;
-  --milestone-soft: #c68d4a22;
+  --ok: #b58c3e;
+  --ok-soft: #b58c3e22;
+  --illness: #c68d4a;
+  --illness-soft: #c68d4a22;
   --stats: #b0864a;
   --stats-soft: #b0864a22;
   --feeding: #e2a441;

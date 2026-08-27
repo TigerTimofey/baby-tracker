@@ -3,6 +3,7 @@ export type IconName =
   | "sun"
   | "growth"
   | "star"
+  | "thermometer"
   | "stats"
   | "settings"
   | "plus"
@@ -87,6 +88,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   "chevron-left": <path d="m14.5 6-6 6 6 6" />,
   "chevron-right": <path d="m9.5 6 6 6-6 6" />,
+  thermometer: (
+    <>
+      <path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0Z" />
+      <path d="M12 9.5v5.8" />
+    </>
+  ),
   "chevron-down": <path d="m6 9.5 6 6 6-6" />,
   bottle: (
     <>

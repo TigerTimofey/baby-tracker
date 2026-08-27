@@ -1,4 +1,5 @@
 import type { Sex } from "../../data/types";
+import { useSvgTextScale } from "../../lib/useSvgTextScale";
 import { METRICS, type Point } from "./growthUtils";
 import type { WhoMetric } from "./whoData";
 import { WHO_MAX_AGE_DAYS } from "./whoData";
@@ -6,6 +7,7 @@ import { valueAtZ } from "./whoUtils";
 import styles from "./GrowthChart.module.css";
 
 const W = 340;
+const AXIS_PX = 9;
 const H = 208;
 const PAD_LEFT = 30;
 const PAD_RIGHT = 6;
@@ -36,6 +38,8 @@ function niceStep(range: number, count: number): number {
 }
 
 export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProps) {
+  const [wrapRef, scale] = useSvgTextScale(W);
+
   const info = METRICS[metric];
 
   const lastAge = points.length ? points[points.length - 1].ageDays : 0;
@@ -113,10 +117,11 @@ export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProp
   const digits = metric === "weight" ? 1 : 0;
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} ref={wrapRef}>
       <svg
         className={styles.svg}
         viewBox={`0 0 ${W} ${H}`}
+        style={{ fontSize: AXIS_PX / scale }}
         role="img"
         aria-label={`График: ${info.short}`}
       >

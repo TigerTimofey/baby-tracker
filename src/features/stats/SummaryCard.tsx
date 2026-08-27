@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { showToast } from "../../components/ui/toast";
+import { svgToPng } from "../../lib/exportSvg";
 import type { SummaryData, SummaryLine } from "./summaryData";
 import styles from "./SummaryCard.module.css";
 
@@ -122,54 +123,14 @@ export function SummaryCard({ data }: { data: SummaryData }) {
 
     setBusy(true);
     try {
-      const xml = new XMLSerializer().serializeToString(svg);
-      const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-
-      const image = new Image();
-      await new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error("не удалось нарисовать"));
-        image.src = url;
+      await svgToPng(svg, {
+        width: W,
+        height,
+        background: BG,
+        filename: `sebason-${data.childName.toLowerCase()}-${new Date()
+          .toISOString()
+          .slice(0, 10)}.png`,
       });
-
-      const canvas = document.createElement("canvas");
-      canvas.width = W;
-      canvas.height = height;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("нет холста");
-      context.fillStyle = BG;
-      context.fillRect(0, 0, W, height);
-      context.drawImage(image, 0, 0, W, height);
-      URL.revokeObjectURL(url);
-
-      const png = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/png"),
-      );
-      if (!png) throw new Error("не удалось сохранить");
-
-      const name = `sebason-${data.childName.toLowerCase()}-${new Date()
-        .toISOString()
-        .slice(0, 10)}.png`;
-      const file = new File([png], name, { type: "image/png" });
-
-      const onPhone = navigator.maxTouchPoints > 0;
-      if (onPhone && navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "Sebason" });
-          return;
-        } catch (cause) {
-          if ((cause as Error)?.name === "AbortError") return;
-        }
-      }
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(png);
-      link.download = name;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(link.href);
     } catch {
       showToast("Не удалось сохранить картинку");
     } finally {

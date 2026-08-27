@@ -406,19 +406,48 @@ export async function syncNow(): Promise<void> {
       const familyId = status.familyId ?? (await ensureFamily());
       if (!familyId) throw new Error("Не удалось определить семью");
 
-      for (const table of TABLES) await pushTable(table, familyId);
+      // Одна нерабочая таблица не должна останавливать остальные: пока в
+      // базе нет свежей таблицы, сон и кормления обязаны продолжать ездить.
+      // Несохранённые строки остаются грязными и уйдут на следующем круге.
+      const failures: string[] = [];
+      const note = (cause: unknown) => {
+        const text = cause instanceof Error ? cause.message : String(cause);
+        if (!failures.includes(text)) failures.push(text);
+      };
+
+      for (const table of TABLES) {
+        try {
+          await pushTable(table, familyId);
+        } catch (cause) {
+          note(cause);
+        }
+      }
 
       let changed = false;
       for (const table of TABLES) {
-        if (await pullTable(table)) changed = true;
+        try {
+          if (await pullTable(table)) changed = true;
+        } catch (cause) {
+          note(cause);
+        }
       }
       if (changed) notifyChange();
 
-      setStatus({
-        state: "idle",
-        lastSyncAt: new Date().toISOString(),
-        error: null,
-      });
+      if (failures.length > 0) {
+        setStatus({
+          state: "error",
+          error:
+            failures.length === 1
+              ? failures[0]
+              : `${failures[0]} (и ещё ${failures.length - 1})`,
+        });
+      } else {
+        setStatus({
+          state: "idle",
+          lastSyncAt: new Date().toISOString(),
+          error: null,
+        });
+      }
     } catch (error) {
       setStatus({
         state: "error",

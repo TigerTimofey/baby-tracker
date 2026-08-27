@@ -11,7 +11,7 @@ import { ensurePersistentStorageOnce } from "./lib/storage";
 import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
 import { GrowthPage } from "./pages/GrowthPage";
-import { MilestonesPage } from "./pages/MilestonesPage";
+import { IllnessPage } from "./pages/IllnessPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SleepPage } from "./pages/SleepPage";
 import { StatsPage } from "./pages/StatsPage";
@@ -82,7 +82,7 @@ export default function App() {
         <Route index element={<Navigate to="/sleep" replace />} />
         <Route path="sleep" element={<SleepPage />} />
         <Route path="growth" element={<GrowthPage />} />
-        <Route path="milestones" element={<MilestonesPage />} />
+        <Route path="illness" element={<IllnessPage />} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

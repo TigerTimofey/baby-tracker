@@ -7,10 +7,12 @@ import type {
   Measurement,
   Milestone,
   SleepSession,
+  Medicine,
+  Temperature,
 } from "./types";
 
 const DB_NAME = "malysh";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 interface BabyDB extends DBSchema {
   children: {
@@ -43,6 +45,16 @@ interface BabyDB extends DBSchema {
     value: Local<Diaper>;
     indexes: { by_dirty: number; by_child: string };
   };
+  temperatures: {
+    key: string;
+    value: Local<Temperature>;
+    indexes: { by_dirty: number; by_child: string };
+  };
+  medicines: {
+    key: string;
+    value: Local<Medicine>;
+    indexes: { by_dirty: number; by_child: string };
+  };
   meta: { key: string; value: unknown };
 }
 
@@ -53,9 +65,14 @@ let dbPromise: Promise<BabyDatabase> | null = null;
 export function getDB(): Promise<BabyDatabase> {
   if (!dbPromise) {
     dbPromise = openDB<BabyDB>(DB_NAME, DB_VERSION, {
+      // Апгрейд идёт и на пустой базе, и на уже заполненной, поэтому каждый
+      // шаг проверяет, чего не хватает: иначе второй запуск падал бы на
+      // попытке создать существующее хранилище.
       upgrade(db) {
-        const children = db.createObjectStore("children", { keyPath: "id" });
-        children.createIndex("by_dirty", "_dirty");
+        if (!db.objectStoreNames.contains("children")) {
+          const children = db.createObjectStore("children", { keyPath: "id" });
+          children.createIndex("by_dirty", "_dirty");
+        }
 
         for (const name of [
           "sleep_sessions",
@@ -63,13 +80,16 @@ export function getDB(): Promise<BabyDatabase> {
           "milestones",
           "feedings",
           "diapers",
+          "temperatures",
+          "medicines",
         ] as const) {
+          if (db.objectStoreNames.contains(name)) continue;
           const store = db.createObjectStore(name, { keyPath: "id" });
           store.createIndex("by_dirty", "_dirty");
           store.createIndex("by_child", "child_id");
         }
 
-        db.createObjectStore("meta");
+        if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
       },
       blocked() {
         console.warn("[db] обновление схемы ждёт закрытия другой вкладки");

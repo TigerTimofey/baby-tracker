@@ -74,16 +74,30 @@ export function formatDate(value: Date | ISODateTime | ISODate): string {
   });
 }
 
-export function formatDayLabel(value: Date | ISODateTime): string {
-  const date = typeof value === "string" ? parseISO(value) : value;
-  if (isToday(date)) return "Сегодня";
-  if (isYesterday(date)) return "Вчера";
+function dayAndMonth(date: Date): string {
   const sameYear = date.getFullYear() === new Date().getFullYear();
   return date.toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
     ...(sameYear ? {} : { year: "numeric" }),
   });
+}
+
+export function formatDayLabel(value: Date | ISODateTime): string {
+  const date = typeof value === "string" ? parseISO(value) : value;
+  if (isToday(date)) return "Сегодня";
+  if (isYesterday(date)) return "Вчера";
+  return dayAndMonth(date);
+}
+
+/**
+ * Число и месяц без «Сегодня» и «Вчера».
+ *
+ * Нужно там, где относительной подписи мало: в журнале болезни дату потом
+ * показывают врачу, и «Сегодня» ему ничего не скажет.
+ */
+export function formatDayDate(value: Date | ISODateTime): string {
+  return dayAndMonth(typeof value === "string" ? parseISO(value) : value);
 }
 
 export function dayKey(value: Date | ISODateTime): string {

@@ -213,6 +213,31 @@ create table if not exists public.diapers (
   synced_at    timestamptz not null default now()
 );
 
+create table if not exists public.temperatures (
+  id          uuid primary key,
+  child_id    uuid not null references public.children (id) on delete cascade,
+  measured_at timestamptz not null,
+  celsius     numeric(4,1) not null,
+  method      text not null check (method in ('forehead', 'armpit', 'rectal')),
+  note        text,
+  updated_at  timestamptz not null default now(),
+  deleted     boolean not null default false,
+  synced_at   timestamptz not null default now()
+);
+
+create table if not exists public.medicines (
+  id         uuid primary key,
+  child_id   uuid not null references public.children (id) on delete cascade,
+  given_at   timestamptz not null,
+  name       text not null,
+  amount     numeric(8,2),
+  unit       text not null check (unit in ('mg', 'ml')),
+  note       text,
+  updated_at timestamptz not null default now(),
+  deleted    boolean not null default false,
+  synced_at  timestamptz not null default now()
+);
+
 create or replace function public.can_access_child(target_child uuid)
 returns boolean
 language sql
@@ -235,7 +260,7 @@ declare
 begin
   foreach t in array array[
     'children', 'sleep_sessions', 'measurements',
-    'milestones', 'feedings', 'diapers'
+    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines'
   ]
   loop
     execute format(
@@ -268,7 +293,7 @@ declare
 begin
   foreach t in array array[
     'children', 'sleep_sessions', 'measurements',
-    'milestones', 'feedings', 'diapers'
+    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines'
   ]
   loop
 
@@ -372,7 +397,8 @@ declare
   t text;
 begin
   foreach t in array array[
-    'sleep_sessions', 'measurements', 'milestones', 'feedings', 'diapers'
+    'sleep_sessions', 'measurements', 'milestones', 'feedings', 'diapers',
+    'temperatures', 'medicines'
   ]
   loop
     execute format('drop policy if exists %I on public.%I', t || '_all', t);

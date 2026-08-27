@@ -10,6 +10,12 @@
   overflow: hidden;
 }
 
+/* Карточка без внутренних отступов всё же нуждается в них для заголовка:
+   иначе он прижимается к краю и обрезается по overflow. */
+.flush .header {
+  padding: var(--gap-4) var(--gap-4) 0;
+}
+
 .header {
   display: flex;
   align-items: center;
