@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
-import { useAuthorLabel, useAuthorPair, useLive, useNow } from "../../data/hooks";
+import { useAuthorLabel, useLive, useNow } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
 import type { Feeding } from "../../data/types";
 import { formatClock, formatDuration, formatTime, plural } from "../../lib/time";
@@ -13,7 +13,6 @@ import {
   feedingsOnDay,
   findActive,
   kindLabel,
-  kindShort,
   lastFinished,
   startMs,
 } from "./feedingUtils";
@@ -25,7 +24,6 @@ const DAY_MS = 24 * 3600_000;
 export function FeedingCard({ childId }: { childId: string }) {
   const now = useNow(1000);
   const author = useAuthorLabel();
-  const people = useAuthorPair();
   const [editing, setEditing] = useState<Feeding | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -86,56 +84,16 @@ export function FeedingCard({ childId }: { childId: string }) {
           </p>
         )}
 
-        {today.length > 0 ? (
-          <>
-            <div className={styles.list}>
-              {today.map((feeding) => (
-                <button
-                  key={feeding.id}
-                  type="button"
-                  className={styles.row}
-                  onClick={() => setEditing(feeding)}
-                >
-                  <span className={`${styles.time} tnum`}>
-                    {formatTime(feeding.start_at)}
-                  </span>
-                  <span className={styles.body}>
-                    <span className={styles.kind}>
-                      {kindShort(feeding.kind)}
-                      {feeding.food ? ` · ${feeding.food}` : ""}
-                      {feeding.end_at
-                        ? ` · ${formatDuration(durationMs(feeding, now))}`
-                        : " · идёт"}
-                    </span>
-                    {(() => {
-                      const who = people(
-                        feeding.created_by,
-                        feeding.ended_by,
-                        "начали",
-                        "закончили",
-                      );
-                      return who ? (
-                        <span className={styles.who}>{who}</span>
-                      ) : null;
-                    })()}
-                  </span>
-                  {feeding.amount_ml != null && (
-                    <span className={`${styles.amount} tnum`}>
-                      {feeding.amount_ml} мл
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <p className={styles.empty} style={{ marginTop: 10 }}>
-              Сегодня {today.length}{" "}
-              {plural(today.length, ["кормление", "кормления", "кормлений"])}
-              {totalMl > 0 ? ` · ${totalMl} мл из бутылочки` : ""}
-            </p>
-          </>
-        ) : (
-          <p className={styles.empty}>Сегодня кормлений ещё не записано.</p>
-        )}
+        {/* Список за сегодня жил здесь и повторял «Историю кормлений» в другом
+            виде. Теперь лента одна, а карточка отвечает только за «что сейчас». */}
+        <p className={styles.empty}>
+          {today.length > 0
+            ? `Сегодня ${today.length} ${plural(today.length, ["кормление", "кормления", "кормлений"])}${
+                totalMl > 0 ? ` · ${totalMl} мл из бутылочки` : ""
+              }`
+            : "Сегодня кормлений ещё не записано."}
+        </p>
+
       </Card>
 
       {adding && (

@@ -107,3 +107,38 @@ export function feedingsOnDay(
     }),
   );
 }
+
+export interface FeedingDay {
+  key: string;
+  date: Date;
+  feedings: Feeding[];
+  totalMl: number;
+}
+
+/** История по дням — как у сна, чтобы обе ленты читались одинаково. */
+export function groupByDay(feedings: Feeding[]): FeedingDay[] {
+  const days = new Map<string, FeedingDay>();
+
+  for (const feeding of sortedByStartDesc(feedings)) {
+    const at = new Date(startMs(feeding));
+    at.setHours(0, 0, 0, 0);
+    const key = at.toDateString();
+
+    const day = days.get(key);
+    if (day) {
+      day.feedings.push(feeding);
+      day.totalMl += feeding.amount_ml ?? 0;
+    } else {
+      days.set(key, {
+        key,
+        date: at,
+        feedings: [feeding],
+        totalMl: feeding.amount_ml ?? 0,
+      });
+    }
+  }
+
+  return [...days.values()].sort(
+    (a, b) => b.date.getTime() - a.date.getTime(),
+  );
+}

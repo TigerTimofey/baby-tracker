@@ -44,6 +44,8 @@ export interface SleepSession extends SyncFields {
   night_feedings: number | null;
   night_feeding_kind: NightFeedingKind | null;
   night_feeding_ml: number | null;
+  /** Родитель подтвердил, что кормления перед этим сном не было. */
+  no_feed_before: boolean | null;
   note: string | null;
 }
 

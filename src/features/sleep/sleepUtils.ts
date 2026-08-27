@@ -207,3 +207,36 @@ const BANDS: Band[] = [
 export function bandFor(ageMonths: number): Band {
   return BANDS.find((band) => ageMonths <= band.upToMonths) ?? BANDS[BANDS.length - 1];
 }
+
+const FEED_BEFORE_MS = 90 * 60_000;
+
+/**
+ * Было ли кормление незадолго до этого сна.
+ *
+ * Полтора часа — запас, в который укладывается обычное «поел и уснул».
+ */
+export function fedBeforeSleep(
+  session: SleepSession,
+  feedings: { start_at: string }[],
+): boolean {
+  const start = startMs(session);
+  return feedings.some((feeding) => {
+    const at = parseISO(feeding.start_at).getTime();
+    return at <= start && start - at <= FEED_BEFORE_MS;
+  });
+}
+
+/**
+ * Стоит ли напомнить, что кормление перед сном не отмечено.
+ *
+ * Только для ночного сна: у дневных снов подсказка висела бы на каждой
+ * второй строке и превратилась бы в шум.
+ */
+export function needsFeedBeforeHint(
+  session: SleepSession,
+  feedings: { start_at: string }[],
+): boolean {
+  if (session.kind !== "night") return false;
+  if (session.no_feed_before === true) return false;
+  return !fedBeforeSleep(session, feedings);
+}

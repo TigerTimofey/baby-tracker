@@ -85,6 +85,13 @@
   color: var(--nap);
 }
 
+/* Кормления живут в этой же ленте, но своим цветом: зелёный здесь занят
+   дневным сном, и одинаковые кружки путали бы две сущности. */
+.feed {
+  background: var(--feeding-soft);
+  color: var(--feeding);
+}
+
 .body {
   flex: 1;
   min-width: 0;
@@ -115,4 +122,44 @@
 
 .live {
   color: var(--tone);
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px var(--gap-3);
+  padding: 6px 14px 10px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.hintText {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.hintActions {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.hintActions button {
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.headerActions {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.headerActions button {
+  width: auto;
+  padding: 0 8px;
 }

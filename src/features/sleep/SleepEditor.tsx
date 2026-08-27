@@ -118,6 +118,7 @@ export function SleepEditor({
         kind === "night" && nightCount > 0 && nightKind === "bottle"
           ? nightMlValue
           : null,
+      no_feed_before: session?.no_feed_before ?? null,
       note: trimOrNull(note),
       updated_at: session?.updated_at ?? nowISO(),
       deleted: false,

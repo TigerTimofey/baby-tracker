@@ -156,6 +156,7 @@ create table if not exists public.sleep_sessions (
   night_feedings      integer,
   night_feeding_kind  text,
   night_feeding_ml    integer,
+  no_feed_before      boolean,
   note       text,
   updated_at timestamptz not null default now(),
   deleted    boolean not null default false,
@@ -271,6 +272,7 @@ end;
 $$;
 
 alter table public.sleep_sessions
+  add column if not exists no_feed_before boolean,
   add column if not exists night_feedings integer,
   add column if not exists night_feeding_kind text,
   add column if not exists night_feeding_ml integer,

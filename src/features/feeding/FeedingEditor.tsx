@@ -49,6 +49,8 @@ interface FeedingEditorProps {
   childId: string;
   feeding?: Feeding;
   initialKind?: FeedingKind;
+  /** С какого времени открыть форму — для записи «задним числом». */
+  initialAt?: Date;
 }
 
 export function FeedingEditor({
@@ -57,6 +59,7 @@ export function FeedingEditor({
   childId,
   feeding,
   initialKind,
+  initialAt,
 }: FeedingEditorProps) {
   const settings = useSettings();
   const trackSide = settings.trackBreastSide;
@@ -68,7 +71,7 @@ export function FeedingEditor({
   const showSide = trackSide || initial.side !== "any";
 
   const [start, setStart] = useState(
-    toLocalInputValue(feeding?.start_at ?? new Date()),
+    toLocalInputValue(feeding?.start_at ?? initialAt ?? new Date()),
   );
   const [end, setEnd] = useState(
     feeding?.end_at ? toLocalInputValue(feeding.end_at) : "",

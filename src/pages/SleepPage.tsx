@@ -3,7 +3,7 @@ import { listByChild } from "../data/repo";
 import type { SleepSession } from "../data/types";
 import { FeedingButton } from "../features/feeding/FeedingButton";
 import { FeedingCard } from "../features/feeding/FeedingCard";
-import { SleepHistory } from "../features/sleep/SleepHistory";
+import { DayLog } from "../features/history/DayLog";
 import { DayTimeline } from "../features/timeline/DayTimeline";
 import { Card } from "../components/ui/Card";
 import { SleepSummary } from "../features/sleep/SleepSummary";
@@ -43,7 +43,7 @@ export function SleepPage() {
           <DayTimeline childId={child.id} sessions={sessions} />
         </Card>
       </div>
-      <SleepHistory childId={child.id} sessions={sessions} />
+      <DayLog childId={child.id} sessions={sessions} />
     </>
   );
 }

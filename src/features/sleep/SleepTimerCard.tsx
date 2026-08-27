@@ -87,6 +87,7 @@ export function SleepTimerCard({
       kind: guessKind(at),
       ended_by: null,
       night_feedings: null,
+      no_feed_before: null,
       night_feeding_kind: null,
       night_feeding_ml: null,
       note: null,
