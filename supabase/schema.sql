@@ -328,6 +328,7 @@ create table if not exists public.push_log (
 alter table public.push_log enable row level security;
 
 alter table public.children
+  add column if not exists photo text,
   add column if not exists bedtime text,
   add column if not exists bedtime_warn_minutes integer,
   add column if not exists notify_bedtime boolean not null default true,

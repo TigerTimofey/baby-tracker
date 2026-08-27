@@ -21,6 +21,8 @@ export interface Child extends SyncFields {
   sex: Sex | null;
   birth_weight_g: number | null;
   birth_height_mm: number | null;
+  /** Квадратное фото 256×256 как data URL: едет вместе со строкой ребёнка. */
+  photo: string | null;
   /** Время отхода ко сну хранится у ребёнка: оно общее для обоих родителей
    * и нужно серверу, который рассылает напоминания. */
   bedtime: string | null;

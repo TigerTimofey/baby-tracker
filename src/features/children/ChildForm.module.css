@@ -3,3 +3,32 @@
   padding-top: var(--gap-4);
   border-top: 1px solid var(--border-soft);
 }
+
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-4);
+  margin-bottom: var(--gap-4);
+}
+
+.photoText {
+  min-width: 0;
+}
+
+.photoLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.photoHint {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.photoButtons {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}

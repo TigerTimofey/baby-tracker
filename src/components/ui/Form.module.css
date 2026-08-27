@@ -19,6 +19,11 @@
   max-width: 100%;
   height: 48px;
   padding: 0 14px;
+  /* Высота задана жёстко, поэтому вертикальное выравнивание нельзя оставлять
+     на усмотрение браузера: Safari прижимает содержимое полей даты и времени
+     к верху. Строка ровно во внутреннюю высоту (48 минус две рамки) держит
+     текст по центру везде. */
+  line-height: 46px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -29,10 +34,13 @@
 .control::-webkit-date-and-time-value {
   text-align: left;
   margin: 0;
+  line-height: 46px;
+  min-height: 46px;
 }
 
 .control::-webkit-datetime-edit {
   padding: 0;
+  line-height: 46px;
 }
 
 .control::-webkit-calendar-picker-indicator {

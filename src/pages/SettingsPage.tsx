@@ -1,3 +1,5 @@
+import { ChildAvatar } from "../components/ui/ChildAvatar";
+import { squarePhotoFromFile } from "../features/children/photo";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
@@ -48,6 +50,9 @@ export function SettingsPage() {
   const { child } = useActiveChild();
 
   const [editOpen, setEditOpen] = useState(false);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [permission, setPermission] = useState(notificationPermission);
   const [storage, setStorage] = useState<StorageStatus | null>(null);
   const [pushNote, setPushNote] = useState<string | null>(null);
@@ -103,18 +108,84 @@ export function SettingsPage() {
 
         <Card title="Малыш">
           <div className={styles.row}>
-            <div className={styles.rowText}>
-              <div className={styles.rowLabel}>{child?.name ?? "Не задан"}</div>
-              <div className={styles.rowHint}>
-                {child
-                  ? `родился ${formatDate(child.birth_date)}`
-                  : "добавьте профиль"}
+            <div className={styles.person}>
+              <ChildAvatar child={child} size={54} />
+              <div className={styles.rowText}>
+                <div className={styles.rowLabel}>{child?.name ?? "Не задан"}</div>
+                <div className={styles.rowHint}>
+                  {child
+                    ? `родился ${formatDate(child.birth_date)}`
+                    : "добавьте профиль"}
+                </div>
               </div>
             </div>
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
               Изменить
             </Button>
           </div>
+
+          {child && (
+            <div className={styles.row}>
+              <div className={styles.rowText}>
+                <div className={styles.rowLabel}>Фото</div>
+                <div className={styles.rowHint}>
+                  {photoError ??
+                    (child.photo
+                      ? "Видно в кружке наверху"
+                      : "Появится в кружке наверху")}
+                </div>
+              </div>
+              <div className={styles.photoActions}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={photoBusy}
+                  onClick={() => photoInput.current?.click()}
+                >
+                  {photoBusy ? "Готовлю…" : child.photo ? "Заменить" : "Выбрать"}
+                </Button>
+                {child.photo && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={photoBusy}
+                    onClick={() => {
+                      setPhotoError(null);
+                      void save("children", { ...child, photo: null });
+                    }}
+                  >
+                    Убрать
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={photoInput}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (!file) return;
+
+                  setPhotoBusy(true);
+                  setPhotoError(null);
+                  try {
+                    const photo = await squarePhotoFromFile(file);
+                    await save("children", { ...child, photo });
+                  } catch (cause) {
+                    setPhotoError(
+                      cause instanceof Error
+                        ? cause.message
+                        : "Не удалось обработать фото",
+                    );
+                  } finally {
+                    setPhotoBusy(false);
+                  }
+                }}
+              />
+            </div>
+          )}
         </Card>
 
         <Card title="Уведомления">

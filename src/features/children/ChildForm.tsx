@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { plural } from "../../lib/time";
 import { Button } from "../../components/ui/Button";
 import {
@@ -7,7 +7,9 @@ import {
   FormRow,
   TextInput,
 } from "../../components/ui/Form";
+import { ChildAvatar } from "../../components/ui/ChildAvatar";
 import { Icon } from "../../components/ui/Icon";
+import { squarePhotoFromFile } from "./photo";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
 import {
@@ -51,6 +53,10 @@ export function ChildForm({
   child,
 }: ChildFormProps) {
   const [name, setName] = useState(child?.name ?? "");
+  const [photo, setPhoto] = useState<string | null>(child?.photo ?? null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState(child?.birth_date ?? todayISO());
   const [birthTime, setBirthTime] = useState(child?.birth_time ?? "");
   const [sex, setSex] = useState<SexChoice>(child?.sex ?? "unset");
@@ -85,6 +91,7 @@ export function ChildForm({
       birth_date: birthDate,
       birth_time: trimOrNull(birthTime),
       sex: sex === "unset" ? null : sex,
+      photo,
       birth_weight_g: kgToGrams(weight),
       birth_height_mm: cmToMm(height),
       bedtime: child?.bedtime ?? null,
@@ -145,6 +152,69 @@ export function ChildForm({
       }
     >
       <form onSubmit={handleSubmit}>
+        <div className={styles.photoRow}>
+          <ChildAvatar
+            child={{ ...(child ?? ({} as Child)), name, photo }}
+            size={64}
+          />
+          <div className={styles.photoText}>
+            <div className={styles.photoLabel}>Фото</div>
+            <div className={styles.photoHint}>
+              {photoError ?? "Появится в кружке наверху"}
+            </div>
+            <div className={styles.photoButtons}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={photoBusy}
+                onClick={() => photoInput.current?.click()}
+              >
+                {photoBusy ? "Готовлю…" : photo ? "Заменить" : "Выбрать"}
+              </Button>
+              {photo && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={photoBusy}
+                  onClick={() => {
+                    setPhotoError(null);
+                    setPhoto(null);
+                  }}
+                >
+                  Убрать
+                </Button>
+              )}
+            </div>
+          </div>
+          <input
+            ref={photoInput}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+
+              setPhotoBusy(true);
+              setPhotoError(null);
+              try {
+                setPhoto(await squarePhotoFromFile(file));
+              } catch (cause) {
+                setPhotoError(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Не удалось обработать фото",
+                );
+              } finally {
+                setPhotoBusy(false);
+              }
+            }}
+          />
+        </div>
+
         <Field label="Имя">
           {(id) => (
             <TextInput

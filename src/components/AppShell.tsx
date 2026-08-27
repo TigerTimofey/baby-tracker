@@ -1,3 +1,4 @@
+import { ChildAvatar } from "./ui/ChildAvatar";
 import { useCallback, useState, type CSSProperties } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useActiveChild, useNow } from "../data/hooks";
@@ -100,9 +101,7 @@ export function AppShell() {
             className={styles.childButton}
             onClick={() => setSwitcherOpen(true)}
           >
-            <span className={styles.avatar}>
-              {child ? child.name.slice(0, 1).toUpperCase() : "?"}
-            </span>
+            <ChildAvatar child={child} size={38} />
             <span className={styles.childText}>
               <span className={styles.childName}>
                 {child?.name ?? "Малыш"}
@@ -184,9 +183,7 @@ export function AppShell() {
                   setSwitcherOpen(false);
                 }}
               >
-                <span className={styles.avatar}>
-                  {item.name.slice(0, 1).toUpperCase()}
-                </span>
+                <ChildAvatar child={item} size={38} />
                 <span>
                   <span className={styles.childRowName}>{item.name}</span>
                   <br />
