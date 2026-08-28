@@ -123,6 +123,9 @@
 .rowMethod {
   display: block;
   font-size: 14px;
+  /* Длинное название не должно наезжать на таймер справа: без этого
+     «Свечи (парацетамол)» вылезали из своей колонки. */
+  overflow-wrap: anywhere;
 }
 
 .rowNote {
@@ -159,8 +162,32 @@
   border-radius: var(--r-full);
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--illness);
   background: var(--illness-soft);
+}
+
+.doseRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+
+/* Отсчёт до следующей дозы — рядом с меткой, а не вместо неё: одно говорит,
+   что это за запись, второе — когда можно повторить. */
+.timer {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--big-number);
+}
+
+.ready {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--ok);
 }
 
 .dayName {
@@ -177,39 +204,8 @@
   white-space: nowrap;
 }
 
-.doses {
-  margin: var(--gap-3) 0 0;
-  padding: var(--gap-3) 0 0;
-  border-top: 1px solid var(--border-soft);
-  list-style: none;
-}
 
-.dose {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--gap-3);
-  padding: 3px 0;
-  font-size: 13.5px;
-}
 
-.doseName {
-  font-weight: 600;
-}
 
-.doseWhen {
-  color: var(--text-muted);
-  text-align: right;
-}
 
-.doseReady {
-  color: var(--ok);
-  font-weight: 600;
-}
 
-.doseNote {
-  margin-top: 6px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--text-faint);
-}

@@ -10,7 +10,7 @@ import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
 import { MedicineEditor } from "../features/illness/MedicineEditor";
 import { TemperatureEditor } from "../features/illness/TemperatureEditor";
-import { doseLine, givenMs, nextDoses } from "../features/illness/medUtils";
+import { doseLine, doseTimers, givenMs } from "../features/illness/medUtils";
 import {
   currentSpell,
   feverThreshold,
@@ -78,7 +78,7 @@ export function IllnessPage() {
   const spell = currentSpell(readings, now);
   const sorted = sortedByTimeDesc(readings);
 
-  const waiting = nextDoses(doses, now);
+  const timers = doseTimers(doses, now);
 
   const entries: Entry[] = [
     ...sorted.map(
@@ -134,47 +134,13 @@ export function IllnessPage() {
             </div>
 
             <p className={styles.basis}>
-              Способ «{methodLabel(spell.last.method).toLowerCase()}», возраст{" "}
-              {shortAge(ageMonths)}:{" "}
+              {methodLabel(spell.last.method)}, {shortAge(ageMonths)}:{" "}
               {highThreshold(spell.last.method, ageMonths) <=
-              feverThreshold(spell.last.method) ? (
-                <>
-                  красным от {formatCelsius(feverThreshold(spell.last.method))}{" "}
-                  — до трёх месяцев любой жар считается тревожным, поэтому
-                  отдельной жёлтой полосы здесь нет.
-                </>
-              ) : (
-                <>
-                  жёлтым от{" "}
-                  {formatCelsius(feverThreshold(spell.last.method))}, красным от{" "}
-                  {formatCelsius(highThreshold(spell.last.method, ageMonths))}.
-                  Чем младше ребёнок, тем ниже вторая граница.
-                </>
-              )}{" "}
-              Это ориентиры, а не диагноз — решает педиатр.
+              feverThreshold(spell.last.method)
+                ? `красным от ${formatCelsius(feverThreshold(spell.last.method))}`
+                : `жёлтым от ${formatCelsius(feverThreshold(spell.last.method))}, красным от ${formatCelsius(highThreshold(spell.last.method, ageMonths))}`}
+              . Ориентир, не диагноз.
             </p>
-
-              {waiting.length > 0 && (
-                <ul className={styles.doses}>
-                  {waiting.map((item) => (
-                    <li key={item.name} className={styles.dose}>
-                      <span className={styles.doseName}>{item.name}</span>
-                      <span
-                        className={`${styles.doseWhen} ${item.ready ? styles.doseReady : ""}`}
-                      >
-                        {item.ready
-                          ? "можно давать"
-                          : `не раньше ${formatTime(new Date(item.readyAt))} · через ${formatDuration(item.readyAt - now)}`}
-                      </span>
-                    </li>
-                  ))}
-                  <li className={styles.doseNote}>
-                    Одно и то же лекарство — не чаще чем раз в{" "}
-                    {waiting[0].gapHours} часов. Это общий ориентир: точный
-                    интервал в инструкции и у педиатра.
-                  </li>
-                </ul>
-              )}
 
           <div className={styles.actions}>
             <Button
@@ -208,28 +174,6 @@ export function IllnessPage() {
                 ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
                 : "Последний замер был давно — похоже, всё позади."}
             </p>
-
-              {waiting.length > 0 && (
-                <ul className={styles.doses}>
-                  {waiting.map((item) => (
-                    <li key={item.name} className={styles.dose}>
-                      <span className={styles.doseName}>{item.name}</span>
-                      <span
-                        className={`${styles.doseWhen} ${item.ready ? styles.doseReady : ""}`}
-                      >
-                        {item.ready
-                          ? "можно давать"
-                          : `не раньше ${formatTime(new Date(item.readyAt))} · через ${formatDuration(item.readyAt - now)}`}
-                      </span>
-                    </li>
-                  ))}
-                  <li className={styles.doseNote}>
-                    Одно и то же лекарство — не чаще чем раз в{" "}
-                    {waiting[0].gapHours} часов. Это общий ориентир: точный
-                    интервал в инструкции и у педиатра.
-                  </li>
-                </ul>
-              )}
 
           <div className={styles.actions}>
             <Button
@@ -302,7 +246,7 @@ export function IllnessPage() {
                         </span>
                         <span className={styles.rowText}>
                           <span className={styles.rowMethod}>
-                            {doseLine(entry.dose)}
+                            {doseLine(entry.dose, true)}
                             {who ? ` · ${who}` : ""}
                           </span>
                           {entry.dose.note && (
@@ -311,7 +255,20 @@ export function IllnessPage() {
                             </span>
                           )}
                         </span>
-                        <span className={styles.pill}>лекарство</span>
+                        <span className={styles.doseRight}>
+                          {(() => {
+                            const timer = timers.get(entry.dose.id);
+                            if (!timer) return null;
+                            return timer.ready ? (
+                              <span className={styles.ready}>можно давать</span>
+                            ) : (
+                              <span className={`${styles.timer} tnum`}>
+                                {formatDuration(timer.readyAt - now)}
+                              </span>
+                            );
+                          })()}
+                          <span className={styles.pill}>лекарство</span>
+                        </span>
                       </button>
                     );
                   }

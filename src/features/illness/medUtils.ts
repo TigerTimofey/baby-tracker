@@ -74,15 +74,22 @@ export function givenMs(dose: Medicine): number {
   return parseISO(dose.given_at).getTime();
 }
 
-export function doseLine(dose: Medicine): string {
-  if (dose.amount === null) return dose.name;
+/** Короткое имя для строки журнала: полное остаётся в выгрузке для врача. */
+export function shortName(name: string): string {
+  return PRESETS.find((item) => item.name === name)?.label ?? name;
+}
+
+export function doseLine(dose: Medicine, short = false): string {
+  const title = short ? shortName(dose.name) : dose.name;
+  if (dose.amount === null) return title;
   const amount = dose.amount.toLocaleString("ru-RU", {
     maximumFractionDigits: 2,
   });
-  return `${dose.name} · ${amount} ${unitLabel(dose.unit)}`;
+  return `${title} · ${amount} ${unitLabel(dose.unit)}`;
 }
 
 export interface NextDose {
+  doseId: string;
   name: string;
   gapHours: number;
   readyAt: number;
@@ -113,6 +120,7 @@ export function nextDoses(doses: Medicine[], now: number): NextDose[] {
     if (now - givenMs(last) > SHOW_WITHIN_MS) continue;
 
     result.push({
+      doseId: last.id,
       name: preset.name,
       gapHours: preset.gapHours,
       readyAt,
@@ -121,4 +129,17 @@ export function nextDoses(doses: Medicine[], now: number): NextDose[] {
   }
 
   return result.sort((a, b) => a.readyAt - b.readyAt);
+}
+
+/**
+ * Отсчёт привязан к самой свежей выдаче каждого лекарства.
+ *
+ * Дали то же самое ещё раз — таймер сам оказывается на новой записи, потому
+ * что ключ здесь идентификатор последней дозы, а не место в списке.
+ */
+export function doseTimers(
+  doses: Medicine[],
+  now: number,
+): Map<string, NextDose> {
+  return new Map(nextDoses(doses, now).map((item) => [item.doseId, item]));
 }
