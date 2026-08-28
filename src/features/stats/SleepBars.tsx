@@ -88,7 +88,7 @@ export function SleepBars({
                 type="button"
                 className={[
                   styles.col,
-                  day.isToday ? styles.today : "",
+                  day.partial ? styles.today : "",
                   picked === day.key ? styles.selected : "",
                 ]
                   .filter(Boolean)

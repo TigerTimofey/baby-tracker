@@ -46,6 +46,8 @@ export interface DayBucket {
   totalMs: number;
   napCount: number;
   isToday: boolean;
+  /** Сутки без предыдущей ночи или ещё не закончившиеся — в средние не идут. */
+  partial: boolean;
   hasData: boolean;
 }
 
@@ -112,6 +114,7 @@ function buildDays(
   sessions: SleepSession[],
   count: number,
   now: number,
+  firstDayMs: number,
 ): DayBucket[] {
   const today = startOfDay(new Date(now));
   const buckets: DayBucket[] = [];
@@ -145,6 +148,9 @@ function buildDays(
       totalMs: nightMs + napMs,
       napCount,
       isToday: index === 0,
+      // У самого первого дня записей отрезано утро: ночи перед ним не было,
+      // поэтому его сумма всегда занижена и в среднее идти не должна.
+      partial: index === 0 || from === firstDayMs,
       hasData: nightMs + napMs > 0,
     });
   }
@@ -159,7 +165,7 @@ function averageOfCompleteDays(days: DayBucket[]): {
   nap: number | null;
   naps: number | null;
 } {
-  const usable = days.filter((day) => !day.isToday && day.hasData);
+  const usable = days.filter((day) => !day.partial && day.hasData);
   if (usable.length === 0) {
     return { counted: 0, total: null, night: null, nap: null, naps: null };
   }
@@ -269,10 +275,20 @@ export function computeSleepStats(
     (session) => sessionEnd(session, now) > previousStart,
   );
 
-  const days = buildDays(relevant, count, now);
+  const firstDayMs =
+    allSessions.length === 0
+      ? 0
+      : startOfDay(
+          new Date(Math.min(...allSessions.map(sessionStart))),
+        ).getTime();
+
+  const days = buildDays(relevant, count, now, firstDayMs);
   const current = windowMetrics(relevant, days, windowStart, Infinity, now);
 
-  const previousDays = buildDays(relevant, count * 2, now).slice(0, count);
+  const previousDays = buildDays(relevant, count * 2, now, firstDayMs).slice(
+    0,
+    count,
+  );
   const previous = windowMetrics(
     relevant,
     previousDays,
