@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLive, useSettings } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
-import type { Child, SleepSession } from "../../data/types";
+import type { Child, Medicine, SleepSession } from "../../data/types";
 import {
   alreadyNotified,
   markNotified,
@@ -14,11 +14,13 @@ import {
   formatDuration,
   parseTimeOfDay,
 } from "../../lib/time";
+import { nextDoses } from "../illness/medUtils";
 import { bandFor, bedtimeOf, findActive, lastWakeMs } from "../sleep/sleepUtils";
 
 const CHECK_MS = 30_000;
 const BEDTIME_WINDOW_MS = 60 * 60_000;
 const NO_SESSIONS: SleepSession[] = [];
+const NO_DOSES: Medicine[] = [];
 
 function dayKey(now: Date): string {
   return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
@@ -35,6 +37,12 @@ export function useReminders(child: Child | null): void {
   );
   const sessions = data ?? NO_SESSIONS;
 
+  const { data: doseData } = useLive(
+    async () => (childId ? await listByChild("medicines", childId) : NO_DOSES),
+    [childId],
+  );
+  const doses = doseData ?? NO_DOSES;
+
   const enabled = settings.notifications && Boolean(child);
 
   useEffect(() => {
@@ -43,6 +51,20 @@ export function useReminders(child: Child | null): void {
 
     const check = () => {
       const now = new Date();
+
+      // Лекарство не зависит от того, спит ли ребёнок, поэтому проверяем
+      // до раннего выхода по активному сну.
+      for (const dose of nextDoses(doses, now.getTime())) {
+        if (!dose.ready) continue;
+        const key = `dose:${dose.name}:${dose.readyAt}`;
+        if (alreadyNotified(key)) continue;
+        markNotified(key);
+        void showNotification(
+          "medicine",
+          "Можно дать лекарство",
+          `${dose.name}: прошло ${dose.gapHours} ч с прошлого раза`,
+        );
+      }
 
       if (findActive(sessions)) return;
 
@@ -115,5 +137,5 @@ export function useReminders(child: Child | null): void {
     check();
     const timer = setInterval(check, CHECK_MS);
     return () => clearInterval(timer);
-  }, [enabled, child, sessions, settings]);
+  }, [enabled, child, sessions, doses, settings]);
 }

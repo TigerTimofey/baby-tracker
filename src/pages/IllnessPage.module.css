@@ -176,3 +176,40 @@
   color: var(--text-faint);
   white-space: nowrap;
 }
+
+.doses {
+  margin: var(--gap-3) 0 0;
+  padding: var(--gap-3) 0 0;
+  border-top: 1px solid var(--border-soft);
+  list-style: none;
+}
+
+.dose {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  padding: 3px 0;
+  font-size: 13.5px;
+}
+
+.doseName {
+  font-weight: 600;
+}
+
+.doseWhen {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.doseReady {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.doseNote {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

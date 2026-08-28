@@ -10,7 +10,7 @@ import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
 import { MedicineEditor } from "../features/illness/MedicineEditor";
 import { TemperatureEditor } from "../features/illness/TemperatureEditor";
-import { doseLine, givenMs } from "../features/illness/medUtils";
+import { doseLine, givenMs, nextDoses } from "../features/illness/medUtils";
 import {
   currentSpell,
   feverThreshold,
@@ -77,6 +77,8 @@ export function IllnessPage() {
 
   const spell = currentSpell(readings, now);
   const sorted = sortedByTimeDesc(readings);
+
+  const waiting = nextDoses(doses, now);
 
   const entries: Entry[] = [
     ...sorted.map(
@@ -152,6 +154,28 @@ export function IllnessPage() {
               Это ориентиры, а не диагноз — решает педиатр.
             </p>
 
+              {waiting.length > 0 && (
+                <ul className={styles.doses}>
+                  {waiting.map((item) => (
+                    <li key={item.name} className={styles.dose}>
+                      <span className={styles.doseName}>{item.name}</span>
+                      <span
+                        className={`${styles.doseWhen} ${item.ready ? styles.doseReady : ""}`}
+                      >
+                        {item.ready
+                          ? "можно давать"
+                          : `не раньше ${formatTime(new Date(item.readyAt))} · через ${formatDuration(item.readyAt - now)}`}
+                      </span>
+                    </li>
+                  ))}
+                  <li className={styles.doseNote}>
+                    Одно и то же лекарство — не чаще чем раз в{" "}
+                    {waiting[0].gapHours} часов. Это общий ориентир: точный
+                    интервал в инструкции и у педиатра.
+                  </li>
+                </ul>
+              )}
+
           <div className={styles.actions}>
             <Button
               variant="primary"
@@ -184,6 +208,28 @@ export function IllnessPage() {
                 ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
                 : "Последний замер был давно — похоже, всё позади."}
             </p>
+
+              {waiting.length > 0 && (
+                <ul className={styles.doses}>
+                  {waiting.map((item) => (
+                    <li key={item.name} className={styles.dose}>
+                      <span className={styles.doseName}>{item.name}</span>
+                      <span
+                        className={`${styles.doseWhen} ${item.ready ? styles.doseReady : ""}`}
+                      >
+                        {item.ready
+                          ? "можно давать"
+                          : `не раньше ${formatTime(new Date(item.readyAt))} · через ${formatDuration(item.readyAt - now)}`}
+                      </span>
+                    </li>
+                  ))}
+                  <li className={styles.doseNote}>
+                    Одно и то же лекарство — не чаще чем раз в{" "}
+                    {waiting[0].gapHours} часов. Это общий ориентир: точный
+                    интервал в инструкции и у педиатра.
+                  </li>
+                </ul>
+              )}
 
           <div className={styles.actions}>
             <Button
