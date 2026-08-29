@@ -48,7 +48,7 @@ export function StatsPage() {
   const { child } = useActiveChild();
   const childId = child?.id;
   const now = useNow(300_000);
-  const [period, setPeriod] = useState<Period>("14");
+  const [period, setPeriod] = useState<Period>("7");
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
 
   const { data } = useLive(
@@ -91,7 +91,11 @@ export function StatsPage() {
       ? 0
       : differenceInCalendarDays(new Date(now), new Date(oldest)) + 1;
   const shown = period;
-  const enough = !loaded || historyDays >= Number(period);
+  // Неделя показывается всегда: даже три дня записей — это уже статистика,
+  // а пустые места карточки объясняют сами. Предупреждение остаётся для
+  // длинных периодов, где короткая история и правда вводила бы в заблуждение.
+  const enough =
+    !loaded || period === "7" || historyDays >= Number(period);
 
   const stats = useMemo(
     () => computeSleepStats(sessions, shown, now),
