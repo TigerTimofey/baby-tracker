@@ -156,6 +156,7 @@ export function SleepEditor({
           hint={end ? undefined : "пусто — сон ещё идёт"}
           value={end}
           onChange={setEnd}
+          defaultDate={start.slice(0, 10)}
         />
 
         <Field label="Тип">

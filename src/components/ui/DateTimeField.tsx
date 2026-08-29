@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import styles from "./DateTimeField.module.css";
 import formStyles from "./Form.module.css";
 
@@ -9,6 +9,8 @@ interface DateTimeFieldProps {
   value: string;
   onChange: (value: string) => void;
   max?: string;
+  /** Какой датой достроить, если человек ввёл только время. */
+  defaultDate?: string;
 }
 
 function split(value: string): { date: string; time: string } {
@@ -22,11 +24,34 @@ export function DateTimeField({
   value,
   onChange,
   max,
+  defaultDate,
 }: DateTimeFieldProps) {
   const id = useId();
-  const { date, time } = split(value);
+  const timeRef = useRef<HTMLInputElement>(null);
+
+  // Половинку ввода держим у себя: раньше время без даты просто выбрасывалось,
+  // и поле оставалось пустым, как будто нажатие не сработало.
+  const [draft, setDraft] = useState(() => split(value));
+  useEffect(() => setDraft(split(value)), [value]);
+  const { date, time } = draft;
+
+  /** Дата выбрана — сразу зовём выбрать время, иначе запись остаётся неполной. */
+  const askForTime = () => {
+    requestAnimationFrame(() => {
+      const node = timeRef.current;
+      if (!node) return;
+      node.focus();
+      try {
+        node.showPicker?.();
+      } catch {
+        // Некоторые браузеры открывают выбор только по прямому нажатию —
+        // тогда достаточно фокуса.
+      }
+    });
+  };
 
   const emit = (nextDate: string, nextTime: string) => {
+    setDraft({ date: nextDate, time: nextTime });
     onChange(nextDate && nextTime ? `${nextDate}T${nextTime}` : "");
   };
 
@@ -45,14 +70,20 @@ export function DateTimeField({
           type="date"
           value={date}
           max={maxDate}
-          onChange={(event) => emit(event.target.value, time || "12:00")}
+          onChange={(event) => {
+            emit(event.target.value, time);
+            if (event.target.value && !time) askForTime();
+          }}
         />
         <input
+          ref={timeRef}
           className={styles.input}
           type="time"
           value={time}
           aria-label="Время"
-          onChange={(event) => emit(date, event.target.value)}
+          onChange={(event) =>
+            emit(date || defaultDate || "", event.target.value)
+          }
         />
       </div>
 

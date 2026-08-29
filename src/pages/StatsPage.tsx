@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import { useMemo, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Segmented } from "../components/ui/Segmented";
@@ -36,6 +37,10 @@ import { ageOf, birthMoment, formatDuration, plural } from "../lib/time";
 import styles from "./StatsPage.module.css";
 
 const NO_SESSIONS: SleepSession[] = [];
+const ORDER: Period[] = ["7", "14", "30"];
+
+/** Порог, ниже которого жест считаем случайным дрожанием пальца. */
+const SWIPE_PX = 45;
 const NO_MEASUREMENTS: Measurement[] = [];
 const NO_FEEDINGS: Feeding[] = [];
 
@@ -44,6 +49,7 @@ export function StatsPage() {
   const childId = child?.id;
   const now = useNow(300_000);
   const [period, setPeriod] = useState<Period>("14");
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
 
   const { data } = useLive(
     async () =>
@@ -65,9 +71,31 @@ export function StatsPage() {
   );
   const feedings = feedingData ?? NO_FEEDINGS;
 
+  const oldest = useMemo(() => {
+    const times = [
+      ...sessions.map((item) => parseISO(item.start_at).getTime()),
+      ...feedings.map((item) => parseISO(item.start_at).getTime()),
+    ];
+    return times.length === 0 ? null : Math.min(...times);
+  }, [sessions, feedings]);
+
+  // Периоды доступны всегда — переключатель не должен менять состав кнопок
+  // под руками. Если истории не хватает, честно говорим об этом отдельной
+  // строкой, а не подменяем выбор.
+  const loaded =
+    Boolean(childId) && data !== undefined && feedingData !== undefined;
+  // Считаем календарные дни, а не прошедшие сутки: графики группируют записи
+  // именно так, и «записи за 9 дней» совпадает с тем, что видно на столбиках.
+  const historyDays =
+    oldest === null
+      ? 0
+      : differenceInCalendarDays(new Date(now), new Date(oldest)) + 1;
+  const shown = period;
+  const enough = !loaded || historyDays >= Number(period);
+
   const stats = useMemo(
-    () => computeSleepStats(sessions, period, now),
-    [sessions, period, now],
+    () => computeSleepStats(sessions, shown, now),
+    [sessions, shown, now],
   );
 
   if (!child) return null;
@@ -77,7 +105,7 @@ export function StatsPage() {
   const daysWithData = stats.days.filter((day) => day.hasData).length;
 
   const timelines = buildTimelines(sessions, feedings, stats.days, now);
-  const changes = buildChanges(stats, feedings, period, now);
+  const changes = buildChanges(stats, feedings, shown, now);
   const checkup = buildCheckup(child, measurements, stats, age.totalMonths, now);
 
   const summary = buildSummary(
@@ -85,21 +113,46 @@ export function StatsPage() {
     sessions,
     feedings,
     measurements,
-    period,
+    shown,
     now,
   );
 
+  function shift(step: number) {
+    const at = ORDER.indexOf(period) + step;
+    // По кругу не ходим: на краю свайп просто ничего не делает.
+    if (at < 0 || at >= ORDER.length) return;
+    setPeriod(ORDER[at]);
+  }
+
   const periods = (
-    <div className={styles.periods}>
+    <div
+      className={styles.periods}
+      onTouchStart={(event) => {
+        const touch = event.touches[0];
+        swipeFrom.current = { x: touch.clientX, y: touch.clientY };
+      }}
+      onTouchEnd={(event) => {
+        const from = swipeFrom.current;
+        swipeFrom.current = null;
+        if (!from) return;
+
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - from.x;
+        const dy = touch.clientY - from.y;
+        // Вертикальное движение — это прокрутка страницы, не наш жест.
+        if (Math.abs(dx) < SWIPE_PX || Math.abs(dy) > Math.abs(dx)) return;
+
+        shift(dx < 0 ? 1 : -1);
+      }}
+    >
       <Segmented<Period>
-        value={period}
+        value={shown}
         onChange={setPeriod}
         ariaLabel="Период"
-        options={[
-          { value: "7", label: "7 дней" },
-          { value: "14", label: "14 дней" },
-          { value: "30", label: "30 дней" },
-        ]}
+        options={ORDER.map((value) => ({
+          value,
+          label: `${value} дней`,
+        }))}
       />
     </div>
   );
@@ -274,6 +327,16 @@ export function StatsPage() {
       {periods}
 
       <div className={styles.stack}>
+        {!enough ? (
+          <p className={styles.shortage}>
+            Данных за {period} дней пока нет. Записи есть только за{" "}
+            {historyDays === 0
+              ? "нулевой срок"
+              : `${historyDays} ${plural(historyDays, ["день", "дня", "дней"])}`}
+            {" "}— выберите период покороче.
+          </p>
+        ) : (
+          <>
         <Checkup data={checkup} />
 
         <Card title={`Итоги ${summary.periodLabel}`} collapsible>
@@ -288,9 +351,11 @@ export function StatsPage() {
         <GrowthOverPeriod
           child={child}
           measurements={measurements}
-          days={Number(period)}
+          days={Number(shown)}
           now={now}
         />
+          </>
+        )}
       </div>
     </>
   );

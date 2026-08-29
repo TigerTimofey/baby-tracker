@@ -102,12 +102,25 @@
 
 .main {
   flex: 1;
+  /* Колонка, чтобы страница могла растянуть свой блок на остаток экрана —
+     иначе центрировать что-либо по вертикали приходится через магические vh. */
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 620px;
   margin: 0 auto;
   padding: var(--gap-4) var(--page-pad);
 
   padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--gap-5));
+}
+
+/* Обёртка анимации не должна разрывать цепочку высот: страница внутри неё
+   растягивается на остаток экрана — иначе центрировать по вертикали нечем. */
+.pageIn,
+.pageBack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .pageIn {

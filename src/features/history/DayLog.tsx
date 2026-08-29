@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { Button } from "../../components/ui/Button";
-import { EmptyState } from "../../components/ui/EmptyState";
+import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
 import { useAuthorPair, useLive, useNow } from "../../data/hooks";
 import { listByChild, save } from "../../data/repo";
@@ -103,6 +103,8 @@ export function DayLog({ childId, sessions }: DayLogProps) {
   const [addSleep, setAddSleep] = useState(false);
   const [addFeed, setAddFeed] = useState(false);
   const [feedFor, setFeedFor] = useState<SleepSession | null>(null);
+  const [showSleep, setShowSleep] = useState(true);
+  const [showFeed, setShowFeed] = useState(true);
 
   const { data } = useLive(
     async () => await listByChild("feedings", childId),
@@ -110,30 +112,71 @@ export function DayLog({ childId, sessions }: DayLogProps) {
   );
   const feedings = data ?? NO_FEEDINGS;
 
-  const days = buildDays(sessions, feedings, now);
+  // Отключить оба фильтра нельзя: пустая лента без объяснения выглядела бы
+  // поломкой, поэтому последний включённый не гасим.
+  const toggle = (which: "sleep" | "feed") => {
+    if (which === "sleep") {
+      if (showSleep && !showFeed) return;
+      setShowSleep(!showSleep);
+    } else {
+      if (showFeed && !showSleep) return;
+      setShowFeed(!showFeed);
+    }
+  };
+
+  const days = buildDays(
+    showSleep ? sessions : [],
+    showFeed ? feedings : [],
+    now,
+  );
 
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2 className={styles.title}>История сна и кормления</h2>
+        <h2 className={styles.title}>История</h2>
         <span className={styles.headerActions}>
-          <Button size="sm" variant="ghost" onClick={() => setAddSleep(true)}>
+          <Button
+            size="sm"
+            variant={showSleep ? "secondary" : "ghost"}
+            aria-pressed={showSleep}
+            onClick={() => toggle("sleep")}
+          >
             <Icon name="moon" size={15} />
             Сон
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setAddFeed(true)}>
+          <Button
+            size="sm"
+            variant={showFeed ? "secondary" : "ghost"}
+            aria-pressed={showFeed}
+            onClick={() => toggle("feed")}
+          >
             <Icon name="bottle" size={15} />
             Кормление
           </Button>
         </span>
       </div>
 
+
       {days.length === 0 ? (
-        <EmptyState
-          icon="moon"
-          title="Пока ни одной записи"
-          text="Здесь будет история по дням — сон и кормления одной лентой."
-        />
+        <Card title="Сон и кормления">
+          <p className={styles.intro}>
+            {showSleep && showFeed
+              ? "Ни одной записи. Добавьте первую — приложение соберёт историю по дням и посчитает, сколько малыш спал и сколько ел."
+              : showSleep
+                ? "Записей сна пока нет."
+                : "Записей кормления пока нет."}
+          </p>
+          <div className={styles.introAction}>
+            <Button variant="primary" onClick={() => setAddSleep(true)}>
+              <Icon name="moon" size={17} />
+              Добавить сон
+            </Button>
+            <Button variant="secondary" onClick={() => setAddFeed(true)}>
+              <Icon name="bottle" size={17} />
+              Добавить кормление
+            </Button>
+          </div>
+        </Card>
       ) : (
         days.map((day) => (
           <div key={day.key} className={styles.day}>
@@ -309,7 +352,8 @@ export function DayLog({ childId, sessions }: DayLogProps) {
           open
           onClose={() => setFeedFor(null)}
           childId={childId}
-          initialAt={new Date(sleepStart(feedFor) - 20 * 60_000)}
+          initialAt={new Date(sleepStart(feedFor) - 15 * 60_000)}
+          initialEndAt={new Date(sleepStart(feedFor))}
         />
       )}
       {editSleep && (

@@ -1,0 +1,13 @@
+/* Карточка построена на стилях кормлений — здесь только смена тона на сонный. */
+.live {
+  background: var(--sleep-soft);
+}
+
+.liveIcon {
+  background: var(--sleep);
+  color: var(--accent-contrast);
+}
+
+.liveTitle {
+  color: var(--sleep);
+}

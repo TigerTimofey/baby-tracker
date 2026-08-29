@@ -1,10 +1,13 @@
 .stack {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: var(--gap-4);
 }
 
 .periods {
+  /* Жест ловим сами, браузеру горизонтальные панорамы тут не нужны. */
+  touch-action: pan-y;
   margin-bottom: var(--gap-4);
 }
 
@@ -15,4 +18,18 @@
   font-size: 12px;
   line-height: 1.45;
   color: var(--text-faint);
+}
+
+.shortage {
+  /* Сообщение остаётся на экране в одиночестве, поэтому висит по центру
+     свободного места, а не прижимается к переключателю периодов. */
+  margin: auto 0;
+  text-align: center;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }

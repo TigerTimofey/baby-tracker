@@ -51,6 +51,8 @@ interface FeedingEditorProps {
   initialKind?: FeedingKind;
   /** С какого времени открыть форму — для записи «задним числом». */
   initialAt?: Date;
+  /** И до какого: подсказка сразу предлагает готовый отрезок. */
+  initialEndAt?: Date;
 }
 
 export function FeedingEditor({
@@ -60,6 +62,7 @@ export function FeedingEditor({
   feeding,
   initialKind,
   initialAt,
+  initialEndAt,
 }: FeedingEditorProps) {
   const settings = useSettings();
   const trackSide = settings.trackBreastSide;
@@ -74,7 +77,11 @@ export function FeedingEditor({
     toLocalInputValue(feeding?.start_at ?? initialAt ?? new Date()),
   );
   const [end, setEnd] = useState(
-    feeding?.end_at ? toLocalInputValue(feeding.end_at) : "",
+    feeding?.end_at
+      ? toLocalInputValue(feeding.end_at)
+      : initialEndAt
+        ? toLocalInputValue(initialEndAt)
+        : "",
   );
   const [family, setFamily] = useState<Family>(initial.family);
   const [side, setSide] = useState<Side>(initial.side);
@@ -173,6 +180,7 @@ export function FeedingEditor({
           hint={end ? undefined : "пусто — кормление идёт"}
           value={end}
           onChange={setEnd}
+          defaultDate={start.slice(0, 10)}
         />
 
         <Field label="Чем кормили">

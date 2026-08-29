@@ -5,9 +5,23 @@
 .header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--gap-3);
+  gap: 8px var(--gap-3);
   margin-bottom: var(--gap-3);
+}
+
+/* Кнопки рядом с длинным заголовком не помещаются на узком экране — пусть
+   уезжают на свою строку целиком, а не сжимают заголовок в столбик. */
+.headerActions {
+  display: inline-flex;
+  flex: none;
+  gap: 0.5rem;
+}
+
+.headerActions button {
+  width: auto;
+  padding: 0 14px;
 }
 
 .title {
@@ -153,13 +167,21 @@
   font-size: 13px;
 }
 
-.headerActions {
-  display: inline-flex;
-  gap: 2px;
-  flex: none;
+.intro {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
-.headerActions button {
+/* Как на вкладке ВОЗ: кнопки по центру карточки, а не прижаты к краю. */
+.introAction {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-3);
+  margin-top: var(--gap-4);
+}
+
+.introAction button {
   width: auto;
-  padding: 0 8px;
 }
