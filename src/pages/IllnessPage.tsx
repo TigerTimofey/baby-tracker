@@ -161,6 +161,14 @@ export function IllnessPage() {
   }
 
 
+  /** Экран «болезни нет»: с него и начинают новую. */
+  const startCard = (lead: string) => (
+    <Card title="Сейчас">
+      <p className={styles.lead}>{lead}</p>
+      {addButtons}
+    </Card>
+  );
+
   return (
     <>
       <h1 className="sr-only">Контроль болезни</h1>
@@ -187,42 +195,50 @@ export function IllnessPage() {
             </div>
           </Card>
         ) : spell && recoveredAt !== null ? (
-          <Card
-            title="Болезнь завершена"
-            action={
-              <Button variant="ghost" size="sm" onClick={reopenSpell}>
-                Вернуть болезнь
-              </Button>
-            }
-          >
-            <div className={`${styles.big} ${styles.done}`}>
-              {formatSpan(recoveredAt - spell.since)}
-            </div>
-            <p className={styles.sub}>{spellRange}</p>
+          <>
+            {startCard(
+              `Болезнь закрыта ${formatDayLabel(
+                new Date(recoveredAt),
+              ).toLowerCase()} в ${formatTime(
+                new Date(recoveredAt),
+              )}. Новый замер начнёт новую.`,
+            )}
+            <Card
+              title="Итог болезни"
+              collapsible
+              action={
+                <Button variant="ghost" size="sm" onClick={reopenSpell}>
+                  Вернуть болезнь
+                </Button>
+              }
+            >
+              <div className={`${styles.big} ${styles.done}`}>
+                {formatSpan(recoveredAt - spell.since)}
+              </div>
+              <p className={styles.sub}>{spellRange}</p>
 
-            <div className={styles.facts}>
-              <div className={styles.fact}>
-                <span className={styles.factLabel}>Пик</span>
-                <span className={`${styles.factValue} tnum`}>
-                  {formatCelsius(spell.peak.celsius)}
-                </span>
+              <div className={styles.facts}>
+                <div className={styles.fact}>
+                  <span className={styles.factLabel}>Пик</span>
+                  <span className={`${styles.factValue} tnum`}>
+                    {formatCelsius(spell.peak.celsius)}
+                  </span>
+                </div>
+                <div className={styles.fact}>
+                  <span className={styles.factLabel}>Замеров</span>
+                  <span className={`${styles.factValue} tnum`}>
+                    {spell.readings.length}
+                  </span>
+                </div>
+                <div className={styles.fact}>
+                  <span className={styles.factLabel}>Лекарств</span>
+                  <span className={`${styles.factValue} tnum`}>
+                    {spellDoses.length}
+                  </span>
+                </div>
               </div>
-              <div className={styles.fact}>
-                <span className={styles.factLabel}>Замеров</span>
-                <span className={`${styles.factValue} tnum`}>
-                  {spell.readings.length}
-                </span>
-              </div>
-              <div className={styles.fact}>
-                <span className={styles.factLabel}>Лекарств</span>
-                <span className={`${styles.factValue} tnum`}>
-                  {spellDoses.length}
-                </span>
-              </div>
-            </div>
-
-            {addButtons}
-          </Card>
+            </Card>
+          </>
         ) : spell ? (
           <Card
             title="Сейчас"
@@ -278,15 +294,11 @@ export function IllnessPage() {
             {addButtons}
           </Card>
         ) : (
-          <Card title="Сейчас">
-            <p className={styles.lead}>
-              {readings.length === 0
-                ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
-                : "Последний замер был давно — похоже, всё позади."}
-            </p>
-
-            {addButtons}
-          </Card>
+          startCard(
+            readings.length === 0
+              ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
+              : "Последний замер был давно — похоже, всё позади.",
+          )
         )}
 
         {entries.length === 0 ? (
@@ -296,7 +308,12 @@ export function IllnessPage() {
             text="Здесь появятся замеры температуры и выданные лекарства — одной лентой, удобно показать врачу."
           />
         ) : (
-          <Card title="Журнал" flush>
+          <Card
+            key={recoveredAt === null ? "log-live" : "log-done"}
+            title="Журнал"
+            flush
+            collapsible={recoveredAt !== null}
+          >
             {[...days.entries()].map(([key, list]) => (
               <div key={key} className={styles.day}>
                 <div className={styles.dayHead}>

@@ -40,7 +40,7 @@ export function Card({
           {collapsible ? (
             <button
               type="button"
-              className={styles.toggle}
+              className={`${styles.toggle} ${action ? styles.toggleTight : ""}`}
               onClick={() => setOpen(!open)}
               aria-expanded={open}
             >
