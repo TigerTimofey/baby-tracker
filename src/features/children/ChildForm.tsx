@@ -9,7 +9,7 @@ import {
 } from "../../components/ui/Form";
 import { ChildAvatar } from "../../components/ui/ChildAvatar";
 import { Icon } from "../../components/ui/Icon";
-import { squarePhotoFromFile } from "./photo";
+import { PhotoCropper } from "./PhotoCropper";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
 import {
@@ -55,8 +55,7 @@ export function ChildForm({
   const [name, setName] = useState(child?.name ?? "");
   const [photo, setPhoto] = useState<string | null>(child?.photo ?? null);
   const pickInput = useRef<HTMLInputElement>(null);
-  const shotInput = useRef<HTMLInputElement>(null);
-  const [photoBusy, setPhotoBusy] = useState(false);
+  const [cropping, setCropping] = useState<File | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState(child?.birth_date ?? todayISO());
   const [birthTime, setBirthTime] = useState(child?.birth_time ?? "");
@@ -69,22 +68,18 @@ export function ChildForm({
   );
   const [error, setError] = useState<string | null>(null);
 
-  async function takePhoto(input: HTMLInputElement) {
+  function takePhoto(input: HTMLInputElement) {
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
 
-    setPhotoBusy(true);
-    setPhotoError(null);
-    try {
-      setPhoto(await squarePhotoFromFile(file));
-    } catch (cause) {
-      setPhotoError(
-        cause instanceof Error ? cause.message : "Не удалось обработать фото",
-      );
-    } finally {
-      setPhotoBusy(false);
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Это не изображение");
+      return;
     }
+    // Кадрирует человек, а не приложение: центр снимка редко совпадает с лицом.
+    setPhotoError(null);
+    setCropping(file);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -186,27 +181,16 @@ export function ChildForm({
                 type="button"
                 size="sm"
                 variant="secondary"
-                disabled={photoBusy}
-                onClick={() => shotInput.current?.click()}
-              >
-                {photoBusy ? "Готовлю…" : "Снять"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={photoBusy}
                 onClick={() => pickInput.current?.click()}
               >
-                Загрузить
+                Добавить
               </Button>
               {photo && (
                 <Button
                   type="button"
                   size="sm"
                   variant="ghost"
-                  disabled={photoBusy}
-                  onClick={() => {
+                    onClick={() => {
                     setPhotoError(null);
                     setPhoto(null);
                   }}
@@ -216,23 +200,12 @@ export function ChildForm({
               )}
             </div>
           </div>
-          {/* Два поля вместо одного: capture просит телефон открыть камеру
-              сразу, без него — галерею. На компьютере capture игнорируется,
-              и обе кнопки ведут к выбору файла. */}
-          <input
-            ref={shotInput}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            hidden
-            onChange={(event) => void takePhoto(event.target)}
-          />
           <input
             ref={pickInput}
             type="file"
             accept="image/*"
             hidden
-            onChange={(event) => void takePhoto(event.target)}
+            onChange={(event) => takePhoto(event.target)}
           />
         </div>
 
@@ -338,6 +311,16 @@ export function ChildForm({
           </div>
         )}
       </form>
+      {cropping && (
+        <PhotoCropper
+          file={cropping}
+          onCancel={() => setCropping(null)}
+          onDone={(next) => {
+            setPhoto(next);
+            setCropping(null);
+          }}
+        />
+      )}
     </Sheet>
   );
 }

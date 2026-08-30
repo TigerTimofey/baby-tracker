@@ -1,4 +1,5 @@
-const SIDE = 256;
+export const PHOTO_SIDE = 256;
+const SIDE = PHOTO_SIDE;
 const QUALITY = 0.82;
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
 
@@ -55,4 +56,36 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export interface SquareCrop {
+  /** Левый верхний угол и сторона кадра в пикселях исходника. */
+  x: number;
+  y: number;
+  size: number;
+}
+
+/** Вырезает выбранный квадрат и сжимает его до того же размера, что и авто-кроп. */
+export function renderSquare(
+  image: CanvasImageSource,
+  crop: SquareCrop,
+): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = SIDE;
+  canvas.height = SIDE;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Не удалось обработать изображение");
+
+  context.drawImage(
+    image,
+    crop.x,
+    crop.y,
+    crop.size,
+    crop.size,
+    0,
+    0,
+    SIDE,
+    SIDE,
+  );
+  return canvas.toDataURL("image/jpeg", QUALITY);
 }

@@ -32,6 +32,7 @@ export function SleepBars({
   const normPercent = ((normMinHours * HOUR_MS) / scaleMs) * 100;
 
   const selected = days.find((day) => day.key === picked) ?? null;
+  const hasAny = days.some((day) => day.hasData);
   const showEveryLabel = days.length <= 14;
 
   const deltaClass =
@@ -51,7 +52,9 @@ export function SleepBars({
                 ? formatDuration(selected.totalMs)
                 : "нет записей"
               : avgTotalMs === null
-                ? "нет данных"
+                ? hasAny
+                  ? "—"
+                  : "нет данных"
                 : formatDuration(avgTotalMs)}
           </div>
           <div className={styles.readoutSub}>
@@ -63,7 +66,9 @@ export function SleepBars({
                 }`
               : daysCounted > 0
                 ? `в среднем за сутки · по ${daysCounted} дн. с записями`
-                : "записей пока нет"}
+                : hasAny
+                  ? "среднее появится с первыми полными сутками — у самого раннего дня и у сегодняшнего они обрезаны"
+                  : "записей пока нет"}
           </div>
         </div>
 
