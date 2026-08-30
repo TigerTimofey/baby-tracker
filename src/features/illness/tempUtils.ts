@@ -98,7 +98,15 @@ export function measuredMs(reading: Temperature): number {
 }
 
 export function sortedByTimeDesc(readings: Temperature[]): Temperature[] {
-  return [...readings].sort((a, b) => measuredMs(b) - measuredMs(a));
+  return [...readings].sort((a, b) => {
+    const byTime = measuredMs(b) - measuredMs(a);
+    if (byTime !== 0) return byTime;
+    // Время в полях — с точностью до минуты, так что первый замер новой
+    // болезни легко совпадает с последним замером только что закрытой.
+    // Замер с отметкой «поправился» в такой паре заведомо старший: иначе
+    // новый прилипал бы к закрытой болезни вместо того, чтобы начать свою.
+    return (a.recovered_at ? 1 : 0) - (b.recovered_at ? 1 : 0);
+  });
 }
 
 export interface FeverSpell {
@@ -117,42 +125,71 @@ export function recoveredMs(reading: Temperature): number | null {
 }
 
 /**
- * Череда измерений, идущих подряд без большого перерыва, — одна болезнь.
+ * Все болезни от свежей к старой.
  *
+ * Череда измерений, идущих подряд без большого перерыва, — одна болезнь.
  * Перерыв больше полутора суток считаем концом: иначе давняя простуда
  * склеилась бы с новой и «болеет 40 дней» было бы враньём. Отметка
  * «поправился» обрывает череду сразу, не дожидаясь этих полутора суток.
+ */
+export function listSpells(readings: Temperature[]): FeverSpell[] {
+  const sorted = sortedByTimeDesc(readings);
+  const spells: FeverSpell[] = [];
+  let bucket: Temperature[] = [];
+
+  const close = () => {
+    if (bucket.length === 0) return;
+    const peak = bucket.reduce((top, item) =>
+      item.celsius > top.celsius ? item : top,
+    );
+    spells.push({
+      readings: bucket,
+      last: bucket[0],
+      peak,
+      since: measuredMs(bucket[bucket.length - 1]),
+      recoveredAt: recoveredMs(bucket[0]),
+    });
+    bucket = [];
+  };
+
+  for (const reading of sorted) {
+    if (bucket.length > 0) {
+      const previous = bucket[bucket.length - 1];
+      // Замер с отметкой — последний в своей болезни, к следующей он не идёт.
+      if (
+        reading.recovered_at ||
+        measuredMs(previous) - measuredMs(reading) > SPELL_GAP_MS
+      ) {
+        close();
+      }
+    }
+    bucket.push(reading);
+  }
+  close();
+
+  return spells;
+}
+
+/**
+ * Когда болезнь кончилась: по отметке родителя, а без неё — полтора суток
+ * после последнего замера, ровно столько приложение считает её идущей.
+ */
+export function spellEnd(spell: FeverSpell): number {
+  return spell.recoveredAt ?? measuredMs(spell.last) + SPELL_GAP_MS;
+}
+
+/**
+ * Болезнь, о которой речь сейчас: самая свежая, пока не остыла.
+ *
+ * Закрытую держим на экране те же полтора суток — чтобы итог успели
+ * посмотреть, а промах по кнопке «Поправился» успели отменить.
  */
 export function currentSpell(
   readings: Temperature[],
   now: number,
 ): FeverSpell | null {
-  const sorted = sortedByTimeDesc(readings);
-  if (sorted.length === 0) return null;
-
-  const recoveredAt = recoveredMs(sorted[0]);
-  // Свежесть считаем по последнему событию: закрытую болезнь ещё показываем,
-  // пока отметка свежая, — чтобы её можно было вернуть, если промахнулись.
-  if (now - (recoveredAt ?? measuredMs(sorted[0])) > SPELL_GAP_MS) return null;
-
-  const spell: Temperature[] = [sorted[0]];
-  for (let index = 1; index < sorted.length; index += 1) {
-    // Замер с отметкой — последний в прошлой болезни, в эту он не входит.
-    if (sorted[index].recovered_at) break;
-    const gap = measuredMs(spell[spell.length - 1]) - measuredMs(sorted[index]);
-    if (gap > SPELL_GAP_MS) break;
-    spell.push(sorted[index]);
-  }
-
-  const peak = spell.reduce((top, item) =>
-    item.celsius > top.celsius ? item : top,
-  );
-
-  return {
-    readings: spell,
-    last: spell[0],
-    peak,
-    since: measuredMs(spell[spell.length - 1]),
-    recoveredAt,
-  };
+  const latest = listSpells(readings)[0];
+  if (!latest) return null;
+  const lastEvent = latest.recoveredAt ?? measuredMs(latest.last);
+  return now - lastEvent > SPELL_GAP_MS ? null : latest;
 }

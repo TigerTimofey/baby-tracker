@@ -22,6 +22,9 @@ import {
   sortedByTimeDesc,
   measuredMs,
   formatSpan,
+  listSpells,
+  spellEnd,
+  type FeverSpell,
 } from "../features/illness/tempUtils";
 import {
   ageOf,
@@ -59,6 +62,7 @@ export function IllnessPage() {
   const [medOpen, setMedOpen] = useState(false);
   const [pickedDose, setPickedDose] = useState<Medicine | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [openPast, setOpenPast] = useState<string | null>(null);
 
   const { data } = useLive(
     async () => (childId ? await listByChild("temperatures", childId) : NONE),
@@ -83,12 +87,37 @@ export function IllnessPage() {
   const timers = doseTimers(doses, now);
 
   const recoveredAt = spell?.recoveredAt ?? null;
-  const spellDoses = spell
-    ? doses.filter((dose) => {
-        const at = givenMs(dose);
-        return at >= spell.since && at <= (recoveredAt ?? now);
-      })
-    : NO_DOSES;
+  const allSpells = listSpells(readings);
+  const pastSpells = spell ? allSpells.slice(1) : allSpells;
+
+  /**
+   * Лекарства делим по болезням: до отметки «поправился», а без неё — пока
+   * приложение считает болезнь идущей, но не заходя в следующую.
+   */
+  function dosesOfSpell(index: number): Medicine[] {
+    const sp = allSpells[index];
+    const newer = index > 0 ? allSpells[index - 1] : null;
+    const end = Math.min(
+      spellEnd(sp),
+      newer ? newer.since : Number.POSITIVE_INFINITY,
+      now,
+    );
+    return doses.filter((dose) => {
+      const at = givenMs(dose);
+      return at >= sp.since && at <= end;
+    });
+  }
+
+  const spellDoses = spell ? dosesOfSpell(0) : NO_DOSES;
+
+  /** Конец болезни для показа: отметка родителя или последний замер. */
+  const spellShownEnd = (sp: FeverSpell) =>
+    sp.recoveredAt ?? measuredMs(sp.last);
+
+  const rangeOf = (from: number, to: number) =>
+    new Date(from).toDateString() === new Date(to).toDateString()
+      ? formatDayDate(new Date(from))
+      : `${formatDayDate(new Date(from))} — ${formatDayDate(new Date(to))}`;
 
   /**
    * Отметка живёт на последнем замере болезни: отдельная таблица ради одного
@@ -111,12 +140,9 @@ export function IllnessPage() {
   const spellRange =
     spell === null || recoveredAt === null
       ? ""
-      : `${formatDayDate(new Date(spell.since))}${
-          new Date(spell.since).toDateString() ===
-          new Date(recoveredAt).toDateString()
-            ? ""
-            : ` — ${formatDayDate(new Date(recoveredAt))}`
-        }, отметили в ${formatTime(new Date(recoveredAt))}`;
+      : `${rangeOf(spell.since, recoveredAt)}, отметили в ${formatTime(
+          new Date(recoveredAt),
+        )}`;
 
   const addButtons = (
     <div className={styles.actions}>
@@ -152,20 +178,183 @@ export function IllnessPage() {
     ...doses.map((dose): Entry => ({ kind: "dose", at: givenMs(dose), dose })),
   ].sort((a, b) => b.at - a.at);
 
-  const days = new Map<string, Entry[]>();
-  for (const entry of entries) {
-    const key = new Date(entry.at).toDateString();
-    const bucket = days.get(key);
-    if (bucket) bucket.push(entry);
-    else days.set(key, [entry]);
+  /** Записи одной болезни: ими же считаются «Замеров» и «Лекарств» в итоге. */
+  function entriesOf(sp: FeverSpell, list: Medicine[]): Entry[] {
+    return [
+      ...sp.readings.map(
+        (reading): Entry => ({
+          kind: "temp",
+          at: measuredMs(reading),
+          reading,
+        }),
+      ),
+      ...list.map((dose): Entry => ({ kind: "dose", at: givenMs(dose), dose })),
+    ].sort((a, b) => b.at - a.at);
   }
 
+  /**
+   * Одна и та же лента и в общем журнале, и внутри итога болезни: там она
+   * показывает только свой период, но выглядеть должна одинаково.
+   */
+  function renderLog(list: Entry[]) {
+    const days = new Map<string, Entry[]>();
+    for (const entry of list) {
+      const key = new Date(entry.at).toDateString();
+      const bucket = days.get(key);
+      if (bucket) bucket.push(entry);
+      else days.set(key, [entry]);
+    }
 
-  /** Экран «болезни нет»: с него и начинают новую. */
+    return [...days.entries()].map(([key, group]) => (
+      <div key={key} className={styles.day}>
+        <div className={styles.dayHead}>
+          <span className={styles.dayName}>
+            {formatDayLabel(new Date(key))}
+            {formatDayLabel(new Date(key)) !== formatDayDate(new Date(key)) && (
+              <span className={styles.dayDate}>
+                {formatDayDate(new Date(key))}
+              </span>
+            )}
+          </span>
+          <span className={styles.dayCount}>
+            {group.length}{" "}
+            {plural(group.length, ["запись", "записи", "записей"])}
+          </span>
+        </div>
+
+        {group.map((entry) => {
+          if (entry.kind === "dose") {
+            const who = author(entry.dose.created_by);
+            return (
+              <button
+                key={entry.dose.id}
+                type="button"
+                className={styles.row}
+                onClick={() => {
+                  setPickedDose(entry.dose);
+                  setMedOpen(true);
+                }}
+              >
+                <span className={`${styles.time} tnum`}>
+                  {formatTime(entry.dose.given_at)}
+                </span>
+                <span className={styles.rowText}>
+                  <span className={styles.rowMethod}>
+                    {doseLine(entry.dose, true)}
+                    {who ? ` · ${who}` : ""}
+                  </span>
+                  {entry.dose.note && (
+                    <span className={styles.rowNote}>{entry.dose.note}</span>
+                  )}
+                </span>
+                <span className={styles.doseRight}>
+                  {(() => {
+                    const timer = timers.get(entry.dose.id);
+                    if (!timer) return null;
+                    return timer.ready ? (
+                      <span className={styles.ready}>можно давать</span>
+                    ) : (
+                      <span className={`${styles.timer} tnum`}>
+                        {formatDuration(timer.readyAt - now)}
+                      </span>
+                    );
+                  })()}
+                  <span className={styles.pill}>лекарство</span>
+                </span>
+              </button>
+            );
+          }
+
+          const reading = entry.reading;
+          const who = author(reading.created_by);
+          return (
+            <button
+              key={reading.id}
+              type="button"
+              className={styles.row}
+              onClick={() => {
+                setPicked(reading);
+                setTempOpen(true);
+              }}
+            >
+              <span className={`${styles.time} tnum`}>
+                {formatTime(reading.measured_at)}
+              </span>
+              <span className={styles.rowText}>
+                <span className={styles.rowMethod}>
+                  {methodLabel(reading.method)}
+                  {who ? ` · ${who}` : ""}
+                </span>
+                {reading.note && (
+                  <span className={styles.rowNote}>{reading.note}</span>
+                )}
+              </span>
+              <span
+                className={`${styles.value} tnum ${styles[levelOf(reading, ageMonths)]}`}
+              >
+                {formatCelsius(reading.celsius)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    ));
+  }
+
+  /** Всё об одном периоде: журнал, график и выгрузка — без лишних карточек. */
+  const spellSections = (sp: FeverSpell, list: Medicine[]) => (
+    <>
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Журнал</h3>
+          <div className={styles.inlineLog}>{renderLog(entriesOf(sp, list))}</div>
+        </div>
+
+        {sp.readings.length >= 2 && (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Как менялась температура</h3>
+            <FeverChart
+              readings={sp.readings}
+              doses={list}
+              ageMonths={ageMonths}
+              now={now}
+            />
+          </div>
+        )}
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Выгрузить для врача</h3>
+        <IllnessReport
+          child={child}
+          readings={sp.readings}
+          doses={list}
+          ageMonths={ageMonths}
+          age={formatAge(age)}
+          now={now}
+        />
+      </div>
+    </>
+  );
+
+  /**
+   * Экран «болезни нет». Пока болезни нет, выбирать нечего: одна кнопка
+   * заводит первый замер, с него болезнь и начинается.
+   */
   const startCard = (lead: string) => (
     <Card title="Сейчас">
       <p className={styles.lead}>{lead}</p>
-      {addButtons}
+      <div className={styles.actions}>
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={() => {
+            setPicked(null);
+            setTempOpen(true);
+          }}
+        >
+          <Icon name="thermometer" size={18} />
+          Заболел
+        </Button>
+      </div>
     </Card>
   );
 
@@ -199,9 +388,7 @@ export function IllnessPage() {
             {startCard(
               `Болезнь закрыта ${formatDayLabel(
                 new Date(recoveredAt),
-              ).toLowerCase()} в ${formatTime(
-                new Date(recoveredAt),
-              )}. Новый замер начнёт новую.`,
+              ).toLowerCase()} в ${formatTime(new Date(recoveredAt))}.`,
             )}
             <Card
               title="Итог болезни"
@@ -237,6 +424,8 @@ export function IllnessPage() {
                   </span>
                 </div>
               </div>
+
+              {spellSections(spell, spellDoses)}
             </Card>
           </>
         ) : spell ? (
@@ -301,138 +490,102 @@ export function IllnessPage() {
           )
         )}
 
-        {entries.length === 0 ? (
+        {recoveredAt !== null ? null : entries.length === 0 ? (
           <EmptyState
             icon="thermometer"
             title="Журнал пуст"
             text="Здесь появятся замеры температуры и выданные лекарства — одной лентой, удобно показать врачу."
           />
         ) : (
-          <Card
-            key={recoveredAt === null ? "log-live" : "log-done"}
-            title="Журнал"
-            flush
-            collapsible={recoveredAt !== null}
-          >
-            {[...days.entries()].map(([key, list]) => (
-              <div key={key} className={styles.day}>
-                <div className={styles.dayHead}>
-                  <span className={styles.dayName}>
-                    {formatDayLabel(new Date(key))}
-                    {formatDayLabel(new Date(key)) !==
-                      formatDayDate(new Date(key)) && (
-                      <span className={styles.dayDate}>
-                        {formatDayDate(new Date(key))}
+          <>
+            <Card title="Журнал" flush>
+              {renderLog(entries)}
+            </Card>
+            {readings.length >= 2 && (
+              <Card title="Как менялась температура" collapsible>
+                <FeverChart
+                  readings={spell ? spell.readings : sorted.slice(0, 40)}
+                  doses={doses}
+                  ageMonths={ageMonths}
+                  now={now}
+                />
+              </Card>
+            )}
+            <Card title="Выгрузить для врача" collapsible>
+              <IllnessReport
+                child={child}
+                readings={readings}
+                doses={doses}
+                ageMonths={ageMonths}
+                age={formatAge(age)}
+                now={now}
+              />
+            </Card>
+          </>
+        )}
+
+        {pastSpells.length > 0 && (
+          <Card title="История болезней" collapsible>
+            {pastSpells.map((sp) => {
+              const list = dosesOfSpell(allSpells.indexOf(sp));
+              const ended = spellShownEnd(sp);
+              const open = openPast === sp.last.id;
+              const facts = [
+                `пик ${formatCelsius(sp.peak.celsius)}`,
+                `${sp.readings.length} ${plural(sp.readings.length, [
+                  "замер",
+                  "замера",
+                  "замеров",
+                ])}`,
+                list.length > 0
+                  ? `${list.length} ${plural(list.length, [
+                      "лекарство",
+                      "лекарства",
+                      "лекарств",
+                    ])}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+              return (
+                <div key={sp.last.id} className={styles.past}>
+                  <button
+                    type="button"
+                    className={styles.pastHead}
+                    aria-expanded={open}
+                    onClick={() => setOpenPast(open ? null : sp.last.id)}
+                  >
+                    <span className={styles.pastText}>
+                      <span className={styles.pastWhen}>
+                        {rangeOf(sp.since, ended)}
+                      </span>
+                      <span className={styles.pastFacts}>{facts}</span>
+                    </span>
+                    {ended - sp.since >= 60_000 && (
+                      <span className={`${styles.pastLen} tnum`}>
+                        {formatSpan(ended - sp.since)}
                       </span>
                     )}
-                  </span>
-                  <span className={styles.dayCount}>
-                    {list.length}{" "}
-                    {plural(list.length, ["запись", "записи", "записей"])}
-                  </span>
-                </div>
-
-                {list.map((entry) => {
-                  if (entry.kind === "dose") {
-                    const who = author(entry.dose.created_by);
-                    return (
-                      <button
-                        key={entry.dose.id}
-                        type="button"
-                        className={styles.row}
-                        onClick={() => {
-                          setPickedDose(entry.dose);
-                          setMedOpen(true);
-                        }}
-                      >
-                        <span className={`${styles.time} tnum`}>
-                          {formatTime(entry.dose.given_at)}
-                        </span>
-                        <span className={styles.rowText}>
-                          <span className={styles.rowMethod}>
-                            {doseLine(entry.dose, true)}
-                            {who ? ` · ${who}` : ""}
-                          </span>
-                          {entry.dose.note && (
-                            <span className={styles.rowNote}>
-                              {entry.dose.note}
-                            </span>
-                          )}
-                        </span>
-                        <span className={styles.doseRight}>
-                          {(() => {
-                            const timer = timers.get(entry.dose.id);
-                            if (!timer) return null;
-                            return timer.ready ? (
-                              <span className={styles.ready}>можно давать</span>
-                            ) : (
-                              <span className={`${styles.timer} tnum`}>
-                                {formatDuration(timer.readyAt - now)}
-                              </span>
-                            );
-                          })()}
-                          <span className={styles.pill}>лекарство</span>
-                        </span>
-                      </button>
-                    );
-                  }
-
-                  const reading = entry.reading;
-                  const who = author(reading.created_by);
-                  return (
-                    <button
-                      key={reading.id}
-                      type="button"
-                      className={styles.row}
-                      onClick={() => {
-                        setPicked(reading);
-                        setTempOpen(true);
-                      }}
+                    <span
+                      className={`${styles.pastChevron} ${
+                        open ? styles.pastChevronOpen : ""
+                      }`}
+                      aria-hidden="true"
                     >
-                      <span className={`${styles.time} tnum`}>
-                        {formatTime(reading.measured_at)}
-                      </span>
-                      <span className={styles.rowText}>
-                        <span className={styles.rowMethod}>
-                          {methodLabel(reading.method)}
-                          {who ? ` · ${who}` : ""}
-                        </span>
-                        {reading.note && (
-                          <span className={styles.rowNote}>{reading.note}</span>
-                        )}
-                      </span>
-                      <span
-                        className={`${styles.value} tnum ${styles[levelOf(reading, ageMonths)]}`}
-                      >
-                        {formatCelsius(reading.celsius)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </Card>
-        )}
-        {readings.length >= 2 && (
-          <Card title="Как менялась температура" collapsible>
-            <FeverChart
-              readings={spell ? spell.readings : sorted.slice(0, 40)}
-              doses={doses}
-              ageMonths={ageMonths}
-              now={now}
-            />
-          </Card>
-        )}
-        {entries.length > 0 && (
-          <Card title="Выгрузить для врача" collapsible>
-            <IllnessReport
-              child={child}
-              readings={readings}
-              doses={doses}
-              ageMonths={ageMonths}
-              age={formatAge(age)}
-              now={now}
-            />
+                      <Icon name="chevron-down" size={16} />
+                    </span>
+                  </button>
+
+                  {open && spellSections(sp, list)}
+                </div>
+              );
+            })}
+
+            <p className={styles.basis}>
+              Длительность закрытой болезни считается до отметки «поправился»,
+              незакрытой — от первого замера до последнего.
+            </p>
           </Card>
         )}
       </div>
