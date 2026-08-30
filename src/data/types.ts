@@ -110,6 +110,11 @@ export interface Temperature extends SyncFields {
   measured_at: ISODateTime;
   celsius: number;
   method: TempMethod;
+  /**
+   * Отметка «поправился» — стоит на последнем замере законченной болезни.
+   * Пока пусто, болезнь считается идущей и новые замеры продолжают её.
+   */
+  recovered_at: ISODateTime | null;
   note: string | null;
 }
 

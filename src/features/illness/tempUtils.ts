@@ -1,5 +1,6 @@
 import { parseISO } from "date-fns";
 import type { Temperature, TempMethod } from "../../data/types";
+import { formatDuration, plural } from "../../lib/time";
 
 export const METHODS: TempMethod[] = ["forehead", "armpit", "rectal"];
 
@@ -78,6 +79,20 @@ export function formatCelsius(value: number): string {
   })} °C`;
 }
 
+/**
+ * Длительность болезни днями и часами: «76 ч» от formatDuration читается
+ * плохо, а «3 дня 4 ч» родитель понимает с одного взгляда.
+ */
+export function formatSpan(ms: number): string {
+  const DAY = 24 * 3600_000;
+  if (ms < 60_000) return "меньше минуты";
+  if (ms < DAY) return formatDuration(ms);
+  const days = Math.floor(ms / DAY);
+  const hours = Math.floor((ms % DAY) / 3600_000);
+  const word = `${days} ${plural(days, ["день", "дня", "дней"])}`;
+  return hours === 0 ? word : `${word} ${hours} ч`;
+}
+
 export function measuredMs(reading: Temperature): number {
   return parseISO(reading.measured_at).getTime();
 }
@@ -91,15 +106,22 @@ export interface FeverSpell {
   last: Temperature;
   peak: Temperature;
   since: number;
+  /** Когда родитель нажал «Поправился»; null — болезнь ещё идёт. */
+  recoveredAt: number | null;
 }
 
 const SPELL_GAP_MS = 36 * 3600_000;
+
+export function recoveredMs(reading: Temperature): number | null {
+  return reading.recovered_at ? parseISO(reading.recovered_at).getTime() : null;
+}
 
 /**
  * Череда измерений, идущих подряд без большого перерыва, — одна болезнь.
  *
  * Перерыв больше полутора суток считаем концом: иначе давняя простуда
- * склеилась бы с новой и «болеет 40 дней» было бы враньём.
+ * склеилась бы с новой и «болеет 40 дней» было бы враньём. Отметка
+ * «поправился» обрывает череду сразу, не дожидаясь этих полутора суток.
  */
 export function currentSpell(
   readings: Temperature[],
@@ -107,10 +129,16 @@ export function currentSpell(
 ): FeverSpell | null {
   const sorted = sortedByTimeDesc(readings);
   if (sorted.length === 0) return null;
-  if (now - measuredMs(sorted[0]) > SPELL_GAP_MS) return null;
+
+  const recoveredAt = recoveredMs(sorted[0]);
+  // Свежесть считаем по последнему событию: закрытую болезнь ещё показываем,
+  // пока отметка свежая, — чтобы её можно было вернуть, если промахнулись.
+  if (now - (recoveredAt ?? measuredMs(sorted[0])) > SPELL_GAP_MS) return null;
 
   const spell: Temperature[] = [sorted[0]];
   for (let index = 1; index < sorted.length; index += 1) {
+    // Замер с отметкой — последний в прошлой болезни, в эту он не входит.
+    if (sorted[index].recovered_at) break;
     const gap = measuredMs(spell[spell.length - 1]) - measuredMs(sorted[index]);
     if (gap > SPELL_GAP_MS) break;
     spell.push(sorted[index]);
@@ -125,5 +153,6 @@ export function currentSpell(
     last: spell[0],
     peak,
     since: measuredMs(spell[spell.length - 1]),
+    recoveredAt,
   };
 }

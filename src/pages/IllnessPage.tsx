@@ -4,7 +4,7 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Icon } from "../components/ui/Icon";
 import { useActiveChild, useAuthorLabel, useLive, useNow } from "../data/hooks";
-import { listByChild } from "../data/repo";
+import { listByChild, save } from "../data/repo";
 import type { Medicine, Temperature } from "../data/types";
 import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
@@ -21,6 +21,7 @@ import {
   methodLabel,
   sortedByTimeDesc,
   measuredMs,
+  formatSpan,
 } from "../features/illness/tempUtils";
 import {
   ageOf,
@@ -57,6 +58,7 @@ export function IllnessPage() {
   const [picked, setPicked] = useState<Temperature | null>(null);
   const [medOpen, setMedOpen] = useState(false);
   const [pickedDose, setPickedDose] = useState<Medicine | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const { data } = useLive(
     async () => (childId ? await listByChild("temperatures", childId) : NONE),
@@ -80,6 +82,69 @@ export function IllnessPage() {
 
   const timers = doseTimers(doses, now);
 
+  const recoveredAt = spell?.recoveredAt ?? null;
+  const spellDoses = spell
+    ? doses.filter((dose) => {
+        const at = givenMs(dose);
+        return at >= spell.since && at <= (recoveredAt ?? now);
+      })
+    : NO_DOSES;
+
+  /**
+   * Отметка живёт на последнем замере болезни: отдельная таблица ради одного
+   * флага не нужна, а так конец болезни уезжает второму родителю сам.
+   */
+  async function finishSpell() {
+    if (!spell) return;
+    setConfirming(false);
+    await save("temperatures", {
+      ...spell.last,
+      recovered_at: new Date().toISOString(),
+    });
+  }
+
+  async function reopenSpell() {
+    if (!spell) return;
+    await save("temperatures", { ...spell.last, recovered_at: null });
+  }
+
+  const spellRange =
+    spell === null || recoveredAt === null
+      ? ""
+      : `${formatDayDate(new Date(spell.since))}${
+          new Date(spell.since).toDateString() ===
+          new Date(recoveredAt).toDateString()
+            ? ""
+            : ` — ${formatDayDate(new Date(recoveredAt))}`
+        }, отметили в ${formatTime(new Date(recoveredAt))}`;
+
+  const addButtons = (
+    <div className={styles.actions}>
+      <Button
+        variant="primary"
+        size="lg"
+        onClick={() => {
+          setPicked(null);
+          setTempOpen(true);
+        }}
+      >
+        <Icon name="thermometer" size={18} />
+        Температура
+      </Button>
+      <Button
+        variant="secondary"
+        size="lg"
+        onClick={() => {
+          setPickedDose(null);
+          setMedOpen(true);
+        }}
+      >
+        <Icon name="bottle" size={18} />
+        Лекарство
+      </Button>
+    </div>
+  );
+
   const entries: Entry[] = [
     ...sorted.map(
       (reading): Entry => ({ kind: "temp", at: measuredMs(reading), reading }),
@@ -101,8 +166,76 @@ export function IllnessPage() {
       <h1 className="sr-only">Контроль болезни</h1>
 
       <div className={styles.stack}>
-        {spell ? (
+        {confirming && spell ? (
           <Card title="Сейчас">
+            <p className={styles.lead}>
+              Завершить болезнь? Замеры и лекарства останутся в журнале, а
+              карточка свернётся в итог — вернуть можно в любой момент.
+            </p>
+
+            <div className={styles.actions}>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => setConfirming(false)}
+              >
+                Отменить
+              </Button>
+              <Button variant="primary" size="lg" onClick={finishSpell}>
+                Подтвердить
+              </Button>
+            </div>
+          </Card>
+        ) : spell && recoveredAt !== null ? (
+          <Card
+            title="Болезнь завершена"
+            action={
+              <Button variant="ghost" size="sm" onClick={reopenSpell}>
+                Вернуть болезнь
+              </Button>
+            }
+          >
+            <div className={`${styles.big} ${styles.done}`}>
+              {formatSpan(recoveredAt - spell.since)}
+            </div>
+            <p className={styles.sub}>{spellRange}</p>
+
+            <div className={styles.facts}>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>Пик</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {formatCelsius(spell.peak.celsius)}
+                </span>
+              </div>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>Замеров</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {spell.readings.length}
+                </span>
+              </div>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>Лекарств</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {spellDoses.length}
+                </span>
+              </div>
+            </div>
+
+            {addButtons}
+          </Card>
+        ) : spell ? (
+          <Card
+            title="Сейчас"
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirming(true)}
+              >
+                Поправился
+              </Button>
+            }
+          >
             <div className={`${styles.big} tnum ${styles[levelOf(spell.last, ageMonths)]}`}>
               {formatCelsius(spell.last.celsius)}
             </div>
@@ -128,7 +261,7 @@ export function IllnessPage() {
               <div className={styles.fact}>
                 <span className={styles.factLabel}>Наблюдаем</span>
                 <span className={`${styles.factValue} tnum`}>
-                  {formatDuration(now - spell.since)}
+                  {formatSpan(now - spell.since)}
                 </span>
               </div>
             </div>
@@ -142,30 +275,7 @@ export function IllnessPage() {
               . Ориентир, не диагноз.
             </p>
 
-          <div className={styles.actions}>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => {
-                setPicked(null);
-                setTempOpen(true);
-              }}
-            >
-              <Icon name="thermometer" size={18} />
-              Температура
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => {
-                setPickedDose(null);
-                setMedOpen(true);
-              }}
-            >
-              <Icon name="bottle" size={18} />
-              Лекарство
-            </Button>
-          </div>
+            {addButtons}
           </Card>
         ) : (
           <Card title="Сейчас">
@@ -175,30 +285,7 @@ export function IllnessPage() {
                 : "Последний замер был давно — похоже, всё позади."}
             </p>
 
-          <div className={styles.actions}>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => {
-                setPicked(null);
-                setTempOpen(true);
-              }}
-            >
-              <Icon name="thermometer" size={18} />
-              Температура
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => {
-                setPickedDose(null);
-                setMedOpen(true);
-              }}
-            >
-              <Icon name="bottle" size={18} />
-              Лекарство
-            </Button>
-          </div>
+            {addButtons}
           </Card>
         )}
 

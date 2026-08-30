@@ -220,6 +220,7 @@ create table if not exists public.temperatures (
   measured_at timestamptz not null,
   celsius     numeric(4,1) not null,
   method      text not null check (method in ('forehead', 'armpit', 'rectal')),
+  recovered_at timestamptz,
   note        text,
   updated_at  timestamptz not null default now(),
   deleted     boolean not null default false,
@@ -280,6 +281,9 @@ alter table public.sleep_sessions
 
 alter table public.feedings
   add column if not exists ended_by uuid;
+
+alter table public.temperatures
+  add column if not exists recovered_at timestamptz;
 
 -- 'breast' без стороны появился, когда различать левую и правую стало
 -- необязательным. Пересоздаём проверку, а не создаём — иначе на базе,

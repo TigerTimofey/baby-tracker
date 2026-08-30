@@ -77,6 +77,8 @@ export function TemperatureEditor({
       measured_at: when.toISOString(),
       celsius: Math.round(parsed * 10) / 10,
       method,
+      // Правка замера не воскрешает законченную болезнь: отметка остаётся.
+      recovered_at: reading?.recovered_at ?? null,
       note: reading?.note ?? null,
       updated_at: nowISO(),
       deleted: false,
