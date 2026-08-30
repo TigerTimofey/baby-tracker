@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Card } from "../components/ui/Card";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Icon } from "../components/ui/Icon";
 import { useActiveChild, useAuthorLabel, useLive, useNow } from "../data/hooks";
-import { listByChild, save } from "../data/repo";
+import { listByChild, restore, save, softDelete } from "../data/repo";
+import { showToast } from "../components/ui/toast";
 import type { Medicine, Temperature } from "../data/types";
 import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
@@ -32,6 +34,7 @@ import {
   formatAge,
   formatDayDate,
   formatDayLabel,
+  formatFullDate,
   formatDuration,
   formatTime,
   plural,
@@ -63,6 +66,7 @@ export function IllnessPage() {
   const [pickedDose, setPickedDose] = useState<Medicine | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [openPast, setOpenPast] = useState<string | null>(null);
+  const [askDelete, setAskDelete] = useState<string | null>(null);
 
   const { data } = useLive(
     async () => (childId ? await listByChild("temperatures", childId) : NONE),
@@ -116,8 +120,8 @@ export function IllnessPage() {
 
   const rangeOf = (from: number, to: number) =>
     new Date(from).toDateString() === new Date(to).toDateString()
-      ? formatDayDate(new Date(from))
-      : `${formatDayDate(new Date(from))} — ${formatDayDate(new Date(to))}`;
+      ? formatFullDate(new Date(from))
+      : `${formatFullDate(new Date(from))} — ${formatFullDate(new Date(to))}`;
 
   /**
    * Отметка живёт на последнем замере болезни: отдельная таблица ради одного
@@ -132,17 +136,37 @@ export function IllnessPage() {
     });
   }
 
-  async function reopenSpell() {
-    if (!spell) return;
-    await save("temperatures", { ...spell.last, recovered_at: null });
+  /**
+   * Снять отметку «поправился»: болезнь снова считается идущей. Доступно
+   * только у свежего итога — в истории болезнь уже не трогают.
+   */
+  async function reopenSpell(sp: FeverSpell) {
+    await save("temperatures", { ...sp.last, recovered_at: null });
   }
 
-  const spellRange =
-    spell === null || recoveredAt === null
-      ? ""
-      : `${rangeOf(spell.since, recoveredAt)}, отметили в ${formatTime(
-          new Date(recoveredAt),
-        )}`;
+  /**
+   * Удаляем не «болезнь» — такой записи нет, — а её замеры и лекарства.
+   * Мягко и все разом, чтобы одно «Вернуть» в тосте отменило целиком.
+   */
+  async function deleteSpell(sp: FeverSpell, list: Medicine[]) {
+    const temps = sp.readings.map((reading) => reading.id);
+    const meds = list.map((dose) => dose.id);
+    setAskDelete(null);
+    setOpenPast(null);
+    await Promise.all([
+      ...temps.map((id) => softDelete("temperatures", id)),
+      ...meds.map((id) => softDelete("medicines", id)),
+    ]);
+    showToast("Болезнь удалена", {
+      label: "Вернуть",
+      run: async () => {
+        await Promise.all([
+          ...temps.map((id) => restore("temperatures", id)),
+          ...meds.map((id) => restore("medicines", id)),
+        ]);
+      },
+    });
+  }
 
   const addButtons = (
     <div className={styles.actions}>
@@ -196,7 +220,7 @@ export function IllnessPage() {
    * Одна и та же лента и в общем журнале, и внутри итога болезни: там она
    * показывает только свой период, но выглядеть должна одинаково.
    */
-  function renderLog(list: Entry[]) {
+  function renderLog(list: Entry[], readonly = false) {
     const days = new Map<string, Entry[]>();
     for (const entry of list) {
       const key = new Date(entry.at).toDateString();
@@ -225,16 +249,8 @@ export function IllnessPage() {
         {group.map((entry) => {
           if (entry.kind === "dose") {
             const who = author(entry.dose.created_by);
-            return (
-              <button
-                key={entry.dose.id}
-                type="button"
-                className={styles.row}
-                onClick={() => {
-                  setPickedDose(entry.dose);
-                  setMedOpen(true);
-                }}
-              >
+            const content = (
+              <>
                 <span className={`${styles.time} tnum`}>
                   {formatTime(entry.dose.given_at)}
                 </span>
@@ -261,22 +277,35 @@ export function IllnessPage() {
                   })()}
                   <span className={styles.pill}>лекарство</span>
                 </span>
+              </>
+            );
+
+            return readonly ? (
+              <div
+                key={entry.dose.id}
+                className={`${styles.row} ${styles.rowStatic}`}
+              >
+                {content}
+              </div>
+            ) : (
+              <button
+                key={entry.dose.id}
+                type="button"
+                className={styles.row}
+                onClick={() => {
+                  setPickedDose(entry.dose);
+                  setMedOpen(true);
+                }}
+              >
+                {content}
               </button>
             );
           }
 
           const reading = entry.reading;
           const who = author(reading.created_by);
-          return (
-            <button
-              key={reading.id}
-              type="button"
-              className={styles.row}
-              onClick={() => {
-                setPicked(reading);
-                setTempOpen(true);
-              }}
-            >
+          const content = (
+            <>
               <span className={`${styles.time} tnum`}>
                 {formatTime(reading.measured_at)}
               </span>
@@ -294,6 +323,24 @@ export function IllnessPage() {
               >
                 {formatCelsius(reading.celsius)}
               </span>
+            </>
+          );
+
+          return readonly ? (
+            <div key={reading.id} className={`${styles.row} ${styles.rowStatic}`}>
+              {content}
+            </div>
+          ) : (
+            <button
+              key={reading.id}
+              type="button"
+              className={styles.row}
+              onClick={() => {
+                setPicked(reading);
+                setTempOpen(true);
+              }}
+            >
+              {content}
             </button>
           );
         })}
@@ -302,11 +349,17 @@ export function IllnessPage() {
   }
 
   /** Всё об одном периоде: журнал, график и выгрузка — без лишних карточек. */
-  const spellSections = (sp: FeverSpell, list: Medicine[]) => (
+  const spellSections = (
+    sp: FeverSpell,
+    list: Medicine[],
+    readonly = false,
+  ) => (
     <>
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Журнал</h3>
-          <div className={styles.inlineLog}>{renderLog(entriesOf(sp, list))}</div>
+          <div className={styles.inlineLog}>
+            {renderLog(entriesOf(sp, list), readonly)}
+          </div>
         </div>
 
         {sp.readings.length >= 2 && (
@@ -358,6 +411,40 @@ export function IllnessPage() {
     </Card>
   );
 
+  const openSpell =
+    pastSpells.find((item) => item.last.id === openPast) ?? null;
+
+  const askedIndex =
+    askDelete === null
+      ? -1
+      : allSpells.findIndex((item) => item.last.id === askDelete);
+  const asked =
+    askedIndex < 0
+      ? null
+      : (() => {
+          const target = allSpells[askedIndex];
+          const list = dosesOfSpell(askedIndex);
+          const parts = [
+            `${target.readings.length} ${plural(target.readings.length, [
+              "замер",
+              "замера",
+              "замеров",
+            ])}`,
+            list.length > 0
+              ? `${list.length} ${plural(list.length, [
+                  "лекарство",
+                  "лекарства",
+                  "лекарств",
+                ])}`
+              : null,
+          ].filter(Boolean);
+          return {
+            spell: target,
+            doses: list,
+            what: parts.join(" и "),
+          };
+        })();
+
   return (
     <>
       <h1 className="sr-only">Контроль болезни</h1>
@@ -393,8 +480,14 @@ export function IllnessPage() {
             <Card
               title="Итог болезни"
               collapsible
+              actionFirst
+              meta={`Последняя болезнь: ${rangeOf(spell.since, recoveredAt)}`}
               action={
-                <Button variant="ghost" size="sm" onClick={reopenSpell}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => reopenSpell(spell)}
+                >
                   Вернуть болезнь
                 </Button>
               }
@@ -402,8 +495,6 @@ export function IllnessPage() {
               <div className={`${styles.big} ${styles.done}`}>
                 {formatSpan(recoveredAt - spell.since)}
               </div>
-              <p className={styles.sub}>{spellRange}</p>
-
               <div className={styles.facts}>
                 <div className={styles.fact}>
                   <span className={styles.factLabel}>Пик</span>
@@ -490,22 +581,22 @@ export function IllnessPage() {
           )
         )}
 
-        {recoveredAt !== null ? null : entries.length === 0 ? (
+        {entries.length === 0 ? (
           <EmptyState
             icon="thermometer"
             title="Журнал пуст"
             text="Здесь появятся замеры температуры и выданные лекарства — одной лентой, удобно показать врачу."
           />
-        ) : (
+        ) : spell !== null && recoveredAt === null ? (
           <>
             <Card title="Журнал" flush>
-              {renderLog(entries)}
+              {renderLog(entriesOf(spell, spellDoses))}
             </Card>
-            {readings.length >= 2 && (
+            {spell.readings.length >= 2 && (
               <Card title="Как менялась температура" collapsible>
                 <FeverChart
-                  readings={spell ? spell.readings : sorted.slice(0, 40)}
-                  doses={doses}
+                  readings={spell.readings}
+                  doses={spellDoses}
                   ageMonths={ageMonths}
                   now={now}
                 />
@@ -514,15 +605,15 @@ export function IllnessPage() {
             <Card title="Выгрузить для врача" collapsible>
               <IllnessReport
                 child={child}
-                readings={readings}
-                doses={doses}
+                readings={spell.readings}
+                doses={spellDoses}
                 ageMonths={ageMonths}
                 age={formatAge(age)}
                 now={now}
               />
             </Card>
           </>
-        )}
+        ) : null}
 
         {pastSpells.length > 0 && (
           <Card title="История болезней" collapsible>
@@ -549,7 +640,10 @@ export function IllnessPage() {
                 .join(" · ");
 
               return (
-                <div key={sp.last.id} className={styles.past}>
+                <div
+                  key={sp.last.id}
+                  className={`${styles.past} ${open ? styles.pastOpen : ""}`}
+                >
                   <button
                     type="button"
                     className={styles.pastHead}
@@ -577,7 +671,7 @@ export function IllnessPage() {
                     </span>
                   </button>
 
-                  {open && spellSections(sp, list)}
+                  {open && spellSections(sp, list, true)}
                 </div>
               );
             })}
@@ -586,6 +680,19 @@ export function IllnessPage() {
               Длительность закрытой болезни считается до отметки «поправился»,
               незакрытой — от первого замера до последнего.
             </p>
+
+            {openSpell && (
+              <div className={styles.pastDanger}>
+                <Button
+                  variant="danger"
+                  block
+                  onClick={() => setAskDelete(openSpell.last.id)}
+                >
+                  <Icon name="trash" size={17} />
+                  Удалить болезнь
+                </Button>
+              </div>
+            )}
           </Card>
         )}
       </div>
@@ -597,6 +704,18 @@ export function IllnessPage() {
           onClose={() => setTempOpen(false)}
           childId={child.id}
           reading={picked ?? undefined}
+        />
+      )}
+
+      {asked && (
+        <ConfirmDialog
+          open={askDelete !== null}
+          onClose={() => setAskDelete(null)}
+          onConfirm={() => deleteSpell(asked.spell, asked.doses)}
+          title="Удалить болезнь?"
+          text={`${rangeOf(asked.spell.since, spellShownEnd(asked.spell))}. ${
+            asked.what
+          } — записи пропадут из журнала и из выгрузки для врача. Сразу после удаления можно будет отменить.`}
         />
       )}
 

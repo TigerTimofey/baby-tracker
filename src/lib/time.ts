@@ -83,6 +83,15 @@ function dayAndMonth(date: Date): string {
   });
 }
 
+/**
+ * Дата с годом: «1 сентября 2026». В истории болезней год нужен всегда —
+ * записи живут годами, и «1 сентября» без года там ничего не значит.
+ * Русская локаль дописывает «г.», для подписи это лишнее.
+ */
+export function formatFullDate(value: Date | ISODateTime): string {
+  return formatDate(value).replace(/\s*г\.$/, "");
+}
+
 export function formatDayLabel(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
   if (isToday(date)) return "Сегодня";

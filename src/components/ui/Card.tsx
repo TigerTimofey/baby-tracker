@@ -5,6 +5,10 @@ import styles from "./Card.module.css";
 interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   title?: ReactNode;
   action?: ReactNode;
+  /** Подпись между заголовком и кнопкой — например, период карточки. */
+  meta?: ReactNode;
+  /** Кнопку налево, заголовок направо. */
+  actionFirst?: boolean;
   flush?: boolean;
   collapsible?: boolean;
   defaultOpen?: boolean;
@@ -13,6 +17,8 @@ interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
 export function Card({
   title,
   action,
+  meta,
+  actionFirst = false,
   flush = false,
   collapsible = false,
   defaultOpen = false,
@@ -35,8 +41,10 @@ export function Card({
         .join(" ")}
       {...rest}
     >
-      {(title || action) && (
+      {(title || action || meta) && (
         <div className={styles.header}>
+          {meta && <span className={styles.meta}>{meta}</span>}
+          {actionFirst && action}
           {collapsible ? (
             <button
               type="button"
@@ -55,7 +63,7 @@ export function Card({
           ) : (
             title && <h2 className={styles.title}>{title}</h2>
           )}
-          {action}
+          {!actionFirst && action}
         </div>
       )}
       {shown && children}
