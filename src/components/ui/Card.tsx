@@ -9,6 +9,8 @@ interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   meta?: ReactNode;
   /** Кнопку налево, заголовок направо. */
   actionFirst?: boolean;
+  /** Низ карточки: виден и когда её свернули. */
+  footer?: ReactNode;
   flush?: boolean;
   collapsible?: boolean;
   defaultOpen?: boolean;
@@ -19,6 +21,7 @@ export function Card({
   action,
   meta,
   actionFirst = false,
+  footer,
   flush = false,
   collapsible = false,
   defaultOpen = false,
@@ -67,6 +70,7 @@ export function Card({
         </div>
       )}
       {shown && children}
+      {footer}
     </div>
   );
 }

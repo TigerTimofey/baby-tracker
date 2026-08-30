@@ -491,6 +491,18 @@ export function IllnessPage() {
                   Вернуть болезнь
                 </Button>
               }
+              footer={
+                <div className={styles.pastDanger}>
+                  <Button
+                    variant="danger"
+                    block
+                    onClick={() => setAskDelete(spell.last.id)}
+                  >
+                    <Icon name="trash" size={17} />
+                    Удалить болезнь
+                  </Button>
+                </div>
+              }
             >
               <div className={`${styles.big} ${styles.done}`}>
                 {formatSpan(recoveredAt - spell.since)}
