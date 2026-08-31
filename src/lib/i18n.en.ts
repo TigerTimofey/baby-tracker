@@ -481,7 +481,7 @@ export const EN: Record<string, string> = {
   "больше 99-го": "above the 99th",
   "больше 99-го перцентиля": "above the 99th percentile",
   "бутылочка": "bottle",
-  "в": "at",
+  "в": "to",
   "в SQL Editor": "in the SQL Editor",
   "в {0} мес обычно бодрствуют {1}": "at {0} months babies are usually awake {1}",
   "в записях ночного сна, отдельно от списка выше": "in night-sleep records, separately from the list above",

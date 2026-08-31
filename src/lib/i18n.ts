@@ -1,7 +1,8 @@
 import { getSettings } from "../data/settings";
 import type { Lang } from "../data/types";
 import { EN } from "./i18n.en";
-import { EN_FORMS, RU_FORMS } from "./i18n.plural";
+import { ET } from "./i18n.et";
+import { EN_FORMS, ET_FORMS, RU_FORMS } from "./i18n.plural";
 
 /**
  * Перевод без библиотеки.
@@ -17,9 +18,15 @@ export function lang(): Lang {
   return getSettings().language;
 }
 
-/** Локаль для Intl: британская, потому что часы в приложении 24-часовые. */
+const LOCALES: Record<Lang, string> = {
+  // Британская, а не американская: часы в приложении 24-часовые.
+  en: "en-GB",
+  et: "et-EE",
+  ru: "ru-RU",
+};
+
 export function locale(): string {
-  return lang() === "ru" ? "ru-RU" : "en-GB";
+  return LOCALES[lang()];
 }
 
 function fill(text: string, params: Params): string {
@@ -31,8 +38,11 @@ function fill(text: string, params: Params): string {
   });
 }
 
+/** Русского словаря нет: ключ и есть русская строка. */
+const DICTS: Partial<Record<Lang, Record<string, string>>> = { en: EN, et: ET };
+
 export function t(key: string, params?: Params): string {
-  const raw = lang() === "ru" ? key : (EN[key] ?? key);
+  const raw = DICTS[lang()]?.[key] ?? key;
   return params === undefined ? raw : fill(raw, params);
 }
 
@@ -41,7 +51,9 @@ export function t(key: string, params?: Params): string {
  * лежат в словарях, а на месте вызова остаётся только само слово.
  */
 export function pluralOf(n: number, key: string): string {
-  if (lang() === "ru") {
+  const current = lang();
+
+  if (current === "ru") {
     const forms = RU_FORMS[key];
     if (!forms) return key;
     const abs = Math.abs(n) % 100;
@@ -52,18 +64,21 @@ export function pluralOf(n: number, key: string): string {
     return forms[2];
   }
 
-  const forms = EN_FORMS[key];
+  // В английском вторая форма — множественное число, в эстонском — частитив
+  // единственного: «3 päeva», а не «3 päevad». Устроены одинаково, две формы.
+  const forms = (current === "et" ? ET_FORMS : EN_FORMS)[key];
   if (!forms) return RU_FORMS[key]?.[0] ?? key;
   return Math.abs(n) === 1 ? forms[0] : forms[1];
 }
 
 /**
- * Число для поля ввода: в русском десятичная запятая, в английском точка.
- * Разбор принимает и то и другое, но подставлять надо привычное.
+ * Число для поля ввода: где-то десятичная запятая, где-то точка. Разбор
+ * принимает и то и другое, но подставлять надо привычное.
  */
 export function decimalInput(value: number): string {
   const text = String(value);
-  return lang() === "ru" ? text.replace(".", ",") : text;
+  // Точка только в английском: в русском и эстонском разделитель — запятая.
+  return lang() === "en" ? text : text.replace(".", ",");
 }
 
 /** «3 дня» / «3 days». */

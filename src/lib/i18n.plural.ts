@@ -52,3 +52,32 @@ export const EN_FORMS: Record<string, [string, string]> = {
   сну: ["sleep", "sleeps"],
   укладывание: ["put-down", "put-downs"],
 };
+
+/**
+ * В эстонском при числе стоит частитив единственного: «1 päev», но «3 päeva».
+ * Поэтому форм две, как в английском, только вторая — не множественное число.
+ */
+export const ET_FORMS: Record<string, [string, string]> = {
+  год: ["aasta", "aastat"],
+  день: ["päev", "päeva"],
+  дню: ["päev", "päeva"],
+  замер: ["mõõtmine", "mõõtmist"],
+  запись: ["kirje", "kirjet"],
+  "запись сна": ["unekirje", "unekirjet"],
+  "запись ещё не отправлена": [
+    "kirje pole veel saadetud",
+    "kirjet pole veel saadetud",
+  ],
+  измерение: ["mõõtmine", "mõõtmist"],
+  кормление: ["toitmine", "toitmist"],
+  лекарство: ["ravim", "ravimit"],
+  месяц: ["kuu", "kuud"],
+  неделя: ["nädal", "nädalat"],
+  ночи: ["öö", "ööd"],
+  показатель: ["näitaja", "näitajat"],
+  промежутку: ["vahe", "vahet"],
+  раз: ["kord", "korda"],
+  сон: ["uni", "und"],
+  сну: ["uni", "und"],
+  укладывание: ["magamapanek", "magamapanekut"],
+};

@@ -40,7 +40,7 @@ interface Reminder {
   value: string | number;
 }
 
-type Lang = "en" | "ru";
+type Lang = "en" | "et" | "ru";
 
 const WORDS: Record<Lang, Record<Reminder["kind"], [string, string]>> = {
   ru: {
@@ -52,6 +52,11 @@ const WORDS: Record<Lang, Record<Reminder["kind"], [string, string]>> = {
     "bedtime-warn": ["Bedtime soon", "{name}: {value} min until bedtime"],
     bedtime: ["Time for bed", "{name}: bedtime is {value}"],
     "wake-window": ["Time to put down", "{name} has been awake {value}"],
+  },
+  et: {
+    "bedtime-warn": ["Varsti uneaeg", "{name}: uneajani {value} min"],
+    bedtime: ["Aeg magama minna", "{name}: uneaeg on {value}"],
+    "wake-window": ["Aeg magama panna", "{name} on ärkvel olnud {value}"],
   },
 };
 
@@ -132,7 +137,7 @@ function formatDuration(ms: number, lang: Lang): string {
   const minutes = Math.floor(ms / 60_000);
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  const h = lang === "ru" ? "ч" : "h";
+  const h = lang === "ru" ? "ч" : lang === "et" ? "t" : "h";
   const m = lang === "ru" ? "мин" : "min";
   if (hours === 0) return `${rest} ${m}`;
   if (rest === 0) return `${hours} ${h}`;
@@ -263,7 +268,8 @@ Deno.serve(async (request) => {
       if (claim.error) continue;
 
       for (const item of family) {
-        const lang: Lang = item.locale === "ru" ? "ru" : "en";
+        const lang: Lang =
+          item.locale === "ru" || item.locale === "et" ? item.locale : "en";
         const text = render(reminder, lang);
         try {
           await webpush.sendNotification(

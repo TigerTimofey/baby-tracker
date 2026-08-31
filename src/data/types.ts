@@ -153,8 +153,8 @@ export const TABLES: TableName[] = [
   "medicines",
 ];
 
-/** Язык интерфейса. Английский основной, русский — выбором в настройках. */
-export type Lang = "en" | "ru";
+/** Язык интерфейса. Английский основной, остальные — выбором в настройках. */
+export type Lang = "en" | "et" | "ru";
 
 export interface Settings {
   activeChildId: string | null;

@@ -21,6 +21,16 @@ function UnionJack() {
   );
 }
 
+function EstonianFlag() {
+  return (
+    <svg viewBox="0 0 60 40" aria-hidden="true" focusable="false">
+      <rect width="60" height="40" fill="#4891D9" />
+      <rect y="13.33" width="60" height="13.34" fill="#000" />
+      <rect y="26.67" width="60" height="13.33" fill="#fff" />
+    </svg>
+  );
+}
+
 function Tricolour() {
   return (
     <svg viewBox="0 0 60 40" aria-hidden="true" focusable="false">
@@ -33,6 +43,7 @@ function Tricolour() {
 
 const FLAGS: Record<Lang, { flag: () => ReactElement; label: string }> = {
   en: { flag: UnionJack, label: "English" },
+  et: { flag: EstonianFlag, label: "Eesti" },
   // Каждый язык подписан на себе самом, как принято у переключателей:
   // «Русский» не превращается в «Russian», когда интерфейс английский.
   ru: { flag: Tricolour, label: "Русский" },
