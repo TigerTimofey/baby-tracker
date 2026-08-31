@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState } from "react";
 import { Icon } from "../../components/ui/Icon";
 import type { Checkup as CheckupData } from "./checkupData";
@@ -20,7 +21,7 @@ export function Checkup({ data }: { data: CheckupData }) {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <span className={styles.title}>Развитие ребёнка</span>
+        <span className={styles.title}>{t("Развитие ребёнка")}</span>
 
         <span className={styles.verdict}>
           <i className={styles.dot} />
@@ -60,9 +61,7 @@ export function Checkup({ data }: { data: CheckupData }) {
           </ul>
 
           <p className={styles.disclaimer}>
-            Это не медицинская оценка. Приложение только сверяет ваши записи с
-            таблицами ВОЗ и возрастными ориентирами сна. Вопросы здоровья решает
-            педиатр.
+            {t("Это не медицинская оценка. Приложение только сверяет ваши записи с\n            таблицами ВОЗ и возрастными ориентирами сна. Вопросы здоровья решает\n            педиатр.")}
           </p>
         </div>
       )}

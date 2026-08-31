@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useActiveChild, useLive } from "../data/hooks";
 import { listByChild } from "../data/repo";
 import type { SleepSession } from "../data/types";
@@ -28,7 +29,7 @@ export function SleepPage() {
 
   return (
     <>
-      <h1 className="sr-only">Сон и кормления</h1>
+      <h1 className="sr-only">{t("Сон и кормления")}</h1>
       <SleepTimerCard
         child={child}
         sessions={sessions}
@@ -42,7 +43,7 @@ export function SleepPage() {
         <SleepSummary child={child} sessions={sessions} />
       </div>
       <div style={{ marginTop: "var(--gap-4)" }}>
-        <Card title="Лента дня">
+        <Card title={t("Лента дня")}>
           <DayTimeline childId={child.id} sessions={sessions} />
         </Card>
       </div>

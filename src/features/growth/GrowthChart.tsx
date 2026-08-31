@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import type { Sex } from "../../data/types";
 import { useSvgTextScale } from "../../lib/useSvgTextScale";
 import { METRICS, type Point } from "./growthUtils";
@@ -123,7 +124,7 @@ export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProp
         viewBox={`0 0 ${W} ${H}`}
         style={{ fontSize: AXIS_PX / scale }}
         role="img"
-        aria-label={`График: ${info.short}`}
+        aria-label={t("График: {0}", [info.short])}
       >
         {yTicks.map((tick) => (
           <g key={`y-${tick}`}>
@@ -140,7 +141,7 @@ export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProp
               y={y(tick) + 2.5}
               textAnchor="end"
             >
-              {tick.toLocaleString("ru-RU", {
+              {tick.toLocaleString(locale(), {
                 minimumFractionDigits: digits,
                 maximumFractionDigits: digits,
               })}
@@ -200,7 +201,7 @@ export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProp
           y={H - 2}
           textAnchor="end"
         >
-          возраст, месяцев
+          {t("возраст, месяцев")}
         </text>
       </svg>
 
@@ -212,15 +213,14 @@ export function GrowthChart({ metric, sex, points, ageDaysNow }: GrowthChartProp
         {hasBands && (
           <span className={styles.legendItem}>
             <i className={styles.swatchBand} />
-            коридоры ВОЗ: 3–97 и 15–85 перцентиль
+            {t("коридоры ВОЗ: 3–97 и 15–85 перцентиль")}
           </span>
         )}
       </div>
 
       {!sex && (
         <p className={styles.hint}>
-          Укажите пол малыша в профиле — тогда на графике появятся коридоры
-          нормы ВОЗ.
+          {t("Укажите пол малыша в профиле — тогда на графике появятся коридоры\n          нормы ВОЗ.")}
         </p>
       )}
     </div>

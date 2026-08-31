@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Sheet } from "../../components/ui/Sheet";
@@ -35,12 +36,12 @@ export function PhotoCropper({ file, onCancel, onDone }: PhotoCropperProps) {
         if (alive) setImage(img);
       };
       img.onerror = () => {
-        if (alive) setError("Не удалось открыть изображение");
+        if (alive) setError(t("Не удалось открыть изображение"));
       };
       img.src = String(reader.result);
     };
     reader.onerror = () => {
-      if (alive) setError("Не удалось прочитать файл");
+      if (alive) setError(t("Не удалось прочитать файл"));
     };
     reader.readAsDataURL(file);
     return () => {
@@ -50,10 +51,10 @@ export function PhotoCropper({ file, onCancel, onDone }: PhotoCropperProps) {
 
   if (error) {
     return (
-      <Sheet open onClose={onCancel} title="Фото">
+      <Sheet open onClose={onCancel} title={t("Фото")}>
         <p className={styles.error}>{error}</p>
         <Button variant="secondary" onClick={onCancel}>
-          Закрыть
+          {t("Закрыть")}
         </Button>
       </Sheet>
     );
@@ -116,17 +117,16 @@ export function PhotoCropper({ file, onCancel, onDone }: PhotoCropperProps) {
         }),
       );
     } catch {
-      setError("Не удалось обработать фото");
+      setError(t("Не удалось обработать фото"));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Sheet open onClose={onCancel} title="Кадрируйте фото">
+    <Sheet open onClose={onCancel} title={t("Кадрируйте фото")}>
       <p className={styles.hint}>
-        Потяните снимок, чтобы выбрать, что попадёт в кружок. Ползунком —
-        приблизить.
+        {t("Потяните снимок, чтобы выбрать, что попадёт в кружок. Ползунком —\n        приблизить.")}
       </p>
 
       <div
@@ -171,30 +171,32 @@ export function PhotoCropper({ file, onCancel, onDone }: PhotoCropperProps) {
       </div>
 
       <label className={styles.zoom}>
-        <span className={styles.zoomLabel}>Масштаб</span>
+        <span className={styles.zoomLabel}>{t("Масштаб")}</span>
         <input
           type="range"
           min={1}
           max={MAX_ZOOM}
           step={0.01}
           value={zoom}
-          aria-label="Масштаб"
+          aria-label={t("Масштаб")}
           onChange={(event) => changeZoom(Number(event.target.value))}
         />
       </label>
 
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel}>
-          Отмена
+          {t("Отмена")}
         </Button>
         <Button variant="primary" disabled={!image || busy} onClick={confirm}>
-          Готово
+          {t("Готово")}
         </Button>
       </div>
 
       <p className={styles.note}>
-        Сохранится квадрат {PHOTO_SIDE}×{PHOTO_SIDE} — этого хватает и кружку в
-        шапке, и карточке.
+        {t("Сохранится квадрат {0}×{1} — этого хватает и кружку в шапке, и карточке.", [
+          PHOTO_SIDE,
+          PHOTO_SIDE,
+        ])}
       </p>
     </Sheet>
   );

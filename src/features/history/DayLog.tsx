@@ -1,3 +1,4 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { Fragment, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -9,7 +10,6 @@ import {
   formatDayLabel,
   formatDuration,
   formatTime,
-  plural,
 } from "../../lib/time";
 import { FeedingEditor } from "../feeding/FeedingEditor";
 import {
@@ -133,7 +133,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2 className={styles.title}>История</h2>
+        <h2 className={styles.title}>{t("История")}</h2>
         <span className={styles.headerActions}>
           <Button
             size="sm"
@@ -142,7 +142,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
             onClick={() => toggle("sleep")}
           >
             <Icon name="moon" size={15} />
-            Сон
+            {t("Сон")}
           </Button>
           <Button
             size="sm"
@@ -151,29 +151,28 @@ export function DayLog({ childId, sessions }: DayLogProps) {
             onClick={() => toggle("feed")}
           >
             <Icon name="bottle" size={15} />
-            Кормление
+            {t("Кормление")}
           </Button>
         </span>
       </div>
 
-
       {days.length === 0 ? (
-        <Card title="Сон и кормления">
+        <Card title={t("Сон и кормления")}>
           <p className={styles.intro}>
             {showSleep && showFeed
-              ? "Ни одной записи. Добавьте первую — приложение соберёт историю по дням и посчитает, сколько малыш спал и сколько ел."
+              ? t("Ни одной записи. Добавьте первую — приложение соберёт историю по дням и посчитает, сколько малыш спал и сколько ел.")
               : showSleep
-                ? "Записей сна пока нет."
-                : "Записей кормления пока нет."}
+                ? t("Записей сна пока нет.")
+                : t("Записей кормления пока нет.")}
           </p>
           <div className={styles.introAction}>
             <Button variant="primary" onClick={() => setAddSleep(true)}>
               <Icon name="moon" size={17} />
-              Добавить сон
+              {t("Добавить сон")}
             </Button>
             <Button variant="secondary" onClick={() => setAddFeed(true)}>
               <Icon name="bottle" size={17} />
-              Добавить кормление
+              {t("Добавить кормление")}
             </Button>
           </div>
         </Card>
@@ -186,13 +185,9 @@ export function DayLog({ childId, sessions }: DayLogProps) {
               </span>
               <span className={styles.dayTotal}>
                 {[
-                  day.sleepMs > 0 ? `сон ${formatDuration(day.sleepMs)}` : null,
+                  day.sleepMs > 0 ? t("сон {0}", [formatDuration(day.sleepMs)]) : null,
                   day.feeds > 0
-                    ? `${day.feeds} ${plural(day.feeds, [
-                        "кормление",
-                        "кормления",
-                        "кормлений",
-                      ])}`
+                    ? `${day.feeds} ${pluralOf(day.feeds, "кормление")}`
                     : null,
                 ]
                   .filter(Boolean)
@@ -208,14 +203,14 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                     kindShort(feeding.kind),
                     feeding.amount_ml === null
                       ? null
-                      : `${feeding.amount_ml} мл`,
+                      : t("{0} мл", [feeding.amount_ml]),
                     feeding.food,
                     feeding.note,
                     people(
                       feeding.created_by,
                       feeding.ended_by,
-                      "начали",
-                      "закончили",
+                      t("начали"),
+                      t("закончили"),
                     ),
                   ].filter(Boolean);
 
@@ -234,7 +229,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                           {formatTime(feeding.start_at)} →{" "}
                           {feeding.end_at
                             ? formatTime(feeding.end_at)
-                            : "сейчас"}
+                            : t("сейчас")}
                         </span>
                         <span className={styles.note}>{parts.join(" · ")}</span>
                       </span>
@@ -256,8 +251,8 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                   people(
                     session.created_by,
                     session.ended_by,
-                    "уложили",
-                    "подняли",
+                    t("уложили"),
+                    t("подняли"),
                   ),
                 ].filter(Boolean);
 
@@ -283,7 +278,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                           {formatTime(session.start_at)} →{" "}
                           {session.end_at
                             ? formatTime(session.end_at)
-                            : "сейчас"}
+                            : t("сейчас")}
                         </span>
                         {parts.length > 0 && (
                           <span className={styles.note}>
@@ -303,7 +298,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                     {needsFeedBeforeHint(session, feedings) && (
                       <div className={styles.hint}>
                         <span className={styles.hintText}>
-                          Кормление перед сном не отмечено
+                          {t("Кормление перед сном не отмечено")}
                         </span>
                         <span className={styles.hintActions}>
                           <Button
@@ -311,7 +306,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                             variant="ghost"
                             onClick={() => setFeedFor(session)}
                           >
-                            Добавить
+                            {t("Добавить")}
                           </Button>
                           <Button
                             size="sm"
@@ -323,7 +318,7 @@ export function DayLog({ childId, sessions }: DayLogProps) {
                               })
                             }
                           >
-                            Не было
+                            {t("Не было")}
                           </Button>
                         </span>
                       </div>

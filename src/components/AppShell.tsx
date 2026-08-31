@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { ChildAvatar } from "./ui/ChildAvatar";
 import { useCallback, useState, type CSSProperties } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -22,6 +23,10 @@ interface Tab {
   tone: string;
 }
 
+/**
+ * В подписях лежит ключ, а не перевод: массив собирается один раз при загрузке
+ * модуля, и готовый текст застыл бы на языке, который был в тот момент.
+ */
 const TABS: Tab[] = [
   { to: "/sleep", label: "Сон", icon: "moon", tone: "sleep" },
   { to: "/growth", label: "ВОЗ", icon: "growth", tone: "growth" },
@@ -104,7 +109,7 @@ export function AppShell() {
             <ChildAvatar child={child} size={38} />
             <span className={styles.childText}>
               <span className={styles.childName}>
-                {child?.name ?? "Малыш"}
+                {child?.name ?? t("Малыш")}
                 <Icon name="chevron-down" size={15} />
               </span>
               <span className={styles.childAge}>{age}</span>
@@ -117,7 +122,7 @@ export function AppShell() {
             type="button"
             className={styles.iconButton}
             onClick={toggleSettings}
-            aria-label={settingsOpen ? "Закрыть настройки" : "Настройки"}
+            aria-label={settingsOpen ? t("Закрыть настройки") : t("Настройки")}
             aria-expanded={settingsOpen}
           >
             <Icon name="settings" size={21} />
@@ -151,7 +156,7 @@ export function AppShell() {
               onClick={() => rememberDirection(tab.to)}
             >
               <Icon name={tab.icon} size={22} />
-              {tab.label}
+              {t(tab.label)}
             </NavLink>
           ))}
         </div>
@@ -160,7 +165,7 @@ export function AppShell() {
       <Sheet
         open={switcherOpen}
         onClose={() => setSwitcherOpen(false)}
-        title="Малыши"
+        title={t("Малыши")}
       >
         <div className={styles.childList}>
           {children.map((item) => {
@@ -205,7 +210,7 @@ export function AppShell() {
             disabled={!child}
           >
             <Icon name="pencil" size={17} />
-            Изменить
+            {t("Изменить")}
           </Button>
           <Button
             variant="primary"
@@ -216,7 +221,7 @@ export function AppShell() {
             }}
           >
             <Icon name="plus" size={17} />
-            Добавить
+            {t("Добавить")}
           </Button>
         </div>
       </Sheet>

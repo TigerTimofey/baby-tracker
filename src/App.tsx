@@ -1,3 +1,4 @@
+import { t } from "./lib/i18n";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
@@ -6,7 +7,7 @@ import { useActiveChild, useSettings } from "./data/hooks";
 import { clearPendingInvite, getPendingInvite } from "./data/invite";
 import { getSyncStatus, initSync, joinFamily, subscribeSync } from "./data/sync";
 import { showToast } from "./components/ui/toast";
-import { applyTheme } from "./data/settings";
+import { applyLang, applyTheme } from "./data/settings";
 import { ensurePersistentStorageOnce } from "./lib/storage";
 import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
@@ -21,6 +22,8 @@ export default function App() {
   useEffect(() => {
     void ensurePersistentStorageOnce();
   }, []);
+
+  useEffect(() => applyLang(), []);
 
   useEffect(() => {
     const tick = () => applyTheme();
@@ -48,10 +51,10 @@ export default function App() {
 
     clearPendingInvite();
     joinFamily(code).then(
-      () => showToast("Вы присоединились к семье", undefined, 4000),
+      () => showToast(t("Вы присоединились к семье"), undefined, 4000),
       (cause: Error) =>
         showToast(
-          `Не удалось присоединиться: ${cause.message}`,
+          t("Не удалось присоединиться: {0}", [cause.message]),
           undefined,
           6000,
         ),

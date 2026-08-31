@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import { DateTimeField } from "../../components/ui/DateTimeField";
@@ -36,7 +37,7 @@ export function TemperatureEditor({
   );
   const [method, setMethod] = useState<TempMethod>(reading?.method ?? DEFAULT_METHOD);
   const [value, setValue] = useState(
-    reading ? reading.celsius.toLocaleString("ru-RU") : "",
+    reading ? reading.celsius.toLocaleString(locale()) : "",
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -45,11 +46,11 @@ export function TemperatureEditor({
 
     const when = resolveLocalInput(at, reading?.measured_at ?? null);
     if (!when) {
-      setError("Укажите, когда измеряли");
+      setError(t("Укажите, когда измеряли"));
       return;
     }
     if (when.getTime() > Date.now() + 60_000) {
-      setError("Время в будущем");
+      setError(t("Время в будущем"));
       return;
     }
 
@@ -58,16 +59,16 @@ export function TemperatureEditor({
     // внятного «введите температуру».
     const raw = value.trim();
     if (raw === "") {
-      setError("Введите температуру");
+      setError(t("Введите температуру"));
       return;
     }
     const parsed = Number(raw.replace(",", "."));
     if (!Number.isFinite(parsed)) {
-      setError("Введите температуру, например 37,4");
+      setError(t("Введите температуру, например 37,4"));
       return;
     }
     if (parsed < MIN_C || parsed > MAX_C) {
-      setError(`Похоже на опечатку — ждём от ${MIN_C} до ${MAX_C} °C`);
+      setError(t("Похоже на опечатку — ждём от {0} до {1} °C", [MIN_C, MAX_C]));
       return;
     }
 
@@ -93,8 +94,8 @@ export function TemperatureEditor({
     if (!reading) return;
     await softDelete("temperatures", reading.id);
     onClose();
-    showToast("Замер удалён", {
-      label: "Вернуть",
+    showToast(t("Замер удалён"), {
+      label: t("Вернуть"),
       run: () => void restore("temperatures", reading.id),
     });
   }
@@ -103,18 +104,18 @@ export function TemperatureEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={reading ? "Замер температуры" : "Записать температуру"}
+      title={reading ? t("Замер температуры") : t("Записать температуру")}
     >
       <form onSubmit={handleSubmit}>
-        <DateTimeField label="Когда" value={at} onChange={setAt} />
+        <DateTimeField label={t("Когда")} value={at} onChange={setAt} />
 
-        <Field label="Способ" hint={`жар считаем от ${feverThreshold(method).toLocaleString("ru-RU", { minimumFractionDigits: 1 })} °C`}>
+        <Field label={t("Способ")} hint={t("жар считаем от {0} °C", [feverThreshold(method).toLocaleString(locale(), { minimumFractionDigits: 1 })])}>
           {(id) => (
             <Segmented<TempMethod>
               id={id}
               value={method}
               onChange={setMethod}
-              ariaLabel="Способ измерения"
+              ariaLabel={t("Способ измерения")}
               options={METHODS.map((item) => ({
                 value: item,
                 label: methodLabel(item),
@@ -123,14 +124,14 @@ export function TemperatureEditor({
           )}
         </Field>
 
-        <Field label="Температура">
+        <Field label={t("Температура")}>
           {(id) => (
             <TextInput
               id={id}
               inputMode="decimal"
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              placeholder="37,4"
+              placeholder={t("37,4")}
               suffix="°C"
               autoFocus={!reading}
             />
@@ -142,15 +143,15 @@ export function TemperatureEditor({
         <FormActions>
           {reading ? (
             <Button type="button" variant="ghost" onClick={handleDelete}>
-              Удалить
+              {t("Удалить")}
             </Button>
           ) : (
             <Button type="button" variant="secondary" onClick={onClose}>
-              Отмена
+              {t("Отмена")}
             </Button>
           )}
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
       </form>

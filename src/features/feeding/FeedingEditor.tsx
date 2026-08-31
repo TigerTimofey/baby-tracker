@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import {
@@ -93,7 +94,7 @@ export function FeedingEditor({
   const [error, setError] = useState<string | null>(null);
   const people = useRecordPeople();
   const who = feeding
-    ? people(feeding.created_by, feeding.ended_by, "начали", "закончили")
+    ? people(feeding.created_by, feeding.ended_by, t("начали"), t("закончили"))
     : null;
 
   async function handleSubmit(event: FormEvent) {
@@ -101,11 +102,11 @@ export function FeedingEditor({
 
     const startDate = resolveLocalInput(start, feeding?.start_at ?? null);
     if (!startDate) {
-      setError("Укажите, когда началось кормление");
+      setError(t("Укажите, когда началось кормление"));
       return;
     }
     if (startDate.getTime() > Date.now() + 60_000) {
-      setError("Время начала в будущем");
+      setError(t("Время начала в будущем"));
       return;
     }
 
@@ -113,15 +114,15 @@ export function FeedingEditor({
     if (end) {
       endDate = resolveLocalInput(end, feeding?.end_at ?? null);
       if (!endDate) {
-        setError("Не удалось разобрать время окончания");
+        setError(t("Не удалось разобрать время окончания"));
         return;
       }
       if (endDate <= startDate) {
-        setError("Окончание должно быть позже начала");
+        setError(t("Окончание должно быть позже начала"));
         return;
       }
       if (endDate.getTime() - startDate.getTime() > MAX_FEEDING_MS) {
-        setError("Больше шести часов подряд — похоже на опечатку");
+        setError(t("Больше шести часов подряд — похоже на опечатку"));
         return;
       }
     }
@@ -130,7 +131,7 @@ export function FeedingEditor({
     if (family === "bottle" && amount.trim() !== "") {
       const parsed = Number(amount.trim().replace(",", "."));
       if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 2000) {
-        setError("Объём похож на опечатку");
+        setError(t("Объём похож на опечатку"));
         return;
       }
       amountMl = Math.round(parsed);
@@ -160,8 +161,8 @@ export function FeedingEditor({
     const id = feeding.id;
     await softDelete("feedings", id);
     onClose();
-    showToast("Кормление удалено", {
-      label: "Отменить",
+    showToast(t("Кормление удалено"), {
+      label: t("Отменить"),
       run: () => restore("feedings", id),
     });
   }
@@ -170,47 +171,47 @@ export function FeedingEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={feeding ? "Кормление" : "Добавить кормление"}
-      subtitle={feeding ? undefined : "Пригодится, если забыли нажать вовремя"}
+      title={feeding ? t("Кормление") : t("Добавить кормление")}
+      subtitle={feeding ? undefined : t("Пригодится, если забыли нажать вовремя")}
     >
       <form onSubmit={handleSubmit}>
-        <DateTimeField label="Начало" value={start} onChange={setStart} />
+        <DateTimeField label={t("Начало")} value={start} onChange={setStart} />
         <DateTimeField
-          label="Окончание"
-          hint={end ? undefined : "пусто — кормление идёт"}
+          label={t("Окончание")}
+          hint={end ? undefined : t("пусто — кормление идёт")}
           value={end}
           onChange={setEnd}
           defaultDate={start.slice(0, 10)}
         />
 
-        <Field label="Чем кормили">
+        <Field label={t("Чем кормили")}>
           {(id) => (
             <Segmented<Family>
               id={id}
               value={family}
               onChange={setFamily}
-              ariaLabel="Чем кормили"
+              ariaLabel={t("Чем кормили")}
               options={[
-                { value: "breast", label: "Грудь" },
-                { value: "bottle", label: "Бутылочка" },
-                { value: "solid", label: "Прикорм" },
+                { value: "breast", label: t("Грудь") },
+                { value: "bottle", label: t("Бутылочка") },
+                { value: "solid", label: t("Прикорм") },
               ]}
             />
           )}
         </Field>
 
         {family === "breast" && showSide && (
-          <Field label="Сторона">
+          <Field label={t("Сторона")}>
             {(id) => (
               <Segmented<Side>
                 id={id}
                 value={side}
                 onChange={setSide}
-                ariaLabel="Сторона"
+                ariaLabel={t("Сторона")}
                 options={[
-                  { value: "left", label: "Левая" },
-                  { value: "right", label: "Правая" },
-                  { value: "any", label: "Не важно" },
+                  { value: "left", label: t("Левая") },
+                  { value: "right", label: t("Правая") },
+                  { value: "any", label: t("Не важно") },
                 ]}
               />
             )}
@@ -218,12 +219,12 @@ export function FeedingEditor({
         )}
 
         {family === "bottle" && (
-          <Field label="Объём" hint="сколько съел">
+          <Field label={t("Объём")} hint={t("сколько съел")}>
             {(id) => (
               <TextInput
                 id={id}
                 inputMode="numeric"
-                suffix="мл"
+                suffix={t("мл")}
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 placeholder="120"
@@ -233,25 +234,25 @@ export function FeedingEditor({
         )}
 
         {family === "solid" && (
-          <Field label="Что ели">
+          <Field label={t("Что ели")}>
             {(id) => (
               <TextInput
                 id={id}
                 value={food}
                 onChange={(event) => setFood(event.target.value)}
-                placeholder="Например, тыквенное пюре"
+                placeholder={t("Например, тыквенное пюре")}
               />
             )}
           </Field>
         )}
 
-        <Field label="Заметка">
+        <Field label={t("Заметка")}>
           {(id) => (
             <Textarea
               id={id}
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Необязательно"
+              placeholder={t("Необязательно")}
             />
           )}
         </Field>
@@ -263,15 +264,15 @@ export function FeedingEditor({
         <FormActions>
           {feeding ? (
             <Button variant="danger" onClick={handleDelete}>
-              Удалить
+              {t("Удалить")}
             </Button>
           ) : (
             <Button variant="secondary" onClick={onClose}>
-              Отмена
+              {t("Отмена")}
             </Button>
           )}
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
 

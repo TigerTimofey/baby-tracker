@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import type { Feeding, FeedingKind } from "../../data/types";
 
@@ -12,30 +13,30 @@ export const FEEDING_KINDS: FeedingKind[] = [
 export function kindLabel(kind: FeedingKind): string {
   switch (kind) {
     case "breast":
-      return "Грудь";
+      return t("Грудь");
     case "breast_left":
-      return "Грудь, левая";
+      return t("Грудь, левая");
     case "breast_right":
-      return "Грудь, правая";
+      return t("Грудь, правая");
     case "bottle":
-      return "Бутылочка";
+      return t("Бутылочка");
     case "solid":
-      return "Прикорм";
+      return t("Прикорм");
   }
 }
 
 export function kindShort(kind: FeedingKind): string {
   switch (kind) {
     case "breast":
-      return "грудь";
+      return t("грудь");
     case "breast_left":
-      return "левая";
+      return t("левая");
     case "breast_right":
-      return "правая";
+      return t("правая");
     case "bottle":
-      return "бутылочка";
+      return t("бутылочка");
     case "solid":
-      return "прикорм";
+      return t("прикорм");
   }
 }
 

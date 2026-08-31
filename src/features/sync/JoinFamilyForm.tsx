@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Field, TextInput } from "../../components/ui/Form";
@@ -22,7 +23,7 @@ export function JoinFamilyForm({ onJoined, autoFocus }: JoinFamilyFormProps) {
     try {
       await joinFamily(code);
       setCode("");
-      setMessage("Готово — данные семьи загружаются");
+      setMessage(t("Готово — данные семьи загружаются"));
       onJoined?.();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -34,8 +35,8 @@ export function JoinFamilyForm({ onJoined, autoFocus }: JoinFamilyFormProps) {
   return (
     <div className={styles.wrap}>
       <Field
-        label="Код приглашения"
-        hint="Шесть символов из настроек второго родителя"
+        label={t("Код приглашения")}
+        hint={t("Шесть символов из настроек второго родителя")}
       >
         {(id) => (
           <TextInput
@@ -57,7 +58,7 @@ export function JoinFamilyForm({ onJoined, autoFocus }: JoinFamilyFormProps) {
         disabled={busy || code.trim().length < 4}
         onClick={() => void submit()}
       >
-        Присоединиться
+        {t("Присоединиться")}
       </Button>
 
       {message && <p className={styles.message}>{message}</p>}

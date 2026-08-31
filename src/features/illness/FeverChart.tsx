@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import type { Medicine, Temperature } from "../../data/types";
 import { useSvgTextScale } from "../../lib/useSvgTextScale";
 import { buildFeverModel } from "./feverModel";
@@ -44,7 +45,7 @@ export function FeverChart({
         viewBox={`0 0 ${W} ${H}`}
         style={{ fontSize: AXIS_PX / scale }}
         role="img"
-        aria-label="График температуры"
+        aria-label={t("График температуры")}
       >
         {model.degrees.map((tick) => (
           <g key={`t-${tick}`}>
@@ -61,7 +62,7 @@ export function FeverChart({
               y={y(tick) + 3}
               textAnchor="end"
             >
-              {tick.toLocaleString("ru-RU", { minimumFractionDigits: 1 })}
+              {tick.toLocaleString(locale(), { minimumFractionDigits: 1 })}
             </text>
           </g>
         ))}
@@ -105,7 +106,7 @@ export function FeverChart({
                 y={bottom + 15}
                 textAnchor="middle"
               >
-                {new Date(at).toLocaleDateString("ru-RU", {
+                {new Date(at).toLocaleDateString(locale(), {
                   day: "numeric",
                   month: "short",
                 })}
@@ -146,25 +147,25 @@ export function FeverChart({
       <div className={styles.legend}>
         <span className={styles.legendItem}>
           <i className={`${styles.swatch} ${styles.swatchFever}`} />
-          порог жара
+          {t("порог жара")}
         </span>
         <span className={styles.legendItem}>
           <i className={`${styles.swatch} ${styles.swatchHigh}`} />
-          тревожно
+          {t("тревожно")}
         </span>
         {model.marks.length > 0 && (
           <span className={styles.legendItem}>
             <i className={styles.swatchDose} />
-            лекарство
+            {t("лекарство")}
           </span>
         )}
       </div>
 
       <p className={styles.basis}>
-        Пунктир — границы для способа «{methodLabel(model.method).toLowerCase()}
-        », им мерили чаще всего за этот отрезок. Точки покрашены каждая по
-        своему способу. Линия рвётся там, где между замерами прошло больше
-        восьми часов: что было в перерыве, приложение не знает.
+        {t(
+          "Пунктир — границы для способа «{0}», им мерили чаще всего за этот отрезок. Точки покрашены каждая по своему способу. Линия рвётся там, где между замерами прошло больше восьми часов: что было в перерыве, приложение не знает.",
+          [methodLabel(model.method).toLowerCase()],
+        )}
       </p>
     </div>
   );

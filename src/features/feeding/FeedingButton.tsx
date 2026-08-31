@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import type { CSSProperties } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
@@ -59,7 +60,7 @@ export function FeedingButton({ childId }: { childId: string }) {
     return (
       <Button size="lg" variant="soft" style={TONE} onClick={stop}>
         <Icon name="stop" size={17} />
-        Доел
+        {t("Доел")}
       </Button>
     );
   }
@@ -67,7 +68,7 @@ export function FeedingButton({ childId }: { childId: string }) {
   return (
     <Button size="lg" variant="secondary" style={TONE} onClick={start}>
       <Icon name="bottle" size={17} />
-      Кормлю
+      {t("Кормлю")}
     </Button>
   );
 }

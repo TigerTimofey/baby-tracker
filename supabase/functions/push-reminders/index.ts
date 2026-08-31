@@ -7,6 +7,7 @@ interface Subscription {
   p256dh: string;
   auth: string;
   timezone: string | null;
+  locale: string | null;
 }
 
 interface Child {
@@ -26,11 +27,44 @@ interface Sleep {
   end_at: string | null;
 }
 
+/**
+ * Напоминание считается без слов: текст собирается позже, отдельно для
+ * каждой подписки. У родителей язык приложения может быть разный, а
+ * уведомление уходит на оба телефона.
+ */
 interface Reminder {
-  kind: string;
+  kind: "bedtime-warn" | "bedtime" | "wake-window";
   key: string;
-  title: string;
-  body: string;
+  name: string;
+  /** Минуты до сна, время сна или длительность бодрствования в мс. */
+  value: string | number;
+}
+
+type Lang = "en" | "ru";
+
+const WORDS: Record<Lang, Record<Reminder["kind"], [string, string]>> = {
+  ru: {
+    "bedtime-warn": ["Скоро сон", "{name}: до отхода ко сну {value} мин"],
+    bedtime: ["Пора укладываться", "{name}: время сна — {value}"],
+    "wake-window": ["Пора укладывать", "{name} бодрствует {value}"],
+  },
+  en: {
+    "bedtime-warn": ["Bedtime soon", "{name}: {value} min until bedtime"],
+    bedtime: ["Time for bed", "{name}: bedtime is {value}"],
+    "wake-window": ["Time to put down", "{name} has been awake {value}"],
+  },
+};
+
+function render(reminder: Reminder, lang: Lang): { title: string; body: string } {
+  const [title, body] = WORDS[lang][reminder.kind];
+  const value =
+    reminder.kind === "wake-window"
+      ? formatDuration(Number(reminder.value), lang)
+      : String(reminder.value);
+  return {
+    title,
+    body: body.replace("{name}", reminder.name).replace("{value}", value),
+  };
 }
 
 const BANDS: Array<{ upToMonths: number; wakeMax: number }> = [
@@ -94,13 +128,15 @@ function parseTimeOfDay(value: string): number | null {
   return h > 23 || m > 59 ? null : h * 60 + m;
 }
 
-function formatDuration(ms: number): string {
+function formatDuration(ms: number, lang: Lang): string {
   const minutes = Math.floor(ms / 60_000);
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours === 0) return `${rest} мин`;
-  if (rest === 0) return `${hours} ч`;
-  return `${hours} ч ${rest} мин`;
+  const h = lang === "ru" ? "ч" : "h";
+  const m = lang === "ru" ? "мин" : "min";
+  if (hours === 0) return `${rest} ${m}`;
+  if (rest === 0) return `${hours} ${h}`;
+  return `${hours} ${h} ${rest} ${m}`;
 }
 
 function remindersFor(
@@ -123,16 +159,16 @@ function remindersFor(
       out.push({
         kind: "bedtime-warn",
         key: local.date,
-        title: "Скоро сон",
-        body: `${child.name}: до отхода ко сну ${until} мин`,
+        name: child.name,
+        value: until,
       });
     }
     if (until <= 0 && until > -60) {
       out.push({
         kind: "bedtime",
         key: local.date,
-        title: "Пора укладываться",
-        body: `${child.name}: время сна — ${child.bedtime}`,
+        name: child.name,
+        value: child.bedtime ?? "",
       });
     }
   }
@@ -148,8 +184,8 @@ function remindersFor(
       out.push({
         kind: "wake-window",
         key: String(lastWake),
-        title: "Пора укладывать",
-        body: `${child.name} бодрствует ${formatDuration(awake)}`,
+        name: child.name,
+        value: awake,
       });
     }
   }
@@ -180,7 +216,7 @@ Deno.serve(async (request) => {
 
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
-    .select("endpoint, family_id, p256dh, auth, timezone");
+    .select("endpoint, family_id, p256dh, auth, timezone, locale");
 
   const byFamily = new Map<string, Subscription[]>();
   for (const item of (subscriptions ?? []) as Subscription[]) {
@@ -227,6 +263,8 @@ Deno.serve(async (request) => {
       if (claim.error) continue;
 
       for (const item of family) {
+        const lang: Lang = item.locale === "ru" ? "ru" : "en";
+        const text = render(reminder, lang);
         try {
           await webpush.sendNotification(
             {
@@ -234,8 +272,8 @@ Deno.serve(async (request) => {
               keys: { p256dh: item.p256dh, auth: item.auth },
             },
             JSON.stringify({
-              title: reminder.title,
-              body: reminder.body,
+              title: text.title,
+              body: text.body,
               tag: reminder.kind,
             }),
           );

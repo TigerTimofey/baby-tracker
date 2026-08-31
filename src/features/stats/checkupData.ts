@@ -1,6 +1,7 @@
+import { locale, pluralOf, t } from "../../lib/i18n";
 import { differenceInCalendarDays } from "date-fns";
 import type { Child, Measurement } from "../../data/types";
-import { plural } from "../../lib/time";
+
 import { METRICS, METRIC_ORDER, seriesFor } from "../growth/growthUtils";
 import {
   percentileLabel,
@@ -31,13 +32,13 @@ export interface Checkup {
 
 function sleepRow(stats: SleepStats, ageMonths: number): CheckRow {
   const band = bandFor(ageMonths);
-  const reference = `ориентир для ${ageMonths} мес — ${band.sleepMinH}–${band.sleepMaxH} ч в сутки`;
+  const reference = t("ориентир для {0} мес — {1}–{2} ч в сутки", [ageMonths, band.sleepMinH, band.sleepMaxH]);
 
   if (stats.avgTotalMs === null || stats.daysCounted < MIN_DAYS_FOR_SLEEP) {
     return {
-      label: "Сон",
-      value: "нет данных",
-      detail: `нужно хотя бы ${MIN_DAYS_FOR_SLEEP} полных дня с записями`,
+      label: t("Сон"),
+      value: t("нет данных"),
+      detail: t("нужно хотя бы {0} полных дня с записями", [MIN_DAYS_FOR_SLEEP]),
       status: "unknown",
     };
   }
@@ -46,12 +47,9 @@ function sleepRow(stats: SleepStats, ageMonths: number): CheckRow {
   const inside = hours >= band.sleepMinH && hours <= band.sleepMaxH;
 
   return {
-    label: "Сон",
-    value: `${hours.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} ч в сутки`,
-    detail: `${reference} · в среднем по ${stats.daysCounted} ${plural(
-      stats.daysCounted,
-      ["дню", "дням", "дням"],
-    )}`,
+    label: t("Сон"),
+    value: t("{0} ч в сутки", [hours.toLocaleString(locale(), { maximumFractionDigits: 1 })]),
+    detail: t("{0} · в среднем по {1} {2}", [reference, stats.daysCounted, pluralOf(stats.daysCounted, "дню")]),
     status: inside ? "ok" : "attention",
   };
 }
@@ -73,8 +71,8 @@ export function buildCheckup(
     if (!last) {
       rows.push({
         label: info.label,
-        value: "нет измерений",
-        detail: "добавьте замер на вкладке «ВОЗ»",
+        value: t("нет измерений"),
+        detail: t("добавьте замер на вкладке «ВОЗ»"),
         status: "unknown",
       });
       continue;
@@ -90,8 +88,8 @@ export function buildCheckup(
         value: info.format(last.raw),
         detail:
           child.sex === null
-            ? "в профиле не указан пол — таблицы ВОЗ для мальчиков и девочек разные"
-            : "возраст вне таблиц ВОЗ — сравнить не с чем",
+            ? t("в профиле не указан пол — таблицы ВОЗ для мальчиков и девочек разные")
+            : t("возраст вне таблиц ВОЗ — сравнить не с чем"),
         status: "unknown",
       });
       continue;
@@ -100,16 +98,16 @@ export function buildCheckup(
     const days = differenceInCalendarDays(new Date(now), last.at);
     const age =
       days <= 0
-        ? "замер сегодня"
-        : `замер ${days} ${plural(days, ["день", "дня", "дней"])} назад`;
+        ? t("замер сегодня")
+        : t("замер {0} {1} назад", [days, pluralOf(days, "день")]);
 
     rows.push({
       label: info.label,
       value: `${info.format(last.raw)} · ${percentileLabel(percentileFromZ(z))}`,
       detail:
         Math.abs(z) <= WHO_LIMIT_Z
-          ? `внутри коридора ВОЗ (с 3-го по 97-й перцентиль) · ${age}`
-          : `за пределами коридора ВОЗ (с 3-го по 97-й перцентиль) · ${age}`,
+          ? t("внутри коридора ВОЗ (с 3-го по 97-й перцентиль) · {0}", [age])
+          : t("за пределами коридора ВОЗ (с 3-го по 97-й перцентиль) · {0}", [age]),
       status: Math.abs(z) <= WHO_LIMIT_Z ? "ok" : "attention",
     });
   }
@@ -124,8 +122,8 @@ export function buildCheckup(
     const names = attention.map((row) => row.label.toLowerCase()).join(", ");
     return {
       status: "attention",
-      headline: "Не всё в ориентирах",
-      sub: `вне ориентиров: ${names}`,
+      headline: t("Не всё в ориентирах"),
+      sub: t("вне ориентиров: {0}", [names]),
       rows,
     };
   }
@@ -133,19 +131,19 @@ export function buildCheckup(
   if (ok.length === 0) {
     return {
       status: "unknown",
-      headline: "Данных пока мало",
-      sub: "нужны замеры роста и веса и хотя бы несколько дней записей сна",
+      headline: t("Данных пока мало"),
+      sub: t("нужны замеры роста и веса и хотя бы несколько дней записей сна"),
       rows,
     };
   }
 
   return {
     status: "ok",
-    headline: "Всё в ориентирах",
+    headline: t("Всё в ориентирах"),
     sub:
       unknown.length === 0
-        ? `${ok.length} из ${rows.length} ${plural(rows.length, ["показателя", "показателей", "показателей"])} проверено`
-        : `${ok.length} из ${rows.length} в норме · по остальным нет данных`,
+        ? t("{0} из {1} {2} проверено", [ok.length, rows.length, pluralOf(rows.length, "показателя")])
+        : t("{0} из {1} в норме · по остальным нет данных", [ok.length, rows.length]),
     rows,
   };
 }

@@ -153,8 +153,12 @@ export const TABLES: TableName[] = [
   "medicines",
 ];
 
+/** Язык интерфейса. Английский основной, русский — выбором в настройках. */
+export type Lang = "en" | "ru";
+
 export interface Settings {
   activeChildId: string | null;
+  language: Lang;
   theme: "dark" | "light" | "system";
   bedtime: string | null;
   bedtimeWarnMinutes: number;
@@ -170,6 +174,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   activeChildId: null,
+  language: "en",
   theme: "dark",
   bedtime: "20:30",
   bedtimeWarnMinutes: 30,

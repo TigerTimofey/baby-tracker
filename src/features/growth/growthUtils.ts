@@ -1,3 +1,4 @@
+import { decimalInput, locale, t } from "../../lib/i18n";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import type { Child, Measurement } from "../../data/types";
 import { birthMoment } from "../../lib/time";
@@ -25,7 +26,7 @@ function decimal(text: string): number | null {
 }
 
 function ru(value: number, digits: number): string {
-  return value.toLocaleString("ru-RU", {
+  return value.toLocaleString(locale(), {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   });
@@ -34,55 +35,97 @@ function ru(value: number, digits: number): string {
 export const METRICS: Record<WhoMetric, MetricInfo> = {
   weight: {
     key: "weight",
-    label: "Вес",
-    short: "вес",
-    unit: "кг",
+    get label() {
+
+      return t("Вес");
+
+    },
+    get short() {
+
+      return t("вес");
+
+    },
+    get unit() {
+
+      return t("кг");
+
+    },
     field: "weight_g",
     toWho: (grams) => grams / 1000,
     fromInput: (text) => {
       const kg = decimal(text);
       return kg === null ? null : Math.round(kg * 1000);
     },
-    toInput: (grams) => (grams == null ? "" : String(grams / 1000).replace(".", ",")),
-    format: (grams) => `${ru(grams / 1000, 2)} кг`,
+    toInput: (grams) => (grams == null ? "" : decimalInput(grams / 1000)),
+    format: (grams) => t("{0} кг", [ru(grams / 1000, 2)]),
     formatDelta: (grams) => {
       const sign = grams >= 0 ? "+" : "−";
       const abs = Math.abs(grams);
-      return abs >= 1000 ? `${sign}${ru(abs / 1000, 2)} кг` : `${sign}${abs} г`;
+      return abs >= 1000 ? t("{0}{1} кг", [sign, ru(abs / 1000, 2)]) : t("{0}{1} г", [sign, abs]);
     },
-    placeholder: "7,25",
+    get placeholder() {
+      return t("7,25");
+    },
   },
   height: {
     key: "height",
-    label: "Рост",
-    short: "рост",
-    unit: "см",
+    get label() {
+
+      return t("Рост");
+
+    },
+    get short() {
+
+      return t("рост");
+
+    },
+    get unit() {
+
+      return t("см");
+
+    },
     field: "height_mm",
     toWho: (mm) => mm / 10,
     fromInput: (text) => {
       const cm = decimal(text);
       return cm === null ? null : Math.round(cm * 10);
     },
-    toInput: (mm) => (mm == null ? "" : String(mm / 10).replace(".", ",")),
-    format: (mm) => `${ru(mm / 10, 1)} см`,
-    formatDelta: (mm) => `${mm >= 0 ? "+" : "−"}${ru(Math.abs(mm) / 10, 1)} см`,
-    placeholder: "68,5",
+    toInput: (mm) => (mm == null ? "" : decimalInput(mm / 10)),
+    format: (mm) => t("{0} см", [ru(mm / 10, 1)]),
+    formatDelta: (mm) => t("{0}{1} см", [mm >= 0 ? "+" : "−", ru(Math.abs(mm) / 10, 1)]),
+    get placeholder() {
+      return t("68,5");
+    },
   },
   head: {
     key: "head",
-    label: "Голова",
-    short: "окружность головы",
-    unit: "см",
+    get label() {
+
+      return t("Голова");
+
+    },
+    get short() {
+
+      return t("окружность головы");
+
+    },
+    get unit() {
+
+      return t("см");
+
+    },
     field: "head_mm",
     toWho: (mm) => mm / 10,
     fromInput: (text) => {
       const cm = decimal(text);
       return cm === null ? null : Math.round(cm * 10);
     },
-    toInput: (mm) => (mm == null ? "" : String(mm / 10).replace(".", ",")),
-    format: (mm) => `${ru(mm / 10, 1)} см`,
-    formatDelta: (mm) => `${mm >= 0 ? "+" : "−"}${ru(Math.abs(mm) / 10, 1)} см`,
-    placeholder: "43,2",
+    toInput: (mm) => (mm == null ? "" : decimalInput(mm / 10)),
+    format: (mm) => t("{0} см", [ru(mm / 10, 1)]),
+    formatDelta: (mm) => t("{0}{1} см", [mm >= 0 ? "+" : "−", ru(Math.abs(mm) / 10, 1)]),
+    get placeholder() {
+      return t("43,2");
+    },
   },
 };
 

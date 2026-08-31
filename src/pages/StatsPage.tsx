@@ -1,3 +1,4 @@
+import { locale, pluralOf, t, withCount } from "../lib/i18n";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { useMemo, useRef, useState } from "react";
 import { Card } from "../components/ui/Card";
@@ -33,7 +34,11 @@ import {
   type Period,
 } from "../features/stats/statsUtils";
 import { bandFor, nightFeedingWord } from "../features/sleep/sleepUtils";
-import { ageOf, birthMoment, formatDuration, plural } from "../lib/time";
+import {
+  ageOf,
+  birthMoment,
+  formatDuration,
+} from "../lib/time";
 import styles from "./StatsPage.module.css";
 
 const NO_SESSIONS: SleepSession[] = [];
@@ -152,10 +157,10 @@ export function StatsPage() {
       <Segmented<Period>
         value={shown}
         onChange={setPeriod}
-        ariaLabel="Период"
+        ariaLabel={t("Период")}
         options={ORDER.map((value) => ({
           value,
-          label: `${value} дней`,
+          label: t("{0} дней", [value]),
         }))}
       />
     </div>
@@ -169,16 +174,16 @@ export function StatsPage() {
   const sleepCards = !sleepReady ? (
     <EmptyState
       icon="stats"
-      title="Записей сна пока нет"
-      text="За этот период сна не записано. Как только появится первая запись, здесь будет график по дням."
+      title={t("Записей сна пока нет")}
+      text={t("За этот период сна не записано. Как только появится первая запись, здесь будет график по дням.")}
     />
   ) : (
     <>
-      <Card title="Из чего состоят сутки">
+      <Card title={t("Из чего состоят сутки")}>
         <DayComposition stats={stats} />
       </Card>
 
-      <Card title="Сон по дням">
+      <Card title={t("Сон по дням")}>
           <SleepBars
             days={stats.days}
             normMinHours={band.sleepMinH}
@@ -187,102 +192,100 @@ export function StatsPage() {
             deltaMs={stats.deltaMs}
           />
           <p className={styles.basis}>
-            Столбик — сон, попавший в эти сутки: фиолетовый ночной, зелёный
-            дневной. Пунктир — ориентир {band.sleepMinH} ч сна в сутки для
-            этого возраста. Бледные столбики в средние не входят: сегодняшний
-            день ещё не закончился, а у самого первого дня записей нет
-            предыдущей ночи, и его сумма всегда занижена.
+            {t(
+              "Столбик — сон, попавший в эти сутки: фиолетовый ночной, зелёный дневной. Пунктир — ориентир {0} ч сна в сутки для этого возраста. Бледные столбики в средние не входят: сегодняшний день ещё не закончился, а у самого первого дня записей нет предыдущей ночи, и его сумма всегда занижена.",
+              [band.sleepMinH],
+            )}
             {stats.deltaMs !== null &&
-              " Значок справа — насколько изменилось среднее по сравнению с предыдущим таким же отрезком."}
+              t(" Значок справа — насколько изменилось среднее по сравнению с предыдущим таким же отрезком.")}
           </p>
         </Card>
 
-        <Card title="Режим суток">
+        <Card title={t("Режим суток")}>
           <DayMap rows={timelines} withFeedings={feedings.length > 0} />
           <p className={styles.basis}>
-            Строка — сутки. Фиолетовый — ночной сон, зелёный — дневной,
-            точки — кормления.
+            {t("Строка — сутки. Фиолетовый — ночной сон, зелёный — дневной,\n            точки — кормления.")}
           </p>
         </Card>
 
-        <Card title="Ночной сон">
+        <Card title={t("Ночной сон")}>
           <Facts
             items={[
               {
-                label: "Обычно засыпает",
+                label: t("Обычно засыпает"),
                 value:
                   stats.bedtimeMinutes === null
                     ? null
                     : formatClockMinutes(stats.bedtimeMinutes),
-                hint: "медиана, а не среднее — одна поздняя ночь её не сдвинет",
+                hint: t("медиана, а не среднее — одна поздняя ночь её не сдвинет"),
               },
               {
-                label: "Обычно просыпается",
+                label: t("Обычно просыпается"),
                 value:
                   stats.wakeMinutes === null
                     ? null
                     : formatClockMinutes(stats.wakeMinutes),
               },
               {
-                label: "Самая длинная ночь",
+                label: t("Самая длинная ночь"),
                 value:
                   stats.longestNightMs === null
                     ? null
                     : formatDuration(stats.longestNightMs),
               },
               {
-                label: "Кормлений за ночь",
+                label: t("Кормлений за ночь"),
                 value:
                   stats.avgNightFeedings === null
                     ? null
-                    : stats.avgNightFeedings.toLocaleString("ru-RU", {
+                    : stats.avgNightFeedings.toLocaleString(locale(), {
                         maximumFractionDigits: 1,
                       }),
-                hint: `в среднем по ${stats.nightsWithFeedingNote} ${plural(
-                  stats.nightsWithFeedingNote,
-                  ["ночи", "ночам", "ночам"],
-                )} с отметкой${
-                  stats.nightFeedingKind
-                    ? ` · чаще ${nightFeedingWord(stats.nightFeedingKind)}`
-                    : ""
-                }`,
+                hint:
+                  t("в среднем по {0} с отметкой", [
+                    withCount(stats.nightsWithFeedingNote, "ночи"),
+                  ]) +
+                  (stats.nightFeedingKind
+                    ? t(" · чаще {0}", [
+                        nightFeedingWord(stats.nightFeedingKind),
+                      ])
+                    : ""),
               },
               {
-                label: "Ночей с записями",
+                label: t("Ночей с записями"),
                 value: stats.nightCount === 0 ? null : String(stats.nightCount),
               },
             ]}
           />
           {stats.nightCount > 0 && stats.nightCount < 3 && (
             <p className={styles.basis}>
-              Обычное время засыпания и подъёма появится, когда наберётся хотя
-              бы три ночи.
+              {t("Обычное время засыпания и подъёма появится, когда наберётся хотя\n              бы три ночи.")}
             </p>
           )}
         </Card>
 
-        <Card title="Дневные сны">
+        <Card title={t("Дневные сны")}>
           <Facts
             items={[
               {
-                label: "Снов за день",
+                label: t("Снов за день"),
                 value:
                   stats.avgNapCount === null
                     ? null
-                    : stats.avgNapCount.toLocaleString("ru-RU", {
+                    : stats.avgNapCount.toLocaleString(locale(), {
                         maximumFractionDigits: 1,
                       }),
-                hint: `в среднем по ${stats.daysCounted} дн.`,
+                hint: t("в среднем по {0} дн.", [stats.daysCounted]),
               },
               {
-                label: "Длительность одного",
+                label: t("Длительность одного"),
                 value:
                   stats.avgNapDurationMs === null
                     ? null
                     : formatDuration(stats.avgNapDurationMs),
               },
               {
-                label: "Всего за день",
+                label: t("Всего за день"),
                 value:
                   stats.avgNapMs === null || stats.avgNapMs === 0
                     ? null
@@ -292,23 +295,27 @@ export function StatsPage() {
           />
         </Card>
 
-      <Card title="Бодрствование">
+      <Card title={t("Бодрствование")}>
           <Facts
             items={[
               {
-                label: "Между снами",
+                label: t("Между снами"),
                 value:
                   stats.avgWakeWindowMs === null
                     ? null
                     : formatDuration(stats.avgWakeWindowMs),
-                hint: `ориентир для ${age.totalMonths} мес — ${
+                hint: t("ориентир для {0} мес — {1}", [
+                  age.totalMonths,
                   band.wakeMin >= 60
-                    ? `${(band.wakeMin / 60).toLocaleString("ru-RU")}–${(band.wakeMax / 60).toLocaleString("ru-RU")} ч`
-                    : `${band.wakeMin}–${band.wakeMax} мин`
-                }`,
+                    ? t("{0}–{1} ч", [
+                        (band.wakeMin / 60).toLocaleString(locale()),
+                        (band.wakeMax / 60).toLocaleString(locale()),
+                      ])
+                    : t("{0}–{1} мин", [band.wakeMin, band.wakeMax]),
+                ]),
               },
               {
-                label: "Самый долгий промежуток",
+                label: t("Самый долгий промежуток"),
                 value:
                   stats.longestWakeWindowMs === null
                     ? null
@@ -317,8 +324,7 @@ export function StatsPage() {
             ]}
           />
         <p className={styles.basis}>
-          Промежутки длиннее 16 часов не учитываются — это пропуск в записях,
-          а не бодрствование.
+          {t("Промежутки длиннее 16 часов не учитываются — это пропуск в записях,\n          а не бодрствование.")}
         </p>
       </Card>
     </>
@@ -326,27 +332,28 @@ export function StatsPage() {
 
   return (
     <>
-      <h1 className="sr-only">Статистика</h1>
+      <h1 className="sr-only">{t("Статистика")}</h1>
       {periods}
 
       <div className={styles.stack}>
         {!enough ? (
           <p className={styles.shortage}>
-            Данных за {period} дней пока нет. Записи есть только за{" "}
-            {historyDays === 0
-              ? "нулевой срок"
-              : `${historyDays} ${plural(historyDays, ["день", "дня", "дней"])}`}
-            {" "}— выберите период покороче.
+            {t("Данных за {0} дней пока нет. Записи есть только за {1} — выберите период покороче.", [
+              period,
+              historyDays === 0
+                ? t("нулевой срок")
+                : withCount(historyDays, "день"),
+            ])}
           </p>
         ) : (
           <>
         <Checkup data={checkup} />
 
-        <Card title={`Итоги ${summary.periodLabel}`} collapsible>
+        <Card title={t("Итоги {0}", [summary.periodLabel])} collapsible>
           <SummaryCard data={summary} />
         </Card>
 
-        <Card title="Что изменилось">
+        <Card title={t("Что изменилось")}>
           <Changes data={changes} />
         </Card>
 
@@ -402,7 +409,7 @@ function GrowthOverPeriod({
       {
         label: info.label,
         value: info.formatDelta(last.raw - baseline.raw),
-        hint: `за ${span} ${plural(span, ["день", "дня", "дней"])} между измерениями`,
+        hint: t("за {0} {1} между измерениями", [span, pluralOf(span, "день")]),
       },
     ];
   });
@@ -410,7 +417,7 @@ function GrowthOverPeriod({
   if (items.length === 0) return null;
 
   return (
-    <Card title="Прибавки">
+    <Card title={t("Прибавки")}>
       <Facts items={items} />
     </Card>
   );

@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import { Field, FormActions, Textarea } from "../../components/ui/Form";
@@ -58,7 +59,7 @@ export function SleepEditor({
   const [error, setError] = useState<string | null>(null);
   const people = useRecordPeople();
   const who = session
-    ? people(session.created_by, session.ended_by, "уложили", "подняли")
+    ? people(session.created_by, session.ended_by, t("уложили"), t("подняли"))
     : null;
 
   async function handleSubmit(event: FormEvent) {
@@ -66,7 +67,7 @@ export function SleepEditor({
 
     const startDate = resolveLocalInput(start, session?.start_at ?? null);
     if (!startDate) {
-      setError("Укажите, когда малыш уснул");
+      setError(t("Укажите, когда малыш уснул"));
       return;
     }
 
@@ -74,21 +75,21 @@ export function SleepEditor({
     if (end) {
       endDate = resolveLocalInput(end, session?.end_at ?? null);
       if (!endDate) {
-        setError("Не удалось разобрать время пробуждения");
+        setError(t("Не удалось разобрать время пробуждения"));
         return;
       }
       if (endDate <= startDate) {
-        setError("Пробуждение должно быть позже засыпания");
+        setError(t("Пробуждение должно быть позже засыпания"));
         return;
       }
       if (endDate.getTime() - startDate.getTime() > 24 * 3600 * 1000) {
-        setError("Больше суток подряд — похоже на опечатку");
+        setError(t("Больше суток подряд — похоже на опечатку"));
         return;
       }
     }
 
     if (startDate.getTime() > Date.now() + 60_000) {
-      setError("Время засыпания в будущем");
+      setError(t("Время засыпания в будущем"));
       return;
     }
 
@@ -96,7 +97,7 @@ export function SleepEditor({
     if (kind === "night" && nightCount > 0 && nightKind === "bottle" && nightMl.trim()) {
       const parsed = Number(nightMl.trim().replace(",", "."));
       if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 2000) {
-        setError("Объём ночного кормления похож на опечатку");
+        setError(t("Объём ночного кормления похож на опечатку"));
         return;
       }
       nightMlValue = Math.round(parsed);
@@ -134,8 +135,8 @@ export function SleepEditor({
     const id = session.id;
     await softDelete("sleep_sessions", id);
     onClose();
-    showToast("Запись сна удалена", {
-      label: "Отменить",
+    showToast(t("Запись сна удалена"), {
+      label: t("Отменить"),
       run: () => restore("sleep_sessions", id),
     });
   }
@@ -144,31 +145,31 @@ export function SleepEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={session ? "Запись сна" : "Добавить сон"}
+      title={session ? t("Запись сна") : t("Добавить сон")}
       subtitle={
-        session ? undefined : "Пригодится, если забыли нажать кнопку вовремя"
+        session ? undefined : t("Пригодится, если забыли нажать кнопку вовремя")
       }
     >
       <form onSubmit={handleSubmit}>
-        <DateTimeField label="Уснул" value={start} onChange={setStart} />
+        <DateTimeField label={t("Уснул")} value={start} onChange={setStart} />
         <DateTimeField
-          label="Проснулся"
-          hint={end ? undefined : "пусто — сон ещё идёт"}
+          label={t("Проснулся")}
+          hint={end ? undefined : t("пусто — сон ещё идёт")}
           value={end}
           onChange={setEnd}
           defaultDate={start.slice(0, 10)}
         />
 
-        <Field label="Тип">
+        <Field label={t("Тип")}>
           {(id) => (
             <Segmented<SleepKind>
               id={id}
               value={kind}
               onChange={setKind}
-              ariaLabel="Тип сна"
+              ariaLabel={t("Тип сна")}
               options={[
-                { value: "nap", label: "Дневной" },
-                { value: "night", label: "Ночной" },
+                { value: "nap", label: t("Дневной") },
+                { value: "night", label: t("Ночной") },
               ]}
             />
           )}
@@ -177,7 +178,7 @@ export function SleepEditor({
         {kind === "night" && (
           <NightFeedingsFields
             min={0}
-            countLabel="Кормлений за ночь"
+            countLabel={t("Кормлений за ночь")}
             count={nightCount}
             onCount={setNightCount}
             kind={nightKind}
@@ -187,13 +188,13 @@ export function SleepEditor({
           />
         )}
 
-        <Field label="Заметка" hint="Как засыпал, что помогло">
+        <Field label={t("Заметка")} hint={t("Как засыпал, что помогло")}>
           {(id) => (
             <Textarea
               id={id}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Необязательно"
+              placeholder={t("Необязательно")}
             />
           )}
         </Field>
@@ -205,15 +206,15 @@ export function SleepEditor({
         <FormActions>
           {session ? (
             <Button variant="danger" onClick={handleDelete}>
-              Удалить
+              {t("Удалить")}
             </Button>
           ) : (
             <Button variant="secondary" onClick={onClose}>
-              Отмена
+              {t("Отмена")}
             </Button>
           )}
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
 

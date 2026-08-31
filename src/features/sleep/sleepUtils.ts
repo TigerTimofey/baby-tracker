@@ -1,3 +1,4 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import type {
   Child,
@@ -6,8 +7,10 @@ import type {
   SleepKind,
   SleepSession,
 } from "../../data/types";
-import { plural } from "../../lib/time";
-import { dayKey } from "../../lib/time";
+
+import {
+  dayKey,
+} from "../../lib/time";
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -17,7 +20,7 @@ export function guessKind(at: Date): SleepKind {
 }
 
 export function kindLabel(kind: SleepKind): string {
-  return kind === "night" ? "Ночной сон" : "Дневной сон";
+  return kind === "night" ? t("Ночной сон") : t("Дневной сон");
 }
 
 export interface BedtimeSetting {
@@ -38,11 +41,11 @@ export function bedtimeOf(
 export function nightFeedingWord(kind: NightFeedingKind): string {
   switch (kind) {
     case "breast":
-      return "грудь";
+      return t("грудь");
     case "bottle":
-      return "бутылочка";
+      return t("бутылочка");
     case "solid":
-      return "прикорм";
+      return t("прикорм");
   }
 }
 
@@ -51,13 +54,13 @@ export function nightFeedingsLabel(session: SleepSession): string | null {
   if (count == null || count === 0) return null;
 
   const parts = [
-    `${count} ${plural(count, ["кормление", "кормления", "кормлений"])}`,
+    `${count} ${pluralOf(count, "кормление")}`,
   ];
   if (session.night_feeding_kind) {
     parts.push(nightFeedingWord(session.night_feeding_kind));
   }
   if (session.night_feeding_ml) {
-    parts.push(`по ${session.night_feeding_ml} мл`);
+    parts.push(t("по {0} мл", [session.night_feeding_ml]));
   }
   return parts.join(" · ");
 }

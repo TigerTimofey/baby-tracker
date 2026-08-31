@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import type { DoseUnit, Medicine } from "../../data/types";
 
@@ -25,23 +26,43 @@ interface PresetInfo {
 export const PRESETS: PresetInfo[] = [
   {
     id: "nurofen",
-    label: "Нурофен",
-    name: "Нурофен",
+    get label() {
+
+      return t("Нурофен");
+
+    },
+    get name() {
+
+      return t("Нурофен");
+
+    },
     unit: "ml",
     doses: [1.25, 2, 2.5],
     gapHours: 6,
   },
   {
     id: "suppository",
-    label: "Свечи",
-    name: "Свечи (парацетамол)",
+    get label() {
+
+      return t("Свечи");
+
+    },
+    get name() {
+
+      return t("Свечи (парацетамол)");
+
+    },
     unit: "mg",
     doses: [80, 125],
     gapHours: 6,
   },
   {
     id: "other",
-    label: "Другое",
+    get label() {
+
+      return t("Другое");
+
+    },
     name: "",
     unit: "ml",
     doses: [],
@@ -56,7 +77,7 @@ export function presetInfo(id: Preset): PresetInfo {
 }
 
 export function formatDose(value: number): string {
-  return value.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  return value.toLocaleString(locale(), { maximumFractionDigits: 2 });
 }
 
 export function presetForName(name: string): Preset {
@@ -67,7 +88,7 @@ export function presetForName(name: string): Preset {
 }
 
 export function unitLabel(unit: DoseUnit): string {
-  return unit === "ml" ? "мл" : "мг";
+  return unit === "ml" ? t("мл") : t("мг");
 }
 
 export function givenMs(dose: Medicine): number {
@@ -82,7 +103,7 @@ export function shortName(name: string): string {
 export function doseLine(dose: Medicine, short = false): string {
   const title = short ? shortName(dose.name) : dose.name;
   if (dose.amount === null) return title;
-  const amount = dose.amount.toLocaleString("ru-RU", {
+  const amount = dose.amount.toLocaleString(locale(), {
     maximumFractionDigits: 2,
   });
   return `${title} · ${amount} ${unitLabel(dose.unit)}`;

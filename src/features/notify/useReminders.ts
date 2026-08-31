@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useEffect } from "react";
 import { useLive, useSettings } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
@@ -61,8 +62,8 @@ export function useReminders(child: Child | null): void {
         markNotified(key);
         void showNotification(
           "medicine",
-          "Можно дать лекарство",
-          `${dose.name}: прошло ${dose.gapHours} ч с прошлого раза`,
+          t("Можно дать лекарство"),
+          t("{0}: прошло {1} ч с прошлого раза", [dose.name, dose.gapHours]),
         );
       }
 
@@ -90,8 +91,8 @@ export function useReminders(child: Child | null): void {
             markNotified(key);
             void showNotification(
               "bedtime-warn",
-              "Скоро сон",
-              `${child.name}: до отхода ко сну ${formatDuration(untilBed)}`,
+              t("Скоро сон"),
+              t("{0}: до отхода ко сну {1}", [child.name, formatDuration(untilBed)]),
             );
           }
         }
@@ -102,8 +103,8 @@ export function useReminders(child: Child | null): void {
             markNotified(key);
             void showNotification(
               "bedtime",
-              "Пора укладываться",
-              `${child.name}: время сна — ${schedule.time}`,
+              t("Пора укладываться"),
+              t("{0}: время сна — {1}", [child.name, schedule.time ?? ""]),
             );
           }
         }
@@ -127,8 +128,8 @@ export function useReminders(child: Child | null): void {
           markNotified(key);
           void showNotification(
             "wake-window",
-            "Пора укладывать",
-            `${child.name} бодрствует ${formatDuration(awake)} — обычно в ${age.totalMonths} мес до ${formatDuration(band.wakeMax * 60_000)}`,
+            t("Пора укладывать"),
+            t("{0} бодрствует {1} — обычно в {2} мес до {3}", [child.name, formatDuration(awake), age.totalMonths, formatDuration(band.wakeMax * 60_000)]),
           );
         }
       }

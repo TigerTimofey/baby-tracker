@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import { useRef, useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
@@ -84,7 +85,7 @@ export function IllnessReport({
 
   nodes.push(
     <text key="brand" x={PAD} y={y} fill={FAINT} fontSize={24} letterSpacing={5} fontFamily={FONT}>
-      SEBASON · КОНТРОЛЬ БОЛЕЗНИ
+      {t("SEBASON · КОНТРОЛЬ БОЛЕЗНИ")}
     </text>,
     <text key="made" x={W - PAD} y={y} fill={FAINT} fontSize={24} textAnchor="end" fontFamily={FONT}>
       {formatDayDate(new Date(now))}
@@ -107,13 +108,13 @@ export function IllnessReport({
 
   y += 56;
   const facts: [string, string, string][] = [
-    ["Замеров", String(readings.length), MUTED],
+    [t("Замеров"), String(readings.length), MUTED],
     [
-      "Пик",
+      t("Пик"),
       peak ? formatCelsius(peak.celsius) : "—",
       peak ? LEVEL_COLOR[levelOf(peak, ageMonths)] : MUTED,
     ],
-    ["Лекарств", String(doses.length), MUTED],
+    [t("Лекарств"), String(doses.length), MUTED],
   ];
   facts.forEach(([label, value, color], index) => {
     const left = PAD + index * 300;
@@ -144,7 +145,7 @@ export function IllnessReport({
       nodes.push(
         <line key={`g-${tick}`} x1={plotLeft} x2={plotRight} y1={yy(tick)} y2={yy(tick)} stroke={LINE} strokeWidth={1.5} />,
         <text key={`gt-${tick}`} x={plotLeft - 12} y={yy(tick) + 8} fill={FAINT} fontSize={22} textAnchor="end" fontFamily={FONT}>
-          {tick.toLocaleString("ru-RU", { minimumFractionDigits: 1 })}
+          {tick.toLocaleString(locale(), { minimumFractionDigits: 1 })}
         </text>,
       );
     }
@@ -164,7 +165,7 @@ export function IllnessReport({
       if (midnight) {
         nodes.push(
           <text key={`td-${at}`} x={x(at)} y={plotBottom + 34} fill={MUTED} fontSize={22} textAnchor="middle" fontFamily={FONT}>
-            {new Date(at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+            {new Date(at).toLocaleDateString(locale(), { day: "numeric", month: "short" })}
           </text>,
         );
       }
@@ -200,9 +201,9 @@ export function IllnessReport({
     // SVG-текст не переносится, поэтому строки нарезаны заранее и коротко:
     // одна длинная фраза просто уехала бы за правый край листа.
     const notes = [
-      `Пунктир: жёлтый — порог жара ${formatCelsius(model.fever)}, красный — тревожный ${formatCelsius(model.high)}`,
-      `Границы для способа «${methodLabel(model.method).toLowerCase()}», возраст ${age}`,
-      "Треугольники — лекарства. Разрыв линии — перерыв больше восьми часов",
+      t("Пунктир: жёлтый — порог жара {0}, красный — тревожный {1}", [formatCelsius(model.fever), formatCelsius(model.high)]),
+      t("Границы для способа «{0}», возраст {1}", [methodLabel(model.method).toLowerCase(), age]),
+      t("Треугольники — лекарства. Разрыв линии — перерыв больше восьми часов"),
     ];
     notes.forEach((note, index) => {
       nodes.push(
@@ -216,7 +217,7 @@ export function IllnessReport({
 
   nodes.push(
     <text key="journal" x={PAD} y={y} fill={FAINT} fontSize={24} letterSpacing={4} fontFamily={FONT}>
-      ЖУРНАЛ
+      {t("ЖУРНАЛ")}
     </text>,
   );
   y += 22;
@@ -258,7 +259,7 @@ export function IllnessReport({
           {doseLine(entry.dose)}
         </text>,
         <text key={`rk-${entry.dose.id}`} x={W - PAD} y={y} fill={DOSE} fontSize={24} textAnchor="end" fontFamily={FONT}>
-          лекарство
+          {t("лекарство")}
         </text>,
       );
     }
@@ -267,8 +268,7 @@ export function IllnessReport({
   y += 64;
   nodes.push(
     <text key="disclaimer" x={PAD} y={y} fill={FAINT} fontSize={22} fontFamily={FONT}>
-      Пороги — общепринятые ориентиры, а не диагноз. Выгружено из приложения
-      родителем.
+      {t("Пороги — общепринятые ориентиры, а не диагноз. Выгружено из приложения\n      родителем.")}
     </text>,
   );
 
@@ -283,12 +283,12 @@ export function IllnessReport({
         width: W,
         height,
         background: BG,
-        filename: `sebason-болезнь-${child.name.toLowerCase()}-${new Date(now)
+        filename: t("sebason-болезнь-{0}-{1}.png", [child.name.toLowerCase(), new Date(now)
           .toISOString()
-          .slice(0, 10)}.png`,
+          .slice(0, 10)]),
       });
     } catch {
-      showToast("Не удалось сохранить картинку");
+      showToast(t("Не удалось сохранить картинку"));
     } finally {
       setBusy(false);
     }
@@ -303,7 +303,7 @@ export function IllnessReport({
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${W} ${height}`}
           role="img"
-          aria-label="Выгрузка по болезни"
+          aria-label={t("Выгрузка по болезни")}
         >
           <rect width={W} height={height} fill={BG} />
           {nodes}
@@ -313,18 +313,16 @@ export function IllnessReport({
       <div className={styles.actions}>
         <Button variant="secondary" disabled={busy} onClick={() => void toPng()}>
           <Icon name="stats" size={16} />
-          Картинкой
+          {t("Картинкой")}
         </Button>
         <Button variant="secondary" onClick={() => window.print()}>
           <Icon name="check" size={16} />
-          В PDF
+          {t("В PDF")}
         </Button>
       </div>
 
       <p className={styles.note}>
-        Один лист со всем журналом и графиком — удобно показать врачу.
-        «Картинкой» сохранит PNG или предложит отправить его сразу. «В PDF»
-        откроет печать: в диалоге выберите «Сохранить как PDF».
+        {t("Один лист со всем журналом и графиком — удобно показать врачу.\n        «Картинкой» сохранит PNG или предложит отправить его сразу. «В PDF»\n        откроет печать: в диалоге выберите «Сохранить как PDF».")}
       </p>
     </div>
   );

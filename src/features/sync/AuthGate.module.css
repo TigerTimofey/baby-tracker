@@ -1,4 +1,5 @@
 .screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,4 +136,12 @@
   border-radius: 5px;
   background: var(--surface-2);
   font-size: 12.5px;
+}
+
+/* Язык на экране входа: до входа настройки недоступны, а выбрать нужно уже
+   здесь — иначе русскоязычный родитель упирается в английский экран. */
+.lang {
+  position: absolute;
+  top: calc(var(--gap-4) + env(safe-area-inset-top));
+  right: var(--gap-4);
 }

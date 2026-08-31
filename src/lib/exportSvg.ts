@@ -23,7 +23,7 @@ export async function svgToPng(
   const image = new Image();
   await new Promise<void>((resolve, reject) => {
     image.onload = () => resolve();
-    image.onerror = () => reject(new Error("не удалось нарисовать"));
+    image.onerror = () => reject(new Error(t("не удалось нарисовать")));
     image.src = url;
   });
 
@@ -31,7 +31,7 @@ export async function svgToPng(
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("нет холста");
+  if (!context) throw new Error(t("нет холста"));
   context.fillStyle = background;
   context.fillRect(0, 0, width, height);
   context.drawImage(image, 0, 0, width, height);
@@ -40,7 +40,7 @@ export async function svgToPng(
   const png = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, "image/png"),
   );
-  if (!png) throw new Error("не удалось сохранить");
+  if (!png) throw new Error(t("не удалось сохранить"));
 
   const file = new File([png], filename, { type: "image/png" });
 
@@ -63,4 +63,5 @@ export async function svgToPng(
   link.click();
   link.remove();
   URL.revokeObjectURL(link.href);
-}
+}import { t } from "../lib/i18n";
+

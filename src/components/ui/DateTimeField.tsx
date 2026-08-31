@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import styles from "./DateTimeField.module.css";
 import formStyles from "./Form.module.css";
@@ -80,7 +81,7 @@ export function DateTimeField({
           className={styles.input}
           type="time"
           value={time}
-          aria-label="Время"
+          aria-label={t("Время")}
           onChange={(event) =>
             emit(date || defaultDate || "", event.target.value)
           }

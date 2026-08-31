@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import { DateTimeField } from "../../components/ui/DateTimeField";
@@ -74,17 +75,17 @@ export function MedicineEditor({
 
     const when = resolveLocalInput(at, dose?.given_at ?? null);
     if (!when) {
-      setError("Укажите, когда дали");
+      setError(t("Укажите, когда дали"));
       return;
     }
     if (when.getTime() > Date.now() + 60_000) {
-      setError("Время в будущем");
+      setError(t("Время в будущем"));
       return;
     }
 
     const title = preset === "other" ? name.trim() : presetInfo(preset).name;
     if (!title) {
-      setError("Напишите, что дали");
+      setError(t("Напишите, что дали"));
       return;
     }
 
@@ -95,18 +96,18 @@ export function MedicineEditor({
     if (typed) {
       const raw = amount.trim();
       if (raw === "") {
-        setError("Укажите, сколько дали");
+        setError(t("Укажите, сколько дали"));
         return;
       }
       const parsed = Number(raw.replace(",", "."));
       if (!Number.isFinite(parsed) || parsed <= 0 || parsed > MAX_AMOUNT) {
-        setError("Количество похоже на опечатку");
+        setError(t("Количество похоже на опечатку"));
         return;
       }
       value = Math.round(parsed * 100) / 100;
     } else {
       if (choice === "") {
-        setError("Выберите, сколько дали");
+        setError(t("Выберите, сколько дали"));
         return;
       }
       value = Number(choice);
@@ -131,8 +132,8 @@ export function MedicineEditor({
     if (!dose) return;
     await softDelete("medicines", dose.id);
     onClose();
-    showToast("Запись удалена", {
-      label: "Вернуть",
+    showToast(t("Запись удалена"), {
+      label: t("Вернуть"),
       run: () => void restore("medicines", dose.id),
     });
   }
@@ -141,18 +142,18 @@ export function MedicineEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={dose ? "Лекарство" : "Дать лекарство"}
+      title={dose ? t("Лекарство") : t("Дать лекарство")}
     >
       <form onSubmit={handleSubmit}>
-        <DateTimeField label="Когда" value={at} onChange={setAt} />
+        <DateTimeField label={t("Когда")} value={at} onChange={setAt} />
 
-        <Field label="Что дали">
+        <Field label={t("Что дали")}>
           {(id) => (
             <Segmented<Preset>
               id={id}
               value={preset}
               onChange={choosePreset}
-              ariaLabel="Что дали"
+              ariaLabel={t("Что дали")}
               options={PRESETS.map((item) => ({
                 value: item.id,
                 label: item.label,
@@ -162,13 +163,13 @@ export function MedicineEditor({
         </Field>
 
         {preset === "other" && (
-          <Field label="Название">
+          <Field label={t("Название")}>
             {(id) => (
               <TextInput
                 id={id}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Например, Виферон"
+                placeholder={t("Например, Виферон")}
                 autoComplete="off"
                 autoFocus
               />
@@ -176,20 +177,20 @@ export function MedicineEditor({
           </Field>
         )}
 
-        <Field label="Сколько">
+        <Field label={t("Сколько")}>
           {(id) =>
             presetInfo(preset).doses.length > 0 ? (
               <Segmented
                 id={id}
                 value={choice}
                 onChange={setChoice}
-                ariaLabel="Сколько"
+                ariaLabel={t("Сколько")}
                 options={[
                   ...presetInfo(preset).doses.map((item) => ({
                     value: String(item),
                     label: `${formatDose(item)} ${unitLabel(unit)}`,
                   })),
-                  { value: CUSTOM, label: "Другое" },
+                  { value: CUSTOM, label: t("Другое") },
                 ]}
               />
             ) : (
@@ -198,7 +199,7 @@ export function MedicineEditor({
                 inputMode="decimal"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
-                placeholder="2,5"
+                placeholder={t("2,5")}
                 suffix={unitLabel(unit)}
               />
             )
@@ -206,7 +207,7 @@ export function MedicineEditor({
         </Field>
 
         {presetInfo(preset).doses.length > 0 && choice === CUSTOM && (
-          <Field label="Своя дозировка">
+          <Field label={t("Своя дозировка")}>
             {(id) => (
               <TextInput
                 id={id}
@@ -224,13 +225,13 @@ export function MedicineEditor({
         {/* Когда доза выбрана кнопкой, единицы уже написаны на ней —
             второй переключатель был бы тем же самым дважды. */}
         {(choice === "" || choice === CUSTOM) && (
-          <Field label="Единицы">
+          <Field label={t("Единицы")}>
             {(id) => (
               <Segmented<DoseUnit>
                 id={id}
                 value={unit}
                 onChange={setUnit}
-                ariaLabel="Единицы"
+                ariaLabel={t("Единицы")}
                 options={UNITS.map((item) => ({
                   value: item,
                   label: unitLabel(item),
@@ -245,15 +246,15 @@ export function MedicineEditor({
         <FormActions>
           {dose ? (
             <Button type="button" variant="ghost" onClick={handleDelete}>
-              Удалить
+              {t("Удалить")}
             </Button>
           ) : (
             <Button type="button" variant="secondary" onClick={onClose}>
-              Отмена
+              {t("Отмена")}
             </Button>
           )}
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
       </form>

@@ -35,6 +35,7 @@ export function updateSettings(patch: Partial<Settings>): void {
     void 0;
   }
   applyTheme();
+  applyLang();
   for (const listener of listeners) listener();
 }
 
@@ -75,6 +76,11 @@ const THEME_COLORS: Record<string, string> = {
   dark: "#12121b",
   night: "#050403",
 };
+
+/** Язык страницы — для экранных дикторов и переносов слов. */
+export function applyLang(): void {
+  document.documentElement.lang = current.language;
+}
 
 export function applyTheme(): void {
   const { theme } = current;

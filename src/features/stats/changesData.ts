@@ -1,6 +1,9 @@
+import { locale, pluralOf, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import type { Feeding } from "../../data/types";
-import { formatDuration, plural } from "../../lib/time";
+import {
+  formatDuration,
+} from "../../lib/time";
 import {
   addDays,
   formatClockMinutes,
@@ -46,8 +49,8 @@ function quantize(value: number, kind: ChangeKind): number {
 function formatValue(value: number, kind: ChangeKind): string {
   if (kind === "duration") return formatDuration(value);
   if (kind === "count")
-    return value.toLocaleString("ru-RU", { maximumFractionDigits: 1 });
-  if (kind === "ml") return `${value} мл`;
+    return value.toLocaleString(locale(), { maximumFractionDigits: 1 });
+  if (kind === "ml") return t("{0} мл", [value]);
   return formatClockMinutes(value);
 }
 
@@ -63,11 +66,13 @@ function formatChange(delta: number, kind: ChangeKind): string {
   const sign = delta > 0 ? "+" : "−";
 
   if (kind === "clock") {
-    return `на ${formatDuration(size * 60_000)} ${delta > 0 ? "позже" : "раньше"}`;
+    return delta > 0
+      ? t("на {0} позже", [formatDuration(size * 60_000)])
+      : t("на {0} раньше", [formatDuration(size * 60_000)]);
   }
   if (kind === "duration") return `${sign}${formatDuration(size)}`;
-  if (kind === "ml") return `${sign}${size} мл`;
-  return `${sign}${size.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}`;
+  if (kind === "ml") return t("{0}{1} мл", [sign, size]);
+  return `${sign}${size.toLocaleString(locale(), { maximumFractionDigits: 1 })}`;
 }
 
 interface RowInput {
@@ -77,7 +82,8 @@ interface RowInput {
   after: number | null;
   samplesBefore: number;
   samplesAfter: number;
-  unit: [string, string, string];
+  /** Ключ формы слова: «день», «сон», «промежуток». */
+  unit: string;
 }
 
 function buildRow(input: RowInput): ChangeRow | null {
@@ -94,9 +100,9 @@ function buildRow(input: RowInput): ChangeRow | null {
     label: input.label,
     before: formatValue(from, input.kind),
     after: formatValue(to, input.kind),
-    change: delta === 0 ? "без изменений" : formatChange(delta, input.kind),
+    change: delta === 0 ? t("без изменений") : formatChange(delta, input.kind),
     direction: delta === 0 ? "flat" : delta > 0 ? "up" : "down",
-    basis: `по ${samplesAfter} ${plural(samplesAfter, input.unit)} против ${samplesBefore}`,
+    basis: t("по {0} {1} против {2}", [samplesAfter, pluralOf(samplesAfter, input.unit), samplesBefore]),
   };
 }
 
@@ -144,14 +150,10 @@ function feedingWindow(
   };
 }
 
-const DAYS: [string, string, string] = ["дню", "дням", "дням"];
-const NIGHTS: [string, string, string] = ["ночи", "ночам", "ночам"];
-const NAPS: [string, string, string] = ["сну", "снам", "снам"];
-const GAPS: [string, string, string] = [
-  "промежутку",
-  "промежуткам",
-  "промежуткам",
-];
+const DAYS = "дню";
+const NIGHTS = "ночи";
+const NAPS = "сну";
+const GAPS = "промежутку";
 
 export function buildChanges(
   stats: SleepStats,
@@ -178,7 +180,7 @@ export function buildChanges(
 
   const candidates: RowInput[] = [
     {
-      label: "Сон за сутки",
+      label: t("Сон за сутки"),
       kind: "duration",
       before: before.avgTotalMs,
       after: after.avgTotalMs,
@@ -187,7 +189,7 @@ export function buildChanges(
       unit: DAYS,
     },
     {
-      label: "Ночной сон",
+      label: t("Ночной сон"),
       kind: "duration",
       before: before.avgNightMs,
       after: after.avgNightMs,
@@ -196,7 +198,7 @@ export function buildChanges(
       unit: DAYS,
     },
     {
-      label: "Дневной сон за день",
+      label: t("Дневной сон за день"),
       kind: "duration",
       before: before.avgNapMs,
       after: after.avgNapMs,
@@ -205,7 +207,7 @@ export function buildChanges(
       unit: DAYS,
     },
     {
-      label: "Снов за день",
+      label: t("Снов за день"),
       kind: "count",
       before: before.avgNapCount,
       after: after.avgNapCount,
@@ -214,7 +216,7 @@ export function buildChanges(
       unit: DAYS,
     },
     {
-      label: "Длительность дневного сна",
+      label: t("Длительность дневного сна"),
       kind: "duration",
       before: before.avgNapDurationMs,
       after: after.avgNapDurationMs,
@@ -223,7 +225,7 @@ export function buildChanges(
       unit: NAPS,
     },
     {
-      label: "Окно бодрствования",
+      label: t("Окно бодрствования"),
       kind: "duration",
       before: before.avgWakeWindowMs,
       after: after.avgWakeWindowMs,
@@ -232,7 +234,7 @@ export function buildChanges(
       unit: GAPS,
     },
     {
-      label: "Засыпает вечером",
+      label: t("Засыпает вечером"),
       kind: "clock",
       before: before.bedtimeMinutes,
       after: after.bedtimeMinutes,
@@ -241,7 +243,7 @@ export function buildChanges(
       unit: NIGHTS,
     },
     {
-      label: "Просыпается утром",
+      label: t("Просыпается утром"),
       kind: "clock",
       before: before.wakeMinutes,
       after: after.wakeMinutes,
@@ -250,7 +252,7 @@ export function buildChanges(
       unit: NIGHTS,
     },
     {
-      label: "Кормлений за ночь",
+      label: t("Кормлений за ночь"),
       kind: "count",
       before: before.avgNightFeedings,
       after: after.avgNightFeedings,
@@ -259,7 +261,7 @@ export function buildChanges(
       unit: NIGHTS,
     },
     {
-      label: "Кормлений за день",
+      label: t("Кормлений за день"),
       kind: "count",
       before: feedBefore.perDay,
       after: feedAfter.perDay,
@@ -268,7 +270,7 @@ export function buildChanges(
       unit: DAYS,
     },
     {
-      label: "Из бутылочки за день",
+      label: t("Из бутылочки за день"),
       kind: "ml",
       before: feedBefore.mlPerDay,
       after: feedAfter.mlPerDay,
@@ -286,14 +288,14 @@ export function buildChanges(
 
   let shortfall: string | null = null;
   if (rows.length === 0) {
-    shortfall = `Сравнивать пока нечего: нужно хотя бы по ${MIN_SAMPLES} записи в каждом из двух соседних отрезков.`;
+    shortfall = t("Сравнивать пока нечего: нужно хотя бы по {0} записи в каждом из двух соседних отрезков.", [MIN_SAMPLES]);
   } else if (skipped > 0) {
-    shortfall = `Ещё ${skipped} ${plural(skipped, ["показатель", "показателя", "показателей"])} не показаны: в одном из отрезков меньше ${MIN_SAMPLES} записей.`;
+    shortfall = t("Ещё {0} {1} не показаны: в одном из отрезков меньше {2} записей.", [skipped, pluralOf(skipped, "показатель"), MIN_SAMPLES]);
   }
 
   return {
     rows,
-    periodLabel: `${count} ${plural(count, ["день", "дня", "дней"])} против предыдущих ${count}`,
+    periodLabel: t("{0} {1} против предыдущих {2}", [count, pluralOf(count, "день"), count]),
     shortfall,
   };
 }

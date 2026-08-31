@@ -285,6 +285,9 @@ alter table public.feedings
 alter table public.temperatures
   add column if not exists recovered_at timestamptz;
 
+alter table public.push_subscriptions
+  add column if not exists locale text;
+
 -- 'breast' без стороны появился, когда различать левую и правую стало
 -- необязательным. Пересоздаём проверку, а не создаём — иначе на базе,
 -- залитой раньше, старое ограничение отвергнет новые записи.
@@ -333,6 +336,7 @@ create table if not exists public.push_subscriptions (
   family_id    uuid references public.families (id) on delete cascade,
   p256dh       text not null,
   auth         text not null,
+  locale       text,
   timezone     text,
   created_at   timestamptz not null default now(),
   last_seen_at timestamptz not null default now()

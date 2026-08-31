@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type {
   Child,
@@ -92,7 +93,7 @@ export function getDB(): Promise<BabyDatabase> {
         if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
       },
       blocked() {
-        console.warn("[db] обновление схемы ждёт закрытия другой вкладки");
+        console.warn(t("[db] обновление схемы ждёт закрытия другой вкладки"));
       },
     });
   }

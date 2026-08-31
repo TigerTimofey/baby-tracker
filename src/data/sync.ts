@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import {
   isSupabaseConfigured,
   supabase,
@@ -82,7 +83,7 @@ async function refreshPending(): Promise<void> {
 function requireClient(): NonNullable<typeof supabase> {
   if (!supabase) {
     throw new Error(
-      "Синхронизация не настроена: не заданы VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY",
+      t("Синхронизация не настроена: не заданы VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY"),
     );
   }
   return supabase;
@@ -176,7 +177,7 @@ async function ensureFamily(): Promise<string | null> {
 
   if (!familyId) {
     const created = await client.rpc("create_family", {
-      family_name: "Моя семья",
+      family_name: t("Моя семья"),
     });
     if (created.error) throw new Error(created.error.message);
     familyId = created.data as string;
@@ -262,16 +263,16 @@ async function refreshMembers(familyId: string): Promise<void> {
 
 export function authorName(userId: string | null): string | null {
   if (!userId) return null;
-  if (userId === status.userId) return "вы";
+  if (userId === status.userId) return t("вы");
   const member = status.members.find((item) => item.user_id === userId);
-  return member?.display_name ?? "второй родитель";
+  return member?.display_name ?? t("второй родитель");
 }
 
 export function authorLabel(createdBy: string | null): string | null {
   if (!createdBy || status.members.length < 2) return null;
-  if (createdBy === status.userId) return "вы";
+  if (createdBy === status.userId) return t("вы");
   const member = status.members.find((item) => item.user_id === createdBy);
-  return member?.display_name ?? "второй родитель";
+  return member?.display_name ?? t("второй родитель");
 }
 
 export async function joinFamily(code: string): Promise<void> {
@@ -322,7 +323,7 @@ async function pushTable(table: TableName, familyId: string): Promise<void> {
   const { error } = await client.from(table).upsert(payload, {
     onConflict: "id",
   });
-  if (error) throw new Error(`Отправка «${table}»: ${error.message}`);
+  if (error) throw new Error(t("Отправка «{0}»: {1}", [table, error.message]));
 
   for (const row of dirty) {
     await clearDirty(table, row.id, row.updated_at);
@@ -353,7 +354,7 @@ async function pullTable(table: TableName): Promise<boolean> {
       .order("synced_at", { ascending: true })
       .limit(PAGE_SIZE);
 
-    if (error) throw new Error(`Загрузка «${table}»: ${error.message}`);
+    if (error) throw new Error(t("Загрузка «{0}»: {1}", [table, error.message]));
     const rows = (data ?? []) as Record<string, unknown>[];
     if (rows.length === 0) break;
 
@@ -404,7 +405,7 @@ export async function syncNow(): Promise<void> {
 
     try {
       const familyId = status.familyId ?? (await ensureFamily());
-      if (!familyId) throw new Error("Не удалось определить семью");
+      if (!familyId) throw new Error(t("Не удалось определить семью"));
 
       // Одна нерабочая таблица не должна останавливать остальные: пока в
       // базе нет свежей таблицы, сон и кормления обязаны продолжать ездить.
@@ -439,7 +440,7 @@ export async function syncNow(): Promise<void> {
           error:
             failures.length === 1
               ? failures[0]
-              : `${failures[0]} (и ещё ${failures.length - 1})`,
+              : t("{0} (и ещё {1})", [failures[0], failures.length - 1]),
         });
       } else {
         setStatus({

@@ -1,3 +1,5 @@
+import { t } from "../../lib/i18n";
+import { LangSwitch } from "../../components/ui/LangSwitch";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Field, TextInput } from "../../components/ui/Form";
@@ -76,6 +78,8 @@ export function AuthGate({ configured }: AuthGateProps) {
 
   return (
     <div className={styles.screen}>
+      <LangSwitch className={styles.lang} />
+
       <span className={styles.mark}>
         <Icon name="moon" size={38} />
       </span>
@@ -85,10 +89,10 @@ export function AuthGate({ configured }: AuthGateProps) {
       {!configured ? (
         <>
           <p className={styles.text}>
-            Чтобы войти, нужны ключи вашего проекта Supabase.
+            {t("Чтобы войти, нужны ключи вашего проекта Supabase.")}
           </p>
           <div className={styles.setup}>
-            Создайте файл <code>.env</code> в корне проекта:
+            {t("Создайте файл")} <code>.env</code> {t("в корне проекта:")}
             <br />
             <br />
             <code>VITE_SUPABASE_URL=…</code>
@@ -96,17 +100,15 @@ export function AuthGate({ configured }: AuthGateProps) {
             <code>VITE_SUPABASE_ANON_KEY=…</code>
             <br />
             <br />
-            Значения — в Supabase → Project Settings → API. После этого
-            перезапустите <code>npm run dev</code>: переменные читаются только
-            при старте.
+            {t("Значения — в Supabase → Project Settings → API. После этого\n            перезапустите")} <code>npm run dev</code>{t(": переменные читаются только\n            при старте.")}
           </div>
         </>
       ) : (
         <>
           <p className={styles.text}>
             {invited
-              ? "Вас пригласили в семью. Войдите — и записи малыша появятся здесь."
-              : "Войдите, чтобы записи хранились в вашем аккаунте и были доступны обоим родителям."}
+              ? t("Вас пригласили в семью. Войдите — и записи малыша появятся здесь.")
+              : t("Войдите, чтобы записи хранились в вашем аккаунте и были доступны обоим родителям.")}
           </p>
 
           <div className={styles.panel}>
@@ -119,32 +121,30 @@ export function AuthGate({ configured }: AuthGateProps) {
                   onClick={() => run(signInWithGoogle)}
                 >
                   <GoogleMark />
-                  Войти через Google
+                  {t("Войти через Google")}
                 </button>
 
                 {googleReady === false && (
                   <p className={styles.message}>
-                    Провайдер Google ещё не включён в вашем проекте Supabase:
-                    Authentication → Providers → Google. Пока можно войти по
-                    коду из почты.
+                    {t("Провайдер Google ещё не включён в вашем проекте Supabase:\n                    Authentication → Providers → Google. Пока можно войти по\n                    коду из почты.")}
                   </p>
                 )}
 
-                <div className={styles.divider}>или</div>
+                <div className={styles.divider}>{t("или")}</div>
 
                 <button
                   type="button"
                   className={styles.link}
                   onClick={() => setMode("email")}
                 >
-                  Войти по коду из почты
+                  {t("Войти по коду из почты")}
                 </button>
               </>
             )}
 
             {mode === "email" && (
               <>
-                <Field label="Почта" hint="Пришлём код для входа">
+                <Field label={t("Почта")} hint={t("Пришлём код для входа")}>
                   {(id) => (
                     <TextInput
                       id={id}
@@ -166,25 +166,25 @@ export function AuthGate({ configured }: AuthGateProps) {
                     run(async () => {
                       await requestCode(email);
                       setMode("code");
-                    }, "Письмо отправлено — проверьте почту")
+                    }, t("Письмо отправлено — проверьте почту"))
                   }
                 >
-                  Получить код
+                  {t("Получить код")}
                 </Button>
-                <div className={styles.divider}>или</div>
+                <div className={styles.divider}>{t("или")}</div>
                 <button
                   type="button"
                   className={styles.link}
                   onClick={() => setMode("choices")}
                 >
-                  Вернуться к входу через Google
+                  {t("Вернуться к входу через Google")}
                 </button>
               </>
             )}
 
             {mode === "code" && (
               <>
-                <Field label="Код из письма" hint={`Отправлен на ${email}`}>
+                <Field label={t("Код из письма")} hint={t("Отправлен на {0}", [email])}>
                   {(id) => (
                     <TextInput
                       id={id}
@@ -203,9 +203,9 @@ export function AuthGate({ configured }: AuthGateProps) {
                   disabled={busy || code.trim().length < 6}
                   onClick={() => run(() => verifyCode(email, code))}
                 >
-                  Войти
+                  {t("Войти")}
                 </Button>
-                <div className={styles.divider}>или</div>
+                <div className={styles.divider}>{t("или")}</div>
                 <button
                   type="button"
                   className={styles.link}
@@ -214,7 +214,7 @@ export function AuthGate({ configured }: AuthGateProps) {
                     setCode("");
                   }}
                 >
-                  Указать другую почту
+                  {t("Указать другую почту")}
                 </button>
               </>
             )}
@@ -232,7 +232,7 @@ export function AuthGate({ configured }: AuthGateProps) {
         className={styles.skip}
         onClick={() => updateSettings({ localOnly: true })}
       >
-        Пока без синхронизации, только на этом устройстве
+        {t("Пока без синхронизации, только на этом устройстве")}
       </button>
     </div>
   );

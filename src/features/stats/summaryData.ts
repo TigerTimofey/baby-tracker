@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import type { Child, Feeding, Measurement, SleepSession } from "../../data/types";
 import { ageOf, birthMoment, formatAge } from "../../lib/time";
@@ -23,19 +24,26 @@ export interface SummaryData {
   madeOn: string;
 }
 
+/** Геттеры, потому что запись собирается при загрузке модуля, а язык — позже. */
 const PERIOD_LABEL: Record<Period, string> = {
-  "7": "за неделю",
-  "14": "за две недели",
-  "30": "за месяц",
+  get "7"() {
+    return t("за неделю");
+  },
+  get "14"() {
+    return t("за две недели");
+  },
+  get "30"() {
+    return t("за месяц");
+  },
 };
 
 function hoursAndMinutes(ms: number): string {
   const total = Math.round(ms / 60_000);
   const h = Math.floor(total / 60);
   const m = total % 60;
-  if (h === 0) return `${m} мин`;
-  if (m === 0) return `${h} ч`;
-  return `${h} ч ${m} мин`;
+  if (h === 0) return t("{0} мин", [m]);
+  if (m === 0) return t("{0} ч", [h]);
+  return t("{0} ч {1} мин", [h, m]);
 }
 
 export function buildSummary(
@@ -54,26 +62,26 @@ export function buildSummary(
   const sleep: SummaryLine[] = [];
   if (stats.avgTotalMs !== null) {
     sleep.push({
-      label: "В сутки в среднем",
+      label: t("В сутки в среднем"),
       value: hoursAndMinutes(stats.avgTotalMs),
-      hint: `по ${stats.daysCounted} дн. с записями`,
+      hint: t("по {0} дн. с записями", [stats.daysCounted]),
     });
   }
   if (stats.avgNightMs !== null && stats.avgNapMs !== null) {
     sleep.push({
-      label: "Ночью и днём",
+      label: t("Ночью и днём"),
       value: `${hoursAndMinutes(stats.avgNightMs)} + ${hoursAndMinutes(stats.avgNapMs)}`,
     });
   }
   if (stats.bedtimeMinutes !== null && stats.wakeMinutes !== null) {
     sleep.push({
-      label: "Обычный режим",
+      label: t("Обычный режим"),
       value: `${formatClockMinutes(stats.bedtimeMinutes)} — ${formatClockMinutes(stats.wakeMinutes)}`,
     });
   }
   if (stats.longestNightMs !== null) {
     sleep.push({
-      label: "Самая длинная ночь",
+      label: t("Самая длинная ночь"),
       value: hoursAndMinutes(stats.longestNightMs),
     });
   }
@@ -94,24 +102,24 @@ export function buildSummary(
   const feeding: SummaryLine[] = [];
   if (inPeriod.length > 0) {
     feeding.push({
-      label: "Кормлений записано",
+      label: t("Кормлений записано"),
       value: String(inPeriod.length),
     });
     const perDay = inPeriod.length / days;
     feeding.push({
-      label: "В день",
-      value: perDay.toLocaleString("ru-RU", { maximumFractionDigits: 1 }),
+      label: t("В день"),
+      value: perDay.toLocaleString(locale(), { maximumFractionDigits: 1 }),
     });
   }
   if (nightFeedings > 0) {
     feeding.push({
-      label: "Ночных отмечено",
+      label: t("Ночных отмечено"),
       value: String(nightFeedings),
-      hint: "в записях ночного сна, отдельно от списка выше",
+      hint: t("в записях ночного сна, отдельно от списка выше"),
     });
   }
   if (totalMl > 0) {
-    feeding.push({ label: "Из бутылочки", value: `${totalMl} мл` });
+    feeding.push({ label: t("Из бутылочки"), value: t("{0} мл", [totalMl]) });
   }
 
   const growth: SummaryLine[] = [];
@@ -148,18 +156,18 @@ export function buildSummary(
   const headline =
     stats.avgTotalMs !== null
       ? hoursAndMinutes(stats.avgTotalMs)
-      : "нет данных";
+      : t("нет данных");
 
   return {
     childName: child.name,
     age: formatAge(age),
     periodLabel: PERIOD_LABEL[period],
     headline,
-    headlineHint: "сна в сутки",
+    headlineHint: t("сна в сутки"),
     sleep,
     feeding,
     growth,
-    madeOn: new Date(now).toLocaleDateString("ru-RU", {
+    madeOn: new Date(now).toLocaleDateString(locale(), {
       day: "numeric",
       month: "long",
       year: "numeric",

@@ -1,6 +1,9 @@
+import { locale, pluralOf, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import type { Temperature, TempMethod } from "../../data/types";
-import { formatDuration, plural } from "../../lib/time";
+import {
+  formatDuration,
+} from "../../lib/time";
 
 export const METHODS: TempMethod[] = ["forehead", "armpit", "rectal"];
 
@@ -9,11 +12,11 @@ export const DEFAULT_METHOD: TempMethod = "forehead";
 export function methodLabel(method: TempMethod): string {
   switch (method) {
     case "armpit":
-      return "Подмышка";
+      return t("Подмышка");
     case "forehead":
-      return "Лоб";
+      return t("Лоб");
     case "rectal":
-      return "Ректально";
+      return t("Ректально");
   }
 }
 
@@ -58,13 +61,13 @@ export function levelOf(reading: Temperature, ageMonths: number): TempLevel {
 export function levelWord(level: TempLevel): string {
   switch (level) {
     case "low":
-      return "пониженная";
+      return t("пониженная");
     case "normal":
-      return "в норме";
+      return t("в норме");
     case "raised":
-      return "повышенная";
+      return t("повышенная");
     case "high":
-      return "высокая";
+      return t("высокая");
   }
 }
 
@@ -73,7 +76,7 @@ export function feverThreshold(method: TempMethod): number {
 }
 
 export function formatCelsius(value: number): string {
-  return `${value.toLocaleString("ru-RU", {
+  return `${value.toLocaleString(locale(), {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   })} °C`;
@@ -85,12 +88,12 @@ export function formatCelsius(value: number): string {
  */
 export function formatSpan(ms: number): string {
   const DAY = 24 * 3600_000;
-  if (ms < 60_000) return "меньше минуты";
+  if (ms < 60_000) return t("меньше минуты");
   if (ms < DAY) return formatDuration(ms);
   const days = Math.floor(ms / DAY);
   const hours = Math.floor((ms % DAY) / 3600_000);
-  const word = `${days} ${plural(days, ["день", "дня", "дней"])}`;
-  return hours === 0 ? word : `${word} ${hours} ч`;
+  const word = `${days} ${pluralOf(days, "день")}`;
+  return hours === 0 ? word : t("{0} {1} ч", [word, hours]);
 }
 
 export function measuredMs(reading: Temperature): number {

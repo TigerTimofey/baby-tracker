@@ -1,3 +1,4 @@
+import { locale, t, withCount } from "./i18n";
 import {
   addMonths,
   addYears,
@@ -10,22 +11,9 @@ import {
 } from "date-fns";
 import type { ISODate, ISODateTime } from "../data/types";
 
-export function plural(n: number, forms: [string, string, string]): string {
-  const abs = Math.abs(n) % 100;
-  const tail = abs % 10;
-  if (abs > 10 && abs < 20) return forms[2];
-  if (tail > 1 && tail < 5) return forms[1];
-  if (tail === 1) return forms[0];
-  return forms[2];
-}
-
-export function withPlural(n: number, forms: [string, string, string]): string {
-  return `${n} ${plural(n, forms)}`;
-}
-
-const DAYS: [string, string, string] = ["день", "дня", "дней"];
-const MONTHS: [string, string, string] = ["месяц", "месяца", "месяцев"];
-const YEARS: [string, string, string] = ["год", "года", "лет"];
+const DAYS = "день";
+const MONTHS = "месяц";
+const YEARS = "год";
 
 export function formatDuration(ms: number): string {
   if (ms < 0) ms = 0;
@@ -33,10 +21,10 @@ export function formatDuration(ms: number): string {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  if (totalMinutes < 1) return `${Math.floor(ms / 1000)} сек`;
-  if (hours === 0) return `${minutes} мин`;
-  if (minutes === 0) return `${hours} ч`;
-  return `${hours} ч ${minutes} мин`;
+  if (totalMinutes < 1) return t("{0} сек", [Math.floor(ms / 1000)]);
+  if (hours === 0) return t("{0} мин", [minutes]);
+  if (minutes === 0) return t("{0} ч", [hours]);
+  return t("{0} ч {1} мин", [hours, minutes]);
 }
 
 export function formatHoursMinutes(ms: number): string {
@@ -44,7 +32,7 @@ export function formatHoursMinutes(ms: number): string {
   const total = Math.round(ms / 60_000);
   const hours = Math.floor(total / 60);
   const minutes = total % 60;
-  return `${hours}:${String(minutes).padStart(2, "0")} ч`;
+  return t("{0}:{1} ч", [hours, String(minutes).padStart(2, "0")]);
 }
 
 export function formatClock(ms: number): string {
@@ -59,7 +47,7 @@ export function formatClock(ms: number): string {
 
 export function formatTime(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
-  return date.toLocaleTimeString("ru-RU", {
+  return date.toLocaleTimeString(locale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -67,7 +55,7 @@ export function formatTime(value: Date | ISODateTime): string {
 
 export function formatDate(value: Date | ISODateTime | ISODate): string {
   const date = typeof value === "string" ? parseISO(value) : value;
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString(locale(), {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -76,7 +64,7 @@ export function formatDate(value: Date | ISODateTime | ISODate): string {
 
 function dayAndMonth(date: Date): string {
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString(locale(), {
     day: "numeric",
     month: "long",
     ...(sameYear ? {} : { year: "numeric" }),
@@ -94,8 +82,8 @@ export function formatFullDate(value: Date | ISODateTime): string {
 
 export function formatDayLabel(value: Date | ISODateTime): string {
   const date = typeof value === "string" ? parseISO(value) : value;
-  if (isToday(date)) return "Сегодня";
-  if (isYesterday(date)) return "Вчера";
+  if (isToday(date)) return t("Сегодня");
+  if (isYesterday(date)) return t("Вчера");
   return dayAndMonth(date);
 }
 
@@ -176,31 +164,35 @@ export function ageOf(birth: Date, now: Date = new Date()): Age {
 }
 
 export function formatAge(age: Age): string {
-  if (age.totalDays < 14) return withPlural(age.totalDays, DAYS);
+  if (age.totalDays < 14) return withCount(age.totalDays, DAYS);
   if (age.totalMonths < 2)
-    return `${withPlural(age.totalWeeks, ["неделя", "недели", "недель"])}`;
+    return withCount(age.totalWeeks, "неделя");
   if (age.years === 0) {
-    if (age.days === 0) return withPlural(age.months, MONTHS);
-    return `${withPlural(age.months, MONTHS)} ${withPlural(age.days, DAYS)}`;
+    if (age.days === 0) return withCount(age.months, MONTHS);
+    return `${withCount(age.months, MONTHS)} ${withCount(age.days, DAYS)}`;
   }
-  if (age.months === 0) return withPlural(age.years, YEARS);
-  return `${withPlural(age.years, YEARS)} ${age.months} мес`;
+  if (age.months === 0) return withCount(age.years, YEARS);
+  return `${withCount(age.years, YEARS)} ${t("{0} мес", [age.months])}`;
 }
 
 export function formatWeight(grams: number | null): string {
   if (grams == null) return "—";
-  return `${(grams / 1000).toLocaleString("ru-RU", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} кг`;
+  return t("{0} кг", [
+    (grams / 1000).toLocaleString(locale(), {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
+  ]);
 }
 
 export function formatLength(mm: number | null): string {
   if (mm == null) return "—";
-  return `${(mm / 10).toLocaleString("ru-RU", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  })} см`;
+  return t("{0} см", [
+    (mm / 10).toLocaleString(locale(), {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }),
+  ]);
 }
 
 export function parseTimeOfDay(value: string): number | null {

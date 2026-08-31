@@ -1,7 +1,8 @@
+import { t, withCount } from "../../lib/i18n";
 import { Card } from "../../components/ui/Card";
 import { useNow } from "../../data/hooks";
 import type { Child, SleepSession } from "../../data/types";
-import { ageOf, birthMoment, formatDuration, withPlural } from "../../lib/time";
+import {ageOf, birthMoment, formatDuration} from "../../lib/time";
 import { bandFor, statsForLast24h } from "./sleepUtils";
 import styles from "./SleepSummary.module.css";
 
@@ -24,9 +25,9 @@ export function SleepSummary({ child, sessions }: SleepSummaryProps) {
   const empty = stats.totalMs === 0;
 
   return (
-    <Card title="За последние сутки">
+    <Card title={t("За последние сутки")}>
       <div className={`${styles.total} ${empty ? styles.totalEmpty : ""} tnum`}>
-        {empty ? "Записей пока нет" : formatDuration(stats.totalMs)}
+        {empty ? t("Записей пока нет") : formatDuration(stats.totalMs)}
       </div>
 
       <div className={styles.bar}>
@@ -37,14 +38,14 @@ export function SleepSummary({ child, sessions }: SleepSummaryProps) {
       <div className={styles.legend}>
         <span className={styles.item}>
           <i className={`${styles.dot} ${styles.dotNight}`} />
-          ночью
+          {t("ночью")}
           <b className={`${styles.value} tnum`}>
             {stats.nightMs === 0 ? "—" : formatDuration(stats.nightMs)}
           </b>
         </span>
         <span className={styles.item}>
           <i className={`${styles.dot} ${styles.dotNap}`} />
-          днём
+          {t("днём")}
           <b className={`${styles.value} tnum`}>
             {stats.napMs === 0 ? "—" : formatDuration(stats.napMs)}
           </b>
@@ -52,10 +53,13 @@ export function SleepSummary({ child, sessions }: SleepSummaryProps) {
       </div>
 
       <p className={styles.norm}>
-        ориентир для {age.totalMonths} мес — {band.sleepMinH}–{band.sleepMaxH} ч
-        в сутки
+        {t("ориентир для {0} мес — {1}–{2} ч в сутки", [
+          age.totalMonths,
+          band.sleepMinH,
+          band.sleepMaxH,
+        ])}
         {stats.count > 0 &&
-          ` · ${withPlural(stats.count, ["укладывание", "укладывания", "укладываний"])}`}
+          ` · ${withCount(stats.count, "укладывание")}`}
       </p>
     </Card>
   );

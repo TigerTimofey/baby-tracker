@@ -13,10 +13,10 @@ const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
  */
 export async function squarePhotoFromFile(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Это не изображение");
+    throw new Error(t("Это не изображение"));
   }
   if (file.size > MAX_SOURCE_BYTES) {
-    throw new Error("Файл слишком большой");
+    throw new Error(t("Файл слишком большой"));
   }
 
   const bitmap = await loadBitmap(file);
@@ -28,7 +28,7 @@ export async function squarePhotoFromFile(file: File): Promise<string> {
   canvas.width = SIDE;
   canvas.height = SIDE;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Не удалось обработать изображение");
+  if (!context) throw new Error(t("Не удалось обработать изображение"));
 
   context.drawImage(bitmap, left, top, side, side, 0, 0, SIDE, SIDE);
   if ("close" in bitmap) bitmap.close();
@@ -50,7 +50,7 @@ async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Не удалось открыть изображение"));
+      image.onerror = () => reject(new Error(t("Не удалось открыть изображение")));
       image.src = url;
     });
   } finally {
@@ -74,7 +74,7 @@ export function renderSquare(
   canvas.width = SIDE;
   canvas.height = SIDE;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Не удалось обработать изображение");
+  if (!context) throw new Error(t("Не удалось обработать изображение"));
 
   context.drawImage(
     image,
@@ -88,4 +88,5 @@ export function renderSquare(
     SIDE,
   );
   return canvas.toDataURL("image/jpeg", QUALITY);
-}
+}import { t } from "../../lib/i18n";
+

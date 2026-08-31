@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import type { Sex } from "../../data/types";
 import {
   WHO_DAYS,
@@ -109,13 +110,13 @@ export function percentileFromZ(z: number): number {
 }
 
 export function percentileLabel(percentile: number): string {
-  if (percentile < 1) return "меньше 1-го перцентиля";
-  if (percentile > 99) return "больше 99-го перцентиля";
-  return `${Math.round(percentile)}-й перцентиль`;
+  if (percentile < 1) return t("меньше 1-го перцентиля");
+  if (percentile > 99) return t("больше 99-го перцентиля");
+  return t("{0}-й перцентиль", [Math.round(percentile)]);
 }
 
 export function formatPercentile(percentile: number): string {
-  if (percentile < 1) return "меньше 1-го";
-  if (percentile > 99) return "больше 99-го";
-  return `${Math.round(percentile)}-й`;
+  if (percentile < 1) return t("меньше 1-го");
+  if (percentile > 99) return t("больше 99-го");
+  return t("{0}-й", [Math.round(percentile)]);
 }

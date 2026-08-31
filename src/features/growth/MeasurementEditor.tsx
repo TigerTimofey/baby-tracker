@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
 import {
@@ -51,11 +52,11 @@ export function MeasurementEditor({
 
     const when = resolveLocalInput(at, measurement?.measured_at ?? null);
     if (!when) {
-      setError("Укажите дату измерения");
+      setError(t("Укажите дату измерения"));
       return;
     }
     if (when.getTime() > Date.now() + 60_000) {
-      setError("Дата измерения в будущем");
+      setError(t("Дата измерения в будущем"));
       return;
     }
 
@@ -64,19 +65,19 @@ export function MeasurementEditor({
     const headMm = METRICS.head.fromInput(head);
 
     if (weightG === null && heightMm === null && headMm === null) {
-      setError("Заполните хотя бы одно значение");
+      setError(t("Заполните хотя бы одно значение"));
       return;
     }
     if (weightG !== null && (weightG < 300 || weightG > 60_000)) {
-      setError("Вес похож на опечатку");
+      setError(t("Вес похож на опечатку"));
       return;
     }
     if (heightMm !== null && (heightMm < 200 || heightMm > 1500)) {
-      setError("Рост похож на опечатку");
+      setError(t("Рост похож на опечатку"));
       return;
     }
     if (headMm !== null && (headMm < 200 || headMm > 700)) {
-      setError("Окружность головы похожа на опечатку");
+      setError(t("Окружность головы похожа на опечатку"));
       return;
     }
 
@@ -102,8 +103,8 @@ export function MeasurementEditor({
     const id = measurement.id;
     await softDelete("measurements", id);
     onClose();
-    showToast("Измерение удалено", {
-      label: "Отменить",
+    showToast(t("Измерение удалено"), {
+      label: t("Отменить"),
       run: () => restore("measurements", id),
     });
   }
@@ -112,15 +113,15 @@ export function MeasurementEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={measurement ? "Измерение" : "Новое измерение"}
+      title={measurement ? t("Измерение") : t("Новое измерение")}
       subtitle={
         measurement
           ? undefined
-          : "Заполните то, что известно — остальное можно оставить пустым"
+          : t("Заполните то, что известно — остальное можно оставить пустым")
       }
     >
       <form onSubmit={handleSubmit}>
-        <DateTimeField label="Когда измеряли" value={at} onChange={setAt} />
+        <DateTimeField label={t("Когда измеряли")} value={at} onChange={setAt} />
 
         {METRIC_ORDER.map((key) => {
           const info = METRICS[key];
@@ -140,13 +141,13 @@ export function MeasurementEditor({
           );
         })}
 
-        <Field label="Заметка" hint="Например, приём у педиатра">
+        <Field label={t("Заметка")} hint={t("Например, приём у педиатра")}>
           {(id) => (
             <Textarea
               id={id}
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Необязательно"
+              placeholder={t("Необязательно")}
             />
           )}
         </Field>
@@ -158,15 +159,15 @@ export function MeasurementEditor({
         <FormActions>
           {measurement ? (
             <Button variant="danger" onClick={handleDelete}>
-              Удалить
+              {t("Удалить")}
             </Button>
           ) : (
             <Button variant="secondary" onClick={onClose}>
-              Отмена
+              {t("Отмена")}
             </Button>
           )}
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
       </form>

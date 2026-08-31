@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import type { ReactNode } from "react";
 import { Button } from "./Button";
 import { FormActions } from "./Form";
@@ -24,8 +25,8 @@ export function ConfirmDialog({
   open,
   title,
   text,
-  confirmLabel = "Удалить",
-  cancelLabel = "Отмена",
+  confirmLabel = t("Удалить"),
+  cancelLabel = t("Отмена"),
   danger = true,
   onConfirm,
   onClose,

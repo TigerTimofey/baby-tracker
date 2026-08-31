@@ -69,9 +69,10 @@ export async function ensurePersistentStorageOnce(): Promise<void> {
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} Б`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`;
-  return `${(bytes / (1024 * 1024)).toLocaleString("ru-RU", {
+  if (bytes < 1024) return t("{0} Б", [bytes]);
+  if (bytes < 1024 * 1024) return t("{0} КБ", [Math.round(bytes / 1024)]);
+  return t("{0} МБ", [(bytes / (1024 * 1024)).toLocaleString(locale(), {
     maximumFractionDigits: 1,
-  })} МБ`;
-}
+  })]);
+}import { locale, t } from "../lib/i18n";
+

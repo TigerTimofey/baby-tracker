@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useRef, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
@@ -28,9 +29,9 @@ export function SummaryCard({ data }: { data: SummaryData }) {
   const [busy, setBusy] = useState(false);
 
   const blocks: Block[] = [
-    { title: "СОН", lines: data.sleep },
-    { title: "КОРМЛЕНИЯ", lines: data.feeding },
-    { title: "РОСТ И ВЕС", lines: data.growth },
+    { title: t("СОН"), lines: data.sleep },
+    { title: t("КОРМЛЕНИЯ"), lines: data.feeding },
+    { title: t("РОСТ И ВЕС"), lines: data.growth },
   ].filter((block) => block.lines.length > 0);
 
   const nodes: React.ReactNode[] = [];
@@ -132,7 +133,7 @@ export function SummaryCard({ data }: { data: SummaryData }) {
           .slice(0, 10)}.png`,
       });
     } catch {
-      showToast("Не удалось сохранить картинку");
+      showToast(t("Не удалось сохранить картинку"));
     } finally {
       setBusy(false);
     }
@@ -147,7 +148,7 @@ export function SummaryCard({ data }: { data: SummaryData }) {
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${W} ${height}`}
           role="img"
-          aria-label={`Итоги ${data.periodLabel}`}
+          aria-label={t("Итоги {0}", [data.periodLabel])}
         >
           <rect width={W} height={height} fill={BG} />
           {nodes}
@@ -157,17 +158,16 @@ export function SummaryCard({ data }: { data: SummaryData }) {
       <div className={styles.actions}>
         <Button variant="secondary" disabled={busy} onClick={() => void toPng()}>
           <Icon name="stats" size={16} />
-          Картинкой
+          {t("Картинкой")}
         </Button>
         <Button variant="secondary" onClick={() => window.print()}>
           <Icon name="check" size={16} />
-          В PDF
+          {t("В PDF")}
         </Button>
       </div>
 
       <p className={styles.note}>
-        «Картинкой» сохранит PNG или предложит отправить его сразу. «В PDF»
-        откроет печать — в диалоге выберите «Сохранить как PDF».
+        {t("«Картинкой» сохранит PNG или предложит отправить его сразу. «В PDF»\n        откроет печать — в диалоге выберите «Сохранить как PDF».")}
       </p>
     </div>
   );

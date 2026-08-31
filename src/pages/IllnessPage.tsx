@@ -1,3 +1,4 @@
+import { pluralOf, t } from "../lib/i18n";
 import { useState } from "react";
 import { Card } from "../components/ui/Card";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -37,7 +38,6 @@ import {
   formatFullDate,
   formatDuration,
   formatTime,
-  plural,
 } from "../lib/time";
 import styles from "./IllnessPage.module.css";
 
@@ -45,9 +45,9 @@ const NONE: Temperature[] = [];
 
 /** Коротко: до двух лет месяцами, дальше годами — как о ребёнке и говорят. */
 function shortAge(months: number): string {
-  if (months < 24) return `${months} мес`;
+  if (months < 24) return t("{0} мес", [months]);
   const years = Math.floor(months / 12);
-  return `${years} ${plural(years, ["год", "года", "лет"])}`;
+  return `${years} ${pluralOf(years, "год")}`;
 }
 const NO_DOSES: Medicine[] = [];
 
@@ -157,8 +157,8 @@ export function IllnessPage() {
       ...temps.map((id) => softDelete("temperatures", id)),
       ...meds.map((id) => softDelete("medicines", id)),
     ]);
-    showToast("Болезнь удалена", {
-      label: "Вернуть",
+    showToast(t("Болезнь удалена"), {
+      label: t("Вернуть"),
       run: async () => {
         await Promise.all([
           ...temps.map((id) => restore("temperatures", id)),
@@ -179,7 +179,7 @@ export function IllnessPage() {
         }}
       >
         <Icon name="thermometer" size={18} />
-        Температура
+        {t("Температура")}
       </Button>
       <Button
         variant="secondary"
@@ -190,7 +190,7 @@ export function IllnessPage() {
         }}
       >
         <Icon name="bottle" size={18} />
-        Лекарство
+        {t("Лекарство")}
       </Button>
     </div>
   );
@@ -242,7 +242,7 @@ export function IllnessPage() {
           </span>
           <span className={styles.dayCount}>
             {group.length}{" "}
-            {plural(group.length, ["запись", "записи", "записей"])}
+            {pluralOf(group.length, "запись")}
           </span>
         </div>
 
@@ -268,14 +268,14 @@ export function IllnessPage() {
                     const timer = timers.get(entry.dose.id);
                     if (!timer) return null;
                     return timer.ready ? (
-                      <span className={styles.ready}>можно давать</span>
+                      <span className={styles.ready}>{t("можно давать")}</span>
                     ) : (
                       <span className={`${styles.timer} tnum`}>
                         {formatDuration(timer.readyAt - now)}
                       </span>
                     );
                   })()}
-                  <span className={styles.pill}>лекарство</span>
+                  <span className={styles.pill}>{t("лекарство")}</span>
                 </span>
               </>
             );
@@ -356,7 +356,7 @@ export function IllnessPage() {
   ) => (
     <>
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Журнал</h3>
+          <h3 className={styles.sectionTitle}>{t("Журнал")}</h3>
           <div className={styles.inlineLog}>
             {renderLog(entriesOf(sp, list), readonly)}
           </div>
@@ -364,7 +364,7 @@ export function IllnessPage() {
 
         {sp.readings.length >= 2 && (
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Как менялась температура</h3>
+            <h3 className={styles.sectionTitle}>{t("Как менялась температура")}</h3>
             <FeverChart
               readings={sp.readings}
               doses={list}
@@ -375,7 +375,7 @@ export function IllnessPage() {
         )}
 
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Выгрузить для врача</h3>
+        <h3 className={styles.sectionTitle}>{t("Выгрузить для врача")}</h3>
         <IllnessReport
           child={child}
           readings={sp.readings}
@@ -393,7 +393,7 @@ export function IllnessPage() {
    * заводит первый замер, с него болезнь и начинается.
    */
   const startCard = (lead: string) => (
-    <Card title="Сейчас">
+    <Card title={t("Сейчас")}>
       <p className={styles.lead}>{lead}</p>
       <div className={styles.actions}>
         <Button
@@ -405,7 +405,7 @@ export function IllnessPage() {
           }}
         >
           <Icon name="thermometer" size={18} />
-          Заболел
+          {t("Заболел")}
         </Button>
       </div>
     </Card>
@@ -425,36 +425,27 @@ export function IllnessPage() {
           const target = allSpells[askedIndex];
           const list = dosesOfSpell(askedIndex);
           const parts = [
-            `${target.readings.length} ${plural(target.readings.length, [
-              "замер",
-              "замера",
-              "замеров",
-            ])}`,
+            `${target.readings.length} ${pluralOf(target.readings.length, "замер")}`,
             list.length > 0
-              ? `${list.length} ${plural(list.length, [
-                  "лекарство",
-                  "лекарства",
-                  "лекарств",
-                ])}`
+              ? `${list.length} ${pluralOf(list.length, "лекарство")}`
               : null,
           ].filter(Boolean);
           return {
             spell: target,
             doses: list,
-            what: parts.join(" и "),
+            what: parts.join(t(" и ")),
           };
         })();
 
   return (
     <>
-      <h1 className="sr-only">Контроль болезни</h1>
+      <h1 className="sr-only">{t("Контроль болезни")}</h1>
 
       <div className={styles.stack}>
         {confirming && spell ? (
-          <Card title="Сейчас">
+          <Card title={t("Сейчас")}>
             <p className={styles.lead}>
-              Завершить болезнь? Замеры и лекарства останутся в журнале, а
-              карточка свернётся в итог — вернуть можно в любой момент.
+              {t("Завершить болезнь? Замеры и лекарства останутся в журнале, а\n              карточка свернётся в итог — вернуть можно в любой момент.")}
             </p>
 
             <div className={styles.actions}>
@@ -463,32 +454,32 @@ export function IllnessPage() {
                 size="lg"
                 onClick={() => setConfirming(false)}
               >
-                Отменить
+                {t("Отменить")}
               </Button>
               <Button variant="primary" size="lg" onClick={finishSpell}>
-                Подтвердить
+                {t("Подтвердить")}
               </Button>
             </div>
           </Card>
         ) : spell && recoveredAt !== null ? (
           <>
             {startCard(
-              `Болезнь закрыта ${formatDayLabel(
+              t("Болезнь закрыта {0} в {1}.", [formatDayLabel(
                 new Date(recoveredAt),
-              ).toLowerCase()} в ${formatTime(new Date(recoveredAt))}.`,
+              ).toLowerCase(), formatTime(new Date(recoveredAt))]),
             )}
             <Card
-              title="Итог болезни"
+              title={t("Итог болезни")}
               collapsible
               actionFirst
-              meta={`Последняя болезнь: ${rangeOf(spell.since, recoveredAt)}`}
+              meta={t("Последняя болезнь: {0}", [rangeOf(spell.since, recoveredAt)])}
               action={
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => reopenSpell(spell)}
                 >
-                  Вернуть болезнь
+                  {t("Вернуть болезнь")}
                 </Button>
               }
               footer={
@@ -499,7 +490,7 @@ export function IllnessPage() {
                     onClick={() => setAskDelete(spell.last.id)}
                   >
                     <Icon name="trash" size={17} />
-                    Удалить болезнь
+                    {t("Удалить болезнь")}
                   </Button>
                 </div>
               }
@@ -509,19 +500,19 @@ export function IllnessPage() {
               </div>
               <div className={styles.facts}>
                 <div className={styles.fact}>
-                  <span className={styles.factLabel}>Пик</span>
+                  <span className={styles.factLabel}>{t("Пик")}</span>
                   <span className={`${styles.factValue} tnum`}>
                     {formatCelsius(spell.peak.celsius)}
                   </span>
                 </div>
                 <div className={styles.fact}>
-                  <span className={styles.factLabel}>Замеров</span>
+                  <span className={styles.factLabel}>{t("Замеров")}</span>
                   <span className={`${styles.factValue} tnum`}>
                     {spell.readings.length}
                   </span>
                 </div>
                 <div className={styles.fact}>
-                  <span className={styles.factLabel}>Лекарств</span>
+                  <span className={styles.factLabel}>{t("Лекарств")}</span>
                   <span className={`${styles.factValue} tnum`}>
                     {spellDoses.length}
                   </span>
@@ -533,14 +524,14 @@ export function IllnessPage() {
           </>
         ) : spell ? (
           <Card
-            title="Сейчас"
+            title={t("Сейчас")}
             action={
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setConfirming(true)}
               >
-                Поправился
+                {t("Поправился")}
               </Button>
             }
           >
@@ -550,24 +541,24 @@ export function IllnessPage() {
             <p className={styles.sub}>
               {levelWord(levelOf(spell.last, ageMonths))} ·{" "}
               {methodLabel(spell.last.method).toLowerCase()} ·{" "}
-              {formatDuration(now - measuredMs(spell.last))} назад
+              {t("{0} назад", [formatDuration(now - measuredMs(spell.last))])}
             </p>
 
             <div className={styles.facts}>
               <div className={styles.fact}>
-                <span className={styles.factLabel}>Пик</span>
+                <span className={styles.factLabel}>{t("Пик")}</span>
                 <span className={`${styles.factValue} tnum`}>
                   {formatCelsius(spell.peak.celsius)}
                 </span>
               </div>
               <div className={styles.fact}>
-                <span className={styles.factLabel}>Замеров</span>
+                <span className={styles.factLabel}>{t("Замеров")}</span>
                 <span className={`${styles.factValue} tnum`}>
                   {spell.readings.length}
                 </span>
               </div>
               <div className={styles.fact}>
-                <span className={styles.factLabel}>Наблюдаем</span>
+                <span className={styles.factLabel}>{t("Наблюдаем")}</span>
                 <span className={`${styles.factValue} tnum`}>
                   {formatSpan(now - spell.since)}
                 </span>
@@ -575,12 +566,19 @@ export function IllnessPage() {
             </div>
 
             <p className={styles.basis}>
-              {methodLabel(spell.last.method)}, {shortAge(ageMonths)}:{" "}
-              {highThreshold(spell.last.method, ageMonths) <=
-              feverThreshold(spell.last.method)
-                ? `красным от ${formatCelsius(feverThreshold(spell.last.method))}`
-                : `жёлтым от ${formatCelsius(feverThreshold(spell.last.method))}, красным от ${formatCelsius(highThreshold(spell.last.method, ageMonths))}`}
-              . Ориентир, не диагноз.
+              {t("{0}, {1}: {2}. Ориентир, не диагноз.", [
+                methodLabel(spell.last.method),
+                shortAge(ageMonths),
+                highThreshold(spell.last.method, ageMonths) <=
+                feverThreshold(spell.last.method)
+                  ? t("красным от {0}", [
+                      formatCelsius(feverThreshold(spell.last.method)),
+                    ])
+                  : t("жёлтым от {0}, красным от {1}", [
+                      formatCelsius(feverThreshold(spell.last.method)),
+                      formatCelsius(highThreshold(spell.last.method, ageMonths)),
+                    ]),
+              ])}
             </p>
 
             {addButtons}
@@ -588,24 +586,24 @@ export function IllnessPage() {
         ) : (
           startCard(
             readings.length === 0
-              ? "Записей пока нет. Нажмите «Температура», когда будете мерить."
-              : "Последний замер был давно — похоже, всё позади.",
+              ? t("Записей пока нет. Нажмите «Температура», когда будете мерить.")
+              : t("Последний замер был давно — похоже, всё позади."),
           )
         )}
 
         {entries.length === 0 ? (
           <EmptyState
             icon="thermometer"
-            title="Журнал пуст"
-            text="Здесь появятся замеры температуры и выданные лекарства — одной лентой, удобно показать врачу."
+            title={t("Журнал пуст")}
+            text={t("Здесь появятся замеры температуры и выданные лекарства — одной лентой, удобно показать врачу.")}
           />
         ) : spell !== null && recoveredAt === null ? (
           <>
-            <Card title="Журнал" flush>
+            <Card title={t("Журнал")} flush>
               {renderLog(entriesOf(spell, spellDoses))}
             </Card>
             {spell.readings.length >= 2 && (
-              <Card title="Как менялась температура" collapsible>
+              <Card title={t("Как менялась температура")} collapsible>
                 <FeverChart
                   readings={spell.readings}
                   doses={spellDoses}
@@ -614,7 +612,7 @@ export function IllnessPage() {
                 />
               </Card>
             )}
-            <Card title="Выгрузить для врача" collapsible>
+            <Card title={t("Выгрузить для врача")} collapsible>
               <IllnessReport
                 child={child}
                 readings={spell.readings}
@@ -628,24 +626,16 @@ export function IllnessPage() {
         ) : null}
 
         {pastSpells.length > 0 && (
-          <Card title="История болезней" collapsible>
+          <Card title={t("История болезней")} collapsible>
             {pastSpells.map((sp) => {
               const list = dosesOfSpell(allSpells.indexOf(sp));
               const ended = spellShownEnd(sp);
               const open = openPast === sp.last.id;
               const facts = [
-                `пик ${formatCelsius(sp.peak.celsius)}`,
-                `${sp.readings.length} ${plural(sp.readings.length, [
-                  "замер",
-                  "замера",
-                  "замеров",
-                ])}`,
+                t("пик {0}", [formatCelsius(sp.peak.celsius)]),
+                `${sp.readings.length} ${pluralOf(sp.readings.length, "замер")}`,
                 list.length > 0
-                  ? `${list.length} ${plural(list.length, [
-                      "лекарство",
-                      "лекарства",
-                      "лекарств",
-                    ])}`
+                  ? `${list.length} ${pluralOf(list.length, "лекарство")}`
                   : null,
               ]
                 .filter(Boolean)
@@ -689,8 +679,7 @@ export function IllnessPage() {
             })}
 
             <p className={styles.basis}>
-              Длительность закрытой болезни считается до отметки «поправился»,
-              незакрытой — от первого замера до последнего.
+              {t("Длительность закрытой болезни считается до отметки «поправился»,\n              незакрытой — от первого замера до последнего.")}
             </p>
 
             {openSpell && (
@@ -701,7 +690,7 @@ export function IllnessPage() {
                   onClick={() => setAskDelete(openSpell.last.id)}
                 >
                   <Icon name="trash" size={17} />
-                  Удалить болезнь
+                  {t("Удалить болезнь")}
                 </Button>
               </div>
             )}
@@ -724,10 +713,8 @@ export function IllnessPage() {
           open={askDelete !== null}
           onClose={() => setAskDelete(null)}
           onConfirm={() => deleteSpell(asked.spell, asked.doses)}
-          title="Удалить болезнь?"
-          text={`${rangeOf(asked.spell.since, spellShownEnd(asked.spell))}. ${
-            asked.what
-          } — записи пропадут из журнала и из выгрузки для врача. Сразу после удаления можно будет отменить.`}
+          title={t("Удалить болезнь?")}
+          text={t("{0}. {1} — записи пропадут из журнала и из выгрузки для врача. Сразу после удаления можно будет отменить.", [rangeOf(asked.spell.since, spellShownEnd(asked.spell)), asked.what])}
         />
       )}
 

@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
@@ -172,7 +173,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
             type="button"
             className={styles.close}
             onClick={onClose}
-            aria-label="Закрыть"
+            aria-label={t("Закрыть")}
           >
             <Icon name="close" size={18} />
           </button>

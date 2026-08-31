@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSyncStatus, subscribeSync } from "../data/sync";
@@ -18,13 +19,13 @@ export function SyncBadge() {
   const view = (() => {
     switch (status.state) {
       case "syncing":
-        return { icon: "spinner", tone: "", text: "Обмен", spin: true };
+        return { icon: "spinner", tone: "", text: t("Обмен"), spin: true };
       case "offline":
-        return { icon: "cloud-off", tone: styles.warn, text: "Офлайн" };
+        return { icon: "cloud-off", tone: styles.warn, text: t("Офлайн") };
       case "signed_out":
-        return { icon: "cloud-off", tone: "", text: "Локально" };
+        return { icon: "cloud-off", tone: "", text: t("Локально") };
       case "error":
-        return { icon: "cloud-off", tone: styles.bad, text: "Ошибка" };
+        return { icon: "cloud-off", tone: styles.bad, text: t("Ошибка") };
       default:
         return {
           icon: "cloud",

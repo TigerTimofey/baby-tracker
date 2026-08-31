@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Icon } from "../../components/ui/Icon";
@@ -67,9 +68,9 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
         left,
         width: Math.max(MIN_MARK_PERCENT, right - left),
         nap: session.kind === "nap",
-        title: session.kind === "night" ? "Ночной сон" : "Дневной сон",
+        title: session.kind === "night" ? t("Ночной сон") : t("Дневной сон"),
         detail: `${formatTime(new Date(start))} → ${
-          session.end_at ? formatTime(new Date(end)) : "сейчас"
+          session.end_at ? formatTime(new Date(end)) : t("сейчас")
         } · ${formatDuration(end - start)}`,
       },
     ];
@@ -88,8 +89,8 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
         width: Math.max(MIN_MARK_PERCENT, right - left),
         title: kindLabel(feeding.kind),
         detail: `${formatTime(new Date(start))} · ${
-          feeding.end_at ? formatDuration(end - start) : "идёт"
-        }${feeding.amount_ml ? ` · ${feeding.amount_ml} мл` : ""}`,
+          feeding.end_at ? formatDuration(end - start) : t("идёт")
+        }${feeding.amount_ml ? t(" · {0} мл", [feeding.amount_ml]) : ""}`,
       },
     ];
   });
@@ -121,7 +122,7 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
           type="button"
           className={styles.nav}
           onClick={() => setOffset(offset + 1)}
-          aria-label="Предыдущий день"
+          aria-label={t("Предыдущий день")}
         >
           <Icon name="chevron-left" size={18} />
         </button>
@@ -133,14 +134,14 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
           className={styles.nav}
           disabled={offset === 0}
           onClick={() => setOffset(Math.max(0, offset - 1))}
-          aria-label="Следующий день"
+          aria-label={t("Следующий день")}
         >
           <Icon name="chevron-right" size={18} />
         </button>
       </div>
 
       {empty ? (
-        <p className={styles.empty}>В этот день записей нет.</p>
+        <p className={styles.empty}>{t("В этот день записей нет.")}</p>
       ) : (
         <>
           <p className={styles.readout}>
@@ -151,7 +152,7 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
                 {picked.detail}
               </>
             ) : (
-              "Нажмите на отрезок, чтобы увидеть время"
+              t("Нажмите на отрезок, чтобы увидеть время")
             )}
           </p>
 
@@ -181,15 +182,15 @@ export function DayTimeline({ childId, sessions }: DayTimelineProps) {
           <div className={styles.legend}>
             <span className={styles.legendItem}>
               <i className={`${styles.swatch} ${styles.swatchNight}`} />
-              ночной сон
+              {t("ночной сон")}
             </span>
             <span className={styles.legendItem}>
               <i className={`${styles.swatch} ${styles.swatchNap}`} />
-              дневной
+              {t("дневной")}
             </span>
             <span className={styles.legendItem}>
               <i className={`${styles.swatch} ${styles.swatchFeed}`} />
-              кормление
+              {t("кормление")}
             </span>
           </div>
         </>

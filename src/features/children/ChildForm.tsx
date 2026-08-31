@@ -1,5 +1,6 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { useRef, useState, type FormEvent } from "react";
-import { plural } from "../../lib/time";
+
 import { Button } from "../../components/ui/Button";
 import {
   Field,
@@ -74,7 +75,7 @@ export function ChildForm({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setPhotoError("Это не изображение");
+      setPhotoError(t("Это не изображение"));
       return;
     }
     // Кадрирует человек, а не приложение: центр снимка редко совпадает с лицом.
@@ -86,15 +87,15 @@ export function ChildForm({
     event.preventDefault();
 
     if (!name.trim()) {
-      setError("Как зовут малыша?");
+      setError(t("Как зовут малыша?"));
       return;
     }
     if (!birthDate) {
-      setError("Укажите дату рождения");
+      setError(t("Укажите дату рождения"));
       return;
     }
     if (new Date(birthDate) > new Date()) {
-      setError("Дата рождения не может быть в будущем");
+      setError(t("Дата рождения не может быть в будущем"));
       return;
     }
 
@@ -129,17 +130,17 @@ export function ChildForm({
     const counts = await countChildRecords(child.id);
     const details = [
       counts.sleep_sessions &&
-        `${counts.sleep_sessions} ${plural(counts.sleep_sessions, ["запись сна", "записи сна", "записей сна"])}`,
+        `${counts.sleep_sessions} ${pluralOf(counts.sleep_sessions, "запись сна")}`,
       counts.measurements &&
-        `${counts.measurements} ${plural(counts.measurements, ["измерение", "измерения", "измерений"])}`,
+        `${counts.measurements} ${pluralOf(counts.measurements, "измерение")}`,
     ]
       .filter(Boolean)
       .join(", ");
 
     const confirmed = window.confirm(
-      `Удалить профиль «${child.name}»?` +
-        (details ? `\n\nВместе с ним удалится: ${details}.` : "") +
-        "\n\nОтменить это будет нельзя.",
+      t("Удалить профиль «{0}»?", [child.name]) +
+        (details ? t("\n\nВместе с ним удалится: {0}.", [details]) : "") +
+        t("\n\nОтменить это будет нельзя."),
     );
     if (!confirmed) return;
 
@@ -147,8 +148,8 @@ export function ChildForm({
     const name = child.name;
     updateSettings({ activeChildId: null });
     onClose();
-    showToast(`Профиль «${name}» удалён`, {
-      label: "Отменить",
+    showToast(t("Профиль «{0}» удалён", [name]), {
+      label: t("Отменить"),
       run: async () => {
         await restoreChildDeep(token);
         updateSettings({ activeChildId: token.childId });
@@ -160,9 +161,9 @@ export function ChildForm({
     <Sheet
       open={open}
       onClose={onClose}
-      title={child ? "Профиль малыша" : "Добавить малыша"}
+      title={child ? t("Профиль малыша") : t("Добавить малыша")}
       subtitle={
-        child ? undefined : "Дата рождения нужна, чтобы считать возраст и нормы"
+        child ? undefined : t("Дата рождения нужна, чтобы считать возраст и нормы")
       }
     >
       <form onSubmit={handleSubmit}>
@@ -172,9 +173,9 @@ export function ChildForm({
             size={64}
           />
           <div className={styles.photoText}>
-            <div className={styles.photoLabel}>Фото</div>
+            <div className={styles.photoLabel}>{t("Фото")}</div>
             <div className={styles.photoHint}>
-              {photoError ?? "Появится в кружке наверху"}
+              {photoError ?? t("Появится в кружке наверху")}
             </div>
             <div className={styles.photoButtons}>
               <Button
@@ -183,7 +184,7 @@ export function ChildForm({
                 variant="secondary"
                 onClick={() => pickInput.current?.click()}
               >
-                Добавить
+                {t("Добавить")}
               </Button>
               {photo && (
                 <Button
@@ -195,7 +196,7 @@ export function ChildForm({
                     setPhoto(null);
                   }}
                 >
-                  Убрать
+                  {t("Убрать")}
                 </Button>
               )}
             </div>
@@ -209,13 +210,13 @@ export function ChildForm({
           />
         </div>
 
-        <Field label="Имя">
+        <Field label={t("Имя")}>
           {(id) => (
             <TextInput
               id={id}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Например, Лев"
+              placeholder={t("Например, Лев")}
               autoComplete="off"
               autoFocus={!child}
             />
@@ -223,7 +224,7 @@ export function ChildForm({
         </Field>
 
         <FormRow>
-          <Field label="Дата рождения">
+          <Field label={t("Дата рождения")}>
             {(id) => (
               <TextInput
                 id={id}
@@ -234,7 +235,7 @@ export function ChildForm({
               />
             )}
           </Field>
-          <Field label="Время" hint="если знаете">
+          <Field label={t("Время")} hint={t("если знаете")}>
             {(id) => (
               <TextInput
                 id={id}
@@ -246,41 +247,41 @@ export function ChildForm({
           </Field>
         </FormRow>
 
-        <Field label="Пол">
+        <Field label={t("Пол")}>
           {(id) => (
             <Segmented<SexChoice>
               id={id}
               value={sex}
               onChange={setSex}
-              ariaLabel="Пол"
+              ariaLabel={t("Пол")}
               options={[
-                { value: "male", label: "Мальчик" },
-                { value: "female", label: "Девочка" },
-                { value: "unset", label: "Не важно" },
+                { value: "male", label: t("Мальчик") },
+                { value: "female", label: t("Девочка") },
+                { value: "unset", label: t("Не важно") },
               ]}
             />
           )}
         </Field>
 
         <FormRow>
-          <Field label="Вес при рождении">
+          <Field label={t("Вес при рождении")}>
             {(id) => (
               <TextInput
                 id={id}
                 inputMode="decimal"
-                suffix="кг"
+                suffix={t("кг")}
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="3,45"
+                placeholder={t("3,45")}
               />
             )}
           </Field>
-          <Field label="Рост при рождении">
+          <Field label={t("Рост при рождении")}>
             {(id) => (
               <TextInput
                 id={id}
                 inputMode="decimal"
-                suffix="см"
+                suffix={t("см")}
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
                 placeholder="52"
@@ -295,10 +296,10 @@ export function ChildForm({
 
         <FormActions>
           <Button variant="secondary" onClick={onClose}>
-            Отмена
+            {t("Отмена")}
           </Button>
           <Button type="submit" variant="primary">
-            Сохранить
+            {t("Сохранить")}
           </Button>
         </FormActions>
 
@@ -306,7 +307,7 @@ export function ChildForm({
           <div className={styles.danger}>
             <Button variant="danger" block onClick={handleDelete}>
               <Icon name="trash" size={17} />
-              Удалить профиль
+              {t("Удалить профиль")}
             </Button>
           </div>
         )}

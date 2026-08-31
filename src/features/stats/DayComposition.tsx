@@ -1,5 +1,9 @@
+import { t, withCount } from "../../lib/i18n";
 import { Donut } from "../../components/ui/Donut";
-import { formatDuration, formatHoursMinutes, plural } from "../../lib/time";
+import {
+  formatDuration,
+  formatHoursMinutes,
+} from "../../lib/time";
 import { DAY_MS, type SleepStats } from "./statsUtils";
 import styles from "./DayComposition.module.css";
 
@@ -14,9 +18,9 @@ export function DayComposition({ stats }: DayCompositionProps) {
 
   const awake = Math.max(0, DAY_MS - night - nap);
   const slices = [
-    { label: "Ночной сон", value: night, color: "var(--sleep)" },
-    { label: "Дневной сон", value: nap, color: "var(--nap)" },
-    { label: "Бодрствование", value: awake, color: "var(--big-number)" },
+    { label: t("Ночной сон"), value: night, color: "var(--sleep)" },
+    { label: t("Дневной сон"), value: nap, color: "var(--nap)" },
+    { label: t("Бодрствование"), value: awake, color: "var(--big-number)" },
   ].filter((slice) => slice.value > 0);
 
   return (
@@ -25,8 +29,8 @@ export function DayComposition({ stats }: DayCompositionProps) {
         slices={slices}
         size={106}
         center={formatHoursMinutes(night + nap)}
-        centerHint="сна"
-        ariaLabel={`Сутки в среднем: ночной сон ${formatDuration(night)}, дневной ${formatDuration(nap)}, бодрствование ${formatDuration(awake)}`}
+        centerHint={t("сна")}
+        ariaLabel={t("Сутки в среднем: ночной сон {0}, дневной {1}, бодрствование {2}", [formatDuration(night), formatDuration(nap), formatDuration(awake)])}
       />
 
       <ul className={styles.legend}>
@@ -40,8 +44,9 @@ export function DayComposition({ stats }: DayCompositionProps) {
           </li>
         ))}
         <li className={styles.basis}>
-          в среднем по {stats.daysCounted}{" "}
-          {plural(stats.daysCounted, ["дню", "дням", "дням"])} с записями
+          {t("в среднем по {0} с записями", [
+            withCount(stats.daysCounted, "дню"),
+          ])}
         </li>
       </ul>
     </div>

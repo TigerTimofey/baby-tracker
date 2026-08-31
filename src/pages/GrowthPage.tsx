@@ -1,3 +1,4 @@
+import { pluralOf, t } from "../lib/i18n";
 import { useState } from "react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -24,7 +25,12 @@ import {
   percentileFromZ,
   zScoreFor,
 } from "../features/growth/whoUtils";
-import { ageOf, birthMoment, formatAge, formatDayLabel, plural } from "../lib/time";
+import {
+  ageOf,
+  birthMoment,
+  formatAge,
+  formatDayLabel,
+} from "../lib/time";
 import styles from "./GrowthPage.module.css";
 
 const NO_MEASUREMENTS: Measurement[] = [];
@@ -69,7 +75,7 @@ export function GrowthPage() {
   const addButton = (
     <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
       <Icon name="plus" size={16} />
-      Добавить
+      {t("Добавить")}
     </Button>
   );
 
@@ -80,24 +86,23 @@ export function GrowthPage() {
 
   return (
     <>
-      <h1 className="sr-only">Рост и вес</h1>
+      <h1 className="sr-only">{t("Рост и вес")}</h1>
       <div className={styles.stack}>
         {!anyData ? (
-          <Card title="Рост и вес">
+          <Card title={t("Рост и вес")}>
             <p className={styles.intro}>
-              Ни одного измерения. Добавьте первое — приложение посчитает
-              прибавки и покажет, как малыш идёт относительно норм ВОЗ.
+              {t("Ни одного измерения. Добавьте первое — приложение посчитает\n              прибавки и покажет, как малыш идёт относительно норм ВОЗ.")}
             </p>
             <div className={styles.introAction}>
               <Button variant="primary" onClick={() => setAdding(true)}>
                 <Icon name="plus" size={17} />
-                Добавить измерение
+                {t("Добавить измерение")}
               </Button>
             </div>
           </Card>
         ) : (
           <>
-            <Card title="Последнее измерение" action={addButton}>
+            <Card title={t("Последнее измерение")} action={addButton}>
               {latestOverall && (
                 <p className={styles.when}>
                   {formatDayLabel(latestOverall.measured_at)} ·{" "}
@@ -138,12 +143,12 @@ export function GrowthPage() {
               </div>
             </Card>
 
-            <Card title="Динамика">
+            <Card title={t("Динамика")}>
               <div className={styles.switcher}>
                 <Segmented<WhoMetric>
                   value={metric}
                   onChange={setMetric}
-                  ariaLabel="Что показать на графике"
+                  ariaLabel={t("Что показать на графике")}
                   options={METRIC_ORDER.map((key) => ({
                     value: key,
                     label: METRICS[key].label,
@@ -153,7 +158,7 @@ export function GrowthPage() {
 
               {activePoints.length === 0 ? (
                 <p className={styles.intro}>
-                  Для этой величины измерений ещё нет.
+                  {t("Для этой величины измерений ещё нет.")}
                 </p>
               ) : (
                 <>
@@ -169,16 +174,16 @@ export function GrowthPage() {
                       <Facts
                         items={[
                           {
-                            label: "С прошлого измерения",
+                            label: t("С прошлого измерения"),
                             value: sincePrevious
                               ? activeInfo.formatDelta(sincePrevious.deltaRaw)
                               : null,
                             hint: sincePrevious
-                              ? `за ${sincePrevious.days} ${plural(sincePrevious.days, ["день", "дня", "дней"])}`
+                              ? t("за {0} {1}", [sincePrevious.days, pluralOf(sincePrevious.days, "день")])
                               : undefined,
                           },
                           {
-                            label: "В среднем за неделю",
+                            label: t("В среднем за неделю"),
                             value:
                               rate === null
                                 ? null
@@ -191,11 +196,10 @@ export function GrowthPage() {
 
                   {child.sex && (
                     <p className={styles.disclaimer}>
-                      Коридоры построены по нормам ВОЗ для{" "}
-                      {child.sex === "female" ? "девочек" : "мальчиков"}.
-                      Попадание в любую точку коридора — вариант нормы; важна не
-                      сама цифра, а то, держится ли ребёнок своей линии.
-                      Оценивает это педиатр, а не приложение.
+                      {t(
+                        "Коридоры построены по нормам ВОЗ для {0}. Попадание в любую точку коридора — вариант нормы; важна не сама цифра, а то, держится ли ребёнок своей линии. Оценивает это педиатр, а не приложение.",
+                        [child.sex === "female" ? t("девочек") : t("мальчиков")],
+                      )}
                     </p>
                   )}
                 </>
@@ -205,7 +209,7 @@ export function GrowthPage() {
         )}
 
         <Card
-          title="История"
+          title={t("История")}
           action={measurements.length > 0 ? addButton : undefined}
         >
           <GrowthHistory child={child} measurements={measurements} />

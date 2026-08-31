@@ -1,3 +1,4 @@
+import { t, withCount } from "../../lib/i18n";
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -5,7 +6,11 @@ import { Icon } from "../../components/ui/Icon";
 import { useAuthorLabel, useLive, useNow } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
 import type { Feeding } from "../../data/types";
-import { formatClock, formatDuration, formatTime, plural } from "../../lib/time";
+import {
+  formatClock,
+  formatDuration,
+  formatTime,
+} from "../../lib/time";
 import { FeedingEditor } from "./FeedingEditor";
 import {
   durationMs,
@@ -51,22 +56,22 @@ export function FeedingCard({ childId }: { childId: string }) {
   const addButton = (
     <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
       <Icon name="plus" size={16} />
-      Добавить
+      {t("Добавить")}
     </Button>
   );
 
   return (
     <>
-      <Card title="Кормления" action={addButton}>
+      <Card title={t("Кормления")} action={addButton}>
         {active && (
           <div className={styles.live}>
             <span className={styles.liveIcon}>
               <Icon name="bottle" size={18} />
             </span>
             <span className={styles.liveText}>
-              <span className={styles.liveTitle}>Кормление идёт</span>
+              <span className={styles.liveTitle}>{t("Кормление идёт")}</span>
               <span className={styles.liveKind}>
-                {kindLabel(active.kind)} · с {formatTime(active.start_at)}
+                {t("{0} · с {1}", [kindLabel(active.kind), formatTime(active.start_at)])}
                 {author(active.created_by) ? ` · ${author(active.created_by)}` : ""}
               </span>
             </span>
@@ -79,8 +84,8 @@ export function FeedingCard({ childId }: { childId: string }) {
         {!active && (
           <p className={styles.summary}>
             {previous
-              ? `Последнее кормление ${formatDuration(now - endMs(previous, now))} назад, длилось ${formatDuration(durationMs(previous, now))}`
-              : "Записей пока нет. Нажмите «Кормлю», когда начнёте."}
+              ? t("Последнее кормление {0} назад, длилось {1}", [formatDuration(now - endMs(previous, now)), formatDuration(durationMs(previous, now))])
+              : t("Записей пока нет. Нажмите «Кормлю», когда начнёте.")}
           </p>
         )}
 
@@ -88,10 +93,10 @@ export function FeedingCard({ childId }: { childId: string }) {
             виде. Теперь лента одна, а карточка отвечает только за «что сейчас». */}
         <p className={styles.empty}>
           {today.length > 0
-            ? `Сегодня ${today.length} ${plural(today.length, ["кормление", "кормления", "кормлений"])}${
-                totalMl > 0 ? ` · ${totalMl} мл из бутылочки` : ""
+            ? `${t("Сегодня {0}", [withCount(today.length, "кормление")])}${
+                totalMl > 0 ? t(" · {0} мл из бутылочки", [totalMl]) : ""
               }`
-            : "Сегодня кормлений ещё не записано."}
+            : t("Сегодня кормлений ещё не записано.")}
         </p>
 
       </Card>

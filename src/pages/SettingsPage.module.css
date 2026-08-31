@@ -5,6 +5,11 @@
   margin-bottom: var(--gap-4);
 }
 
+/* Выбор языка прижат к правому краю шапки: заголовок и «назад» слева. */
+.lang {
+  margin-left: auto;
+}
+
 .back {
   display: grid;
   place-items: center;

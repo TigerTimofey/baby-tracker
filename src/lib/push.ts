@@ -1,3 +1,4 @@
+import { lang } from "./i18n";
 import { supabase } from "./supabase";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY?.trim() ?? "";
@@ -70,6 +71,8 @@ export async function enablePush(familyId: string | null): Promise<PushResult> {
         p256dh: json.keys?.p256dh ?? keyToBase64(subscription.getKey("p256dh")),
         auth: json.keys?.auth ?? keyToBase64(subscription.getKey("auth")),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        // Язык устройства, а не семьи: у родителей он может быть разный.
+        locale: lang(),
         last_seen_at: new Date().toISOString(),
       },
       { onConflict: "endpoint" },

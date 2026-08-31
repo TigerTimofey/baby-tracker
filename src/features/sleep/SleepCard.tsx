@@ -1,10 +1,15 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
 import { useAuthorLabel, useNow } from "../../data/hooks";
 import type { SleepSession } from "../../data/types";
-import { formatClock, formatDuration, formatTime, plural } from "../../lib/time";
+import {
+  formatClock,
+  formatDuration,
+  formatTime,
+} from "../../lib/time";
 import { SleepEditor } from "./SleepEditor";
 import {
   DAY_MS,
@@ -49,13 +54,13 @@ export function SleepCard({
   const addButton = (
     <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
       <Icon name="plus" size={16} />
-      Добавить
+      {t("Добавить")}
     </Button>
   );
 
   return (
     <>
-      <Card title="Сон" action={addButton}>
+      <Card title={t("Сон")} action={addButton}>
         {active && (
           <div className={`${styles.live} ${own.live}`}>
             <span className={`${styles.liveIcon} ${own.liveIcon}`}>
@@ -63,10 +68,10 @@ export function SleepCard({
             </span>
             <span className={styles.liveText}>
               <span className={`${styles.liveTitle} ${own.liveTitle}`}>
-                Спит
+                {t("Спит")}
               </span>
               <span className={styles.liveKind}>
-                {kindLabel(active.kind)} · с {formatTime(active.start_at)}
+                {t("{0} · с {1}", [kindLabel(active.kind), formatTime(active.start_at)])}
                 {author(active.created_by)
                   ? ` · ${author(active.created_by)}`
                   : ""}
@@ -81,15 +86,15 @@ export function SleepCard({
         {!active && (
           <p className={styles.summary}>
             {previous
-              ? `Последний сон ${formatDuration(now - endMs(previous, now))} назад, длился ${formatDuration(durationMs(previous, now))}`
-              : "Записей пока нет. Нажмите «Уснул», когда малыш заснёт."}
+              ? t("Последний сон {0} назад, длился {1}", [formatDuration(now - endMs(previous, now)), formatDuration(durationMs(previous, now))])
+              : t("Записей пока нет. Нажмите «Уснул», когда малыш заснёт.")}
           </p>
         )}
 
         <p className={styles.empty}>
           {today.length > 0
-            ? `Сегодня ${today.length} ${plural(today.length, ["сон", "сна", "снов"])} · ${formatDuration(todayMs)}`
-            : "Сегодня снов ещё не записано."}
+            ? t("Сегодня {0} {1} · {2}", [today.length, pluralOf(today.length, "сон"), formatDuration(todayMs)])
+            : t("Сегодня снов ещё не записано.")}
         </p>
       </Card>
 

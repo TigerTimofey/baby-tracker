@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState } from "react";
 import { formatDayLabel, formatDuration } from "../../lib/time";
 import { HOUR_MS, type DayBucket } from "./statsUtils";
@@ -50,25 +51,28 @@ export function SleepBars({
             {selected
               ? selected.hasData
                 ? formatDuration(selected.totalMs)
-                : "нет записей"
+                : t("нет записей")
               : avgTotalMs === null
                 ? hasAny
                   ? "—"
-                  : "нет данных"
+                  : t("нет данных")
                 : formatDuration(avgTotalMs)}
           </div>
           <div className={styles.readoutSub}>
             {selected
               ? `${formatDayLabel(selected.date)}${
                   selected.hasData
-                    ? ` · ночью ${formatDuration(selected.nightMs)}, днём ${formatDuration(selected.napMs)}`
+                    ? t(" · ночью {0}, днём {1}", [
+                        formatDuration(selected.nightMs),
+                        formatDuration(selected.napMs),
+                      ])
                     : ""
                 }`
               : daysCounted > 0
-                ? `в среднем за сутки · по ${daysCounted} дн. с записями`
+                ? t("в среднем за сутки · по {0} дн. с записями", [daysCounted])
                 : hasAny
-                  ? "среднее появится с первыми полными сутками — у самого раннего дня и у сегодняшнего они обрезаны"
-                  : "записей пока нет"}
+                  ? t("среднее появится с первыми полными сутками — у самого раннего дня и у сегодняшнего они обрезаны")
+                  : t("записей пока нет")}
           </div>
         </div>
 
@@ -100,7 +104,7 @@ export function SleepBars({
                   .join(" ")}
                 onClick={() => setPicked(picked === day.key ? null : day.key)}
                 aria-label={`${formatDayLabel(day.date)}: ${
-                  day.hasData ? formatDuration(day.totalMs) : "нет записей"
+                  day.hasData ? formatDuration(day.totalMs) : t("нет записей")
                 }`}
               >
                 {day.hasData ? (

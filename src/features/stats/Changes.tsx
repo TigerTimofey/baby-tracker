@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import type { Changes as ChangesData } from "./changesData";
 import styles from "./Changes.module.css";
 
@@ -38,9 +39,7 @@ export function Changes({ data }: { data: ChangesData }) {
       {data.shortfall && <p className={styles.basis}>{data.shortfall}</p>}
 
       <p className={styles.basis}>
-        Сравниваются два соседних отрезка одинаковой длины. Сегодняшний день не
-        учитывается — он ещё не закончился. Показатель появляется, только если
-        записей хватает в обоих отрезках; рядом всегда написано, по скольким.
+        {t("Сравниваются два соседних отрезка одинаковой длины. Сегодняшний день не\n        учитывается — он ещё не закончился. Показатель появляется, только если\n        записей хватает в обоих отрезках; рядом всегда написано, по скольким.")}
       </p>
     </>
   );

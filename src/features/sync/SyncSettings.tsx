@@ -1,3 +1,4 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { useState, useSyncExternalStore } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -14,7 +15,9 @@ import {
   verifyCode,
 } from "../../data/sync";
 import { inviteLink } from "../../data/invite";
-import { formatTime, plural } from "../../lib/time";
+import {
+  formatTime,
+} from "../../lib/time";
 import { JoinFamilyForm } from "./JoinFamilyForm";
 import styles from "./SyncSettings.module.css";
 
@@ -50,23 +53,21 @@ export function SyncSettings() {
 
   if (status.state === "disabled") {
     return (
-      <Card title="Синхронизация">
+      <Card title={t("Синхронизация")}>
         <p className={styles.setup}>
-          Сейчас все записи хранятся только на этом устройстве. Чтобы данные
-          были и на втором телефоне:
+          {t("Сейчас все записи хранятся только на этом устройстве. Чтобы данные\n          были и на втором телефоне:")}
           <br />
           <br />
-          1. Создайте бесплатный проект на <code>supabase.com</code>
+          {t("1. Создайте бесплатный проект на")} <code>supabase.com</code>
           <br />
-          2. Выполните <code>supabase/schema.sql</code> в SQL Editor
+          {t("2. Выполните")} <code>supabase/schema.sql</code> {t("в SQL Editor")}
           <br />
-          3. Скопируйте <code>.env.example</code> в <code>.env.local</code> и
-          подставьте URL и anon key
+          {t("3. Скопируйте")} <code>.env.example</code> {t("в")} <code>.env.local</code> {t("и\n          подставьте URL и anon key")}
           <br />
-          4. Перезапустите <code>npm run dev</code>
+          {t("4. Перезапустите")} <code>npm run dev</code>
           <br />
           <br />
-          Подробности — в <code>README.md</code>.
+          {t("Подробности — в")} <code>README.md</code>.
         </p>
       </Card>
     );
@@ -76,13 +77,13 @@ export function SyncSettings() {
 
   if (status.state === "signed_out") {
     return (
-      <Card title="Синхронизация">
+      <Card title={t("Синхронизация")}>
         <div className={styles.state}>
           <span className={styles.dot} />
           <div>
-            <div className={styles.stateText}>Только на этом устройстве</div>
+            <div className={styles.stateText}>{t("Только на этом устройстве")}</div>
             <div className={styles.stateSub}>
-              Войдите, чтобы данные были у обоих родителей
+              {t("Войдите, чтобы данные были у обоих родителей")}
             </div>
           </div>
         </div>
@@ -94,14 +95,14 @@ export function SyncSettings() {
           onClick={() => run(signInWithGoogle)}
         >
           <GoogleMark />
-          Войти через Google
+          {t("Войти через Google")}
         </button>
 
-        <div className={styles.divider}>или по коду из почты</div>
+        <div className={styles.divider}>{t("или по коду из почты")}</div>
 
         {step === "email" ? (
           <>
-            <Field label="Почта" hint="Пришлём код для входа">
+            <Field label={t("Почта")} hint={t("Пришлём код для входа")}>
               {(id) => (
                 <TextInput
                   id={id}
@@ -122,15 +123,15 @@ export function SyncSettings() {
                 run(async () => {
                   await requestCode(email);
                   setStep("code");
-                }, "Письмо отправлено — проверьте почту")
+                }, t("Письмо отправлено — проверьте почту"))
               }
             >
-              Получить код
+              {t("Получить код")}
             </Button>
           </>
         ) : (
           <>
-            <Field label="Код из письма" hint={`Отправлен на ${email}`}>
+            <Field label={t("Код из письма")} hint={t("Отправлен на {0}", [email])}>
               {(id) => (
                 <TextInput
                   id={id}
@@ -151,7 +152,7 @@ export function SyncSettings() {
                   setCode("");
                 }}
               >
-                Назад
+                {t("Назад")}
               </Button>
               <Button
                 variant="primary"
@@ -162,7 +163,7 @@ export function SyncSettings() {
                   })
                 }
               >
-                Войти
+                {t("Войти")}
               </Button>
             </div>
           </>
@@ -187,17 +188,17 @@ export function SyncSettings() {
 
   const stateText =
     status.state === "error"
-      ? "Ошибка синхронизации"
+      ? t("Ошибка синхронизации")
       : status.state === "offline"
-        ? "Нет сети — данные сохраняются локально"
+        ? t("Нет сети — данные сохраняются локально")
         : status.state === "syncing"
-          ? "Синхронизация…"
+          ? t("Синхронизация…")
           : status.pending > 0
-            ? `${status.pending} записей ждут отправки`
-            : "Всё синхронизировано";
+            ? t("{0} записей ждут отправки", [status.pending])
+            : t("Всё синхронизировано");
 
   return (
-    <Card title="Синхронизация">
+    <Card title={t("Синхронизация")}>
       <div className={styles.state}>
         <span className={`${styles.dot} ${dot}`} />
         <div>
@@ -205,7 +206,7 @@ export function SyncSettings() {
           <div className={styles.stateSub}>
             {status.email}
             {status.lastSyncAt &&
-              ` · последний обмен в ${formatTime(status.lastSyncAt)}`}
+              t(" · последний обмен в {0}", [formatTime(status.lastSyncAt)])}
           </div>
         </div>
       </div>
@@ -213,7 +214,7 @@ export function SyncSettings() {
       {status.inviteCode && (
         <div className={styles.code}>
           <div>
-            <div className={styles.codeLabel}>Код приглашения</div>
+            <div className={styles.codeLabel}>{t("Код приглашения")}</div>
             <div className={`${styles.codeValue} tnum`}>
               {status.inviteCode}
             </div>
@@ -227,16 +228,16 @@ export function SyncSettings() {
                 if (navigator.share) {
                   await navigator.share({
                     title: "Sebason",
-                    text: "Приглашение в семью",
+                    text: t("Приглашение в семью"),
                     url: link,
                   });
                   return;
                 }
                 await navigator.clipboard.writeText(link);
-              }, "Ссылка готова — отправьте её второму родителю")
+              }, t("Ссылка готова — отправьте её второму родителю"))
             }
           >
-            Поделиться
+            {t("Поделиться")}
           </Button>
         </div>
       )}
@@ -250,7 +251,7 @@ export function SyncSettings() {
           onClick={() => run(() => syncNow())}
         >
           <Icon name="cloud" size={16} />
-          Синхронизировать
+          {t("Синхронизировать")}
         </Button>
       </div>
 
@@ -262,11 +263,11 @@ export function SyncSettings() {
           onClick={() => {
             const pending =
               status.pending > 0
-                ? `\n\n${status.pending} ${plural(status.pending, ["запись ещё не отправлена", "записи ещё не отправлены", "записей ещё не отправлены"])} на сервер. Они останутся на устройстве и уедут при следующем входе.`
+                ? t("\n\n{0} {1} на сервер. Они останутся на устройстве и уедут при следующем входе.", [status.pending, pluralOf(status.pending, "запись ещё не отправлена")])
                 : "";
             const confirmed = window.confirm(
-              `Выйти из аккаунта ${status.email ?? ""}?` +
-                "\n\nЗаписи останутся на этом устройстве, но перестанут синхронизироваться со вторым телефоном." +
+              t("Выйти из аккаунта {0}?", [status.email ?? ""]) +
+                t("\n\nЗаписи останутся на этом устройстве, но перестанут синхронизироваться со вторым телефоном.") +
                 pending,
             );
             if (!confirmed) return;
@@ -276,7 +277,7 @@ export function SyncSettings() {
             });
           }}
         >
-          Выйти из аккаунта
+          {t("Выйти из аккаунта")}
         </Button>
       </div>
 

@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { useState, useSyncExternalStore } from "react";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
@@ -51,13 +52,13 @@ export function FamilyCard() {
       if (navigator.share) {
         await navigator.share({
           title: "Sebason",
-          text: "Приглашение в семью",
+          text: t("Приглашение в семью"),
           url: link,
         });
         return;
       }
       await navigator.clipboard.writeText(link);
-      showToast("Ссылка скопирована — отправьте её второму родителю");
+      showToast(t("Ссылка скопирована — отправьте её второму родителю"));
     } catch {
       void 0;
     }
@@ -66,7 +67,7 @@ export function FamilyCard() {
   const alone = status.members.length < 2;
 
   return (
-    <Card title="Семья">
+    <Card title={t("Семья")}>
       <div className={styles.row}>
         {status.members.map((member) => {
           const isMe = member.user_id === status.userId;
@@ -74,7 +75,7 @@ export function FamilyCard() {
             <div key={member.user_id} className={styles.member}>
               <Avatar member={member} />
               <span className={`${styles.name} ${isMe ? styles.me : ""}`}>
-                {member.display_name ?? (isMe ? "вы" : "второй родитель")}
+                {member.display_name ?? (isMe ? t("вы") : t("второй родитель"))}
               </span>
             </div>
           );
@@ -89,15 +90,14 @@ export function FamilyCard() {
             <span className={`${styles.circle} ${styles.invite}`}>
               <Icon name="plus" size={22} />
             </span>
-            <span className={styles.name}>Пригласить</span>
+            <span className={styles.name}>{t("Пригласить")}</span>
           </button>
         )}
       </div>
 
       {alone && (
         <p className={styles.hint}>
-          Отправьте ссылку второму родителю — он войдёт в свой аккаунт и увидит
-          те же записи.
+          {t("Отправьте ссылку второму родителю — он войдёт в свой аккаунт и увидит\n          те же записи.")}
         </p>
       )}
     </Card>

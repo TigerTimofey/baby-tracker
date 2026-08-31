@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { listAll, save } from "../data/repo";
 import { getSettings, updateSettings } from "../data/settings";
 import { TABLES, type Settings, type TableName } from "../data/types";
@@ -57,15 +58,15 @@ export async function restoreBackup(text: string): Promise<ImportResult> {
   try {
     parsed = JSON.parse(text) as Backup;
   } catch {
-    throw new Error("Это не файл резервной копии");
+    throw new Error(t("Это не файл резервной копии"));
   }
 
   const known = parsed.app === "sebason" || parsed.app === "malysh";
   if (!known || typeof parsed.tables !== "object") {
-    throw new Error("Файл не похож на копию «Sebason»");
+    throw new Error(t("Файл не похож на копию «Sebason»"));
   }
   if (parsed.format > FORMAT_VERSION) {
-    throw new Error("Файл создан более новой версией приложения");
+    throw new Error(t("Файл создан более новой версией приложения"));
   }
 
   let imported = 0;

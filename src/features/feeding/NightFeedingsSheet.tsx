@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
@@ -37,7 +38,7 @@ export function NightFeedingsSheet({
     if (feedings > 0 && kind === "bottle" && amount.trim() !== "") {
       const parsed = Number(amount.trim().replace(",", "."));
       if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 2000) {
-        setError("Объём похож на опечатку");
+        setError(t("Объём похож на опечатку"));
         return;
       }
       amountMl = Math.round(parsed);
@@ -56,14 +57,11 @@ export function NightFeedingsSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Были кормления за ночь?"
-      subtitle={`Сон записан одним куском: ${formatTime(session.start_at)} → ${
-        session.end_at ? formatTime(session.end_at) : ""
-      }, ${formatDuration(to - from)}`}
+      title={t("Были кормления за ночь?")}
+      subtitle={t("Сон записан одним куском: {0} → {1}, {2}", [formatTime(session.start_at), session.end_at ? formatTime(session.end_at) : "", formatDuration(to - from)])}
     >
       <p className={styles.intro}>
-        Если малыш просыпался поесть — отметьте сколько раз и чем. Время не
-        нужно, важны количество и чем кормили.
+        {t("Если малыш просыпался поесть — отметьте сколько раз и чем. Время не\n        нужно, важны количество и чем кормили.")}
       </p>
 
       <NightFeedingsFields
@@ -80,16 +78,15 @@ export function NightFeedingsSheet({
 
       <FormActions>
         <Button variant="secondary" onClick={() => void store(0)}>
-          Не было
+          {t("Не было")}
         </Button>
         <Button variant="primary" onClick={() => void store(count)}>
-          Сохранить
+          {t("Сохранить")}
         </Button>
       </FormActions>
 
       <p className={styles.note}>
-        Отметка хранится в самой записи сна и попадает в статистику. Отдельных
-        кормлений с выдуманным временем не создаётся.
+        {t("Отметка хранится в самой записи сна и попадает в статистику. Отдельных\n        кормлений с выдуманным временем не создаётся.")}
       </p>
     </Sheet>
   );

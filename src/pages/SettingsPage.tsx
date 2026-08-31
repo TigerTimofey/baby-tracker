@@ -1,8 +1,10 @@
+import { t } from "../lib/i18n";
 import { ChildAvatar } from "../components/ui/ChildAvatar";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { LangSwitch } from "../components/ui/LangSwitch";
 import { Icon } from "../components/ui/Icon";
 import { Segmented } from "../components/ui/Segmented";
 import { Switch } from "../components/ui/Switch";
@@ -78,7 +80,7 @@ export function SettingsPage() {
     try {
       const result = await restoreBackup(await file.text());
       setMessage(
-        `Загружено записей: ${result.imported}. Пропущено как более старые: ${result.skipped}.`,
+        t("Загружено записей: {0}. Пропущено как более старые: {1}.", [result.imported, result.skipped]),
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -92,50 +94,51 @@ export function SettingsPage() {
           type="button"
           className={styles.back}
           onClick={goBack}
-          aria-label="Назад"
+          aria-label={t("Назад")}
         >
           <Icon name="chevron-left" size={22} />
         </button>
-        <h1 className={styles.title}>Настройки</h1>
+        <h1 className={styles.title}>{t("Настройки")}</h1>
+        <LangSwitch className={styles.lang} />
       </div>
 
       <div className={styles.stack}>
         <FamilyCard />
 
-        <Card title="Малыш">
+        <Card title={t("Малыш")}>
           <div className={styles.row}>
             <div className={styles.person}>
               <ChildAvatar child={child} size={54} />
               <div className={styles.rowText}>
-                <div className={styles.rowLabel}>{child?.name ?? "Не задан"}</div>
+                <div className={styles.rowLabel}>{child?.name ?? t("Не задан")}</div>
                 <div className={styles.rowHint}>
                   {child
-                    ? `родился ${formatDate(child.birth_date)}`
-                    : "добавьте профиль"}
+                    ? t("родился {0}", [formatDate(child.birth_date)])
+                    : t("добавьте профиль")}
                 </div>
               </div>
             </div>
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-              Изменить
+              {t("Изменить")}
             </Button>
           </div>
 
         </Card>
 
-        <Card title="Уведомления">
+        <Card title={t("Уведомления")}>
           <div className={styles.row}>
             <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Включить</div>
+              <div className={styles.rowLabel}>{t("Включить")}</div>
               <div className={styles.rowHint}>
                 {permission === "unsupported"
-                  ? "Этот браузер не умеет их показывать"
+                  ? t("Этот браузер не умеет их показывать")
                   : permission === "denied"
-                    ? "Разрешение отклонено — включите его в настройках браузера"
-                    : "Напомнят про сон и про долгое бодрствование"}
+                    ? t("Разрешение отклонено — включите его в настройках браузера")
+                    : t("Напомнят про сон и про долгое бодрствование")}
               </div>
             </div>
             <Switch
-              label="Уведомления"
+              label={t("Уведомления")}
               disabled={permission === "unsupported" || permission === "denied"}
               checked={settings.notifications && permission === "granted"}
               onChange={async (next) => {
@@ -153,13 +156,13 @@ export function SettingsPage() {
 
                 if (!pushSupported()) {
                   setPushNote(
-                    "Этот браузер не умеет получать уведомления с сервера — напоминания придут, только пока приложение открыто.",
+                    t("Этот браузер не умеет получать уведомления с сервера — напоминания придут, только пока приложение открыто."),
                   );
                   return;
                 }
                 if (!pushConfigured()) {
                   setPushNote(
-                    "Серверные уведомления не настроены: нет VITE_VAPID_PUBLIC_KEY. Напоминания придут, только пока приложение открыто.",
+                    t("Серверные уведомления не настроены: нет VITE_VAPID_PUBLIC_KEY. Напоминания придут, только пока приложение открыто."),
                   );
                   return;
                 }
@@ -167,10 +170,10 @@ export function SettingsPage() {
                 const result = await enablePush(getSyncStatus().familyId);
                 setPushNote(
                   result.ok
-                    ? "Уведомления придут, даже если приложение закрыто."
+                    ? t("Уведомления придут, даже если приложение закрыто.")
                     : result.reason === "no-account"
-                      ? "Войдите в аккаунт, чтобы уведомления приходили при закрытом приложении."
-                      : "Не удалось подписаться на серверные уведомления. Напоминания придут, пока приложение открыто.",
+                      ? t("Войдите в аккаунт, чтобы уведомления приходили при закрытом приложении.")
+                      : t("Не удалось подписаться на серверные уведомления. Напоминания придут, пока приложение открыто."),
                 );
               }}
             />
@@ -182,14 +185,16 @@ export function SettingsPage() {
             <>
               <div className={styles.row}>
                 <div className={styles.rowText}>
-                  <div className={styles.rowLabel}>Напомнить об отходе ко сну</div>
+                  <div className={styles.rowLabel}>{t("Напомнить об отходе ко сну")}</div>
                   <div className={styles.rowHint}>
-                    За {bedtime.warnMinutes} мин до {bedtime.time ?? "—"} и в
-                    само время сна
+                    {t("За {0} мин до {1} и в само время сна", [
+                      bedtime.warnMinutes,
+                      bedtime.time ?? "—",
+                    ])}
                   </div>
                 </div>
                 <Switch
-                  label="Напоминание об отходе ко сну"
+                  label={t("Напоминание об отходе ко сну")}
                   checked={child.notify_bedtime}
                   onChange={(value) =>
                     void save("children", { ...child, notify_bedtime: value })
@@ -200,14 +205,14 @@ export function SettingsPage() {
               {child.notify_bedtime && (
                 <div className={styles.row}>
                   <div className={styles.rowText}>
-                    <div className={styles.rowLabel}>Отход ко сну</div>
+                    <div className={styles.rowLabel}>{t("Отход ко сну")}</div>
                     <div className={styles.rowHint}>
-                      во сколько напомнить, что пора укладываться
+                      {t("во сколько напомнить, что пора укладываться")}
                     </div>
                   </div>
                   <input
                     type="time"
-                    aria-label="Время отхода ко сну"
+                    aria-label={t("Время отхода ко сну")}
                     className={styles.timeInput}
                     value={bedtime.time ?? ""}
                     onChange={(event) => setBedtime(event.target.value || null)}
@@ -218,14 +223,14 @@ export function SettingsPage() {
               {child.notify_bedtime && (
                 <div className={styles.row}>
                   <div className={styles.rowText}>
-                    <div className={styles.rowLabel}>Предупредить заранее</div>
-                    <div className={styles.rowHint}>минут до отхода ко сну</div>
+                    <div className={styles.rowLabel}>{t("Предупредить заранее")}</div>
+                    <div className={styles.rowHint}>{t("минут до отхода ко сну")}</div>
                   </div>
                   <div style={{ width: 170 }}>
                     <Segmented
                       value={String(bedtime.warnMinutes)}
                       onChange={(value) => setWarnMinutes(Number(value))}
-                      ariaLabel="За сколько предупредить"
+                      ariaLabel={t("За сколько предупредить")}
                       options={WARN_OPTIONS.map((value) => ({
                         value,
                         label: value,
@@ -237,13 +242,13 @@ export function SettingsPage() {
 
               <div className={styles.row}>
                 <div className={styles.rowText}>
-                  <div className={styles.rowLabel}>Если долго не спит</div>
+                  <div className={styles.rowLabel}>{t("Если долго не спит")}</div>
                   <div className={styles.rowHint}>
-                    Когда бодрствует дольше возрастного ориентира
+                    {t("Когда бодрствует дольше возрастного ориентира")}
                   </div>
                 </div>
                 <Switch
-                  label="Напоминание о долгом бодрствовании"
+                  label={t("Напоминание о долгом бодрствовании")}
                   checked={child.notify_wake_window}
                   onChange={(value) =>
                     void save("children", {
@@ -259,9 +264,9 @@ export function SettingsPage() {
           {settings.notifications && permission === "granted" && (
             <div className={styles.row}>
               <div className={styles.rowText}>
-                <div className={styles.rowLabel}>Проверить</div>
+                <div className={styles.rowLabel}>{t("Проверить")}</div>
                 <div className={styles.rowHint}>
-                  Придёт пробное уведомление
+                  {t("Придёт пробное уведомление")}
                 </div>
               </div>
               <Button
@@ -270,30 +275,30 @@ export function SettingsPage() {
                 onClick={() =>
                   void showNotification(
                     "test",
-                    "Проверка",
-                    "Уведомления работают",
+                    t("Проверка"),
+                    t("Уведомления работают"),
                   )
                 }
               >
-                Отправить
+                {t("Отправить")}
               </Button>
             </div>
           )}
 
         </Card>
 
-        <Card title="Кормление">
+        <Card title={t("Кормление")}>
           <div className={styles.row}>
             <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Различать грудь</div>
+              <div className={styles.rowLabel}>{t("Различать грудь")}</div>
               <div className={styles.rowHint}>
                 {settings.trackBreastSide
-                  ? "Записываем левую и правую отдельно и предлагаем чередовать"
-                  : "Записываем просто «грудь», без стороны"}
+                  ? t("Записываем левую и правую отдельно и предлагаем чередовать")
+                  : t("Записываем просто «грудь», без стороны")}
               </div>
             </div>
             <Switch
-              label="Различать левую и правую грудь"
+              label={t("Различать левую и правую грудь")}
               checked={settings.trackBreastSide}
               onChange={(trackBreastSide) =>
                 updateSettings({ trackBreastSide })
@@ -302,28 +307,27 @@ export function SettingsPage() {
           </div>
         </Card>
 
-        <Card title="Вид">
+        <Card title={t("Вид")}>
           <Segmented<Settings["theme"]>
             value={settings.theme}
             onChange={(theme) => updateSettings({ theme })}
-            ariaLabel="Тема оформления"
+            ariaLabel={t("Тема оформления")}
             options={[
-              { value: "dark", label: "Тёмная" },
-              { value: "light", label: "Светлая" },
-              { value: "system", label: "Как в системе" },
+              { value: "dark", label: t("Тёмная") },
+              { value: "light", label: t("Светлая") },
+              { value: "system", label: t("Как в системе") },
             ]}
           />
 
           <div className={styles.row} style={{ marginTop: "var(--gap-4)" }}>
             <div className={styles.rowText}>
-              <div className={styles.rowLabel}>Ночной режим</div>
+              <div className={styles.rowLabel}>{t("Ночной режим")}</div>
               <div className={styles.rowHint}>
-                Тёплые тона без синего света и крупные кнопки. Включается сам в
-                заданные часы и перекрывает выбранную тему.
+                {t("Тёплые тона без синего света и крупные кнопки. Включается сам в\n                заданные часы и перекрывает выбранную тему.")}
               </div>
             </div>
             <Switch
-              label="Ночной режим"
+              label={t("Ночной режим")}
               checked={settings.nightMode}
               onChange={(nightMode) => updateSettings({ nightMode })}
             />
@@ -333,16 +337,16 @@ export function SettingsPage() {
             <>
               <div className={styles.row}>
                 <div className={styles.rowText}>
-                  <div className={styles.rowLabel}>Включать</div>
+                  <div className={styles.rowLabel}>{t("Включать")}</div>
                   <div className={styles.rowHint}>
                     {isNightWindow(settings.nightFrom, settings.nightTo)
-                      ? "сейчас активен"
-                      : `сейчас день — включится в ${settings.nightFrom}`}
+                      ? t("сейчас активен")
+                      : t("сейчас день — включится в {0}", [settings.nightFrom])}
                   </div>
                 </div>
                 <input
                   type="time"
-                  aria-label="Начало ночного режима"
+                  aria-label={t("Начало ночного режима")}
                   className={styles.timeInput}
                   value={settings.nightFrom}
                   onChange={(event) =>
@@ -353,12 +357,12 @@ export function SettingsPage() {
 
               <div className={styles.row}>
                 <div className={styles.rowText}>
-                  <div className={styles.rowLabel}>Выключать</div>
-                  <div className={styles.rowHint}>утром, когда встаёте</div>
+                  <div className={styles.rowLabel}>{t("Выключать")}</div>
+                  <div className={styles.rowHint}>{t("утром, когда встаёте")}</div>
                 </div>
                 <input
                   type="time"
-                  aria-label="Конец ночного режима"
+                  aria-label={t("Конец ночного режима")}
                   className={styles.timeInput}
                   value={settings.nightTo}
                   onChange={(event) =>
@@ -372,23 +376,22 @@ export function SettingsPage() {
 
         <SyncSettings />
 
-        <Card title="Резервная копия">
+        <Card title={t("Резервная копия")}>
           <p className={styles.rowHint} style={{ marginBottom: 12 }}>
-            Файл со всеми записями. Пригодится, если браузер очистит данные или
-            захочется перенести дневник в другое место.
+            {t("Файл со всеми записями. Пригодится, если браузер очистит данные или\n            захочется перенести дневник в другое место.")}
           </p>
           <div className={styles.buttons}>
             <Button
               variant="secondary"
               onClick={() => void downloadBackup()}
             >
-              Выгрузить файл
+              {t("Выгрузить файл")}
             </Button>
             <Button
               variant="secondary"
               onClick={() => fileInput.current?.click()}
             >
-              Загрузить из файла
+              {t("Загрузить из файла")}
             </Button>
           </div>
           {storage?.supported && (
@@ -396,15 +399,15 @@ export function SettingsPage() {
               <div className={styles.rowText}>
                 <div className={styles.rowLabel}>
                   {storage.persisted
-                    ? "Хранилище защищено"
-                    : "Хранилище не защищено"}
+                    ? t("Хранилище защищено")
+                    : t("Хранилище не защищено")}
                 </div>
                 <div className={styles.rowHint}>
                   {storage.persisted
-                    ? "Браузер не удалит записи при нехватке места"
-                    : "Браузер вправе удалить записи при нехватке места"}
+                    ? t("Браузер не удалит записи при нехватке места")
+                    : t("Браузер вправе удалить записи при нехватке места")}
                   {storage.usageBytes != null
-                    ? ` · занято ${formatBytes(storage.usageBytes)}`
+                    ? t(" · занято {0}", [formatBytes(storage.usageBytes)])
                     : ""}
                 </div>
               </div>
@@ -417,7 +420,7 @@ export function SettingsPage() {
                     setStorage(await readStorageStatus());
                   }}
                 >
-                  Защитить
+                  {t("Защитить")}
                 </Button>
               )}
             </div>

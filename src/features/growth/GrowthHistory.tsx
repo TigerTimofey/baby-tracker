@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -20,8 +21,8 @@ export function GrowthHistory({ child, measurements }: GrowthHistoryProps) {
     return (
       <EmptyState
         icon="growth"
-        title="Измерений пока нет"
-        text="Добавьте вес и рост — например, после приёма у педиатра."
+        title={t("Измерений пока нет")}
+        text={t("Добавьте вес и рост — например, после приёма у педиатра.")}
       />
     );
   }
@@ -35,7 +36,7 @@ export function GrowthHistory({ child, measurements }: GrowthHistoryProps) {
             birthMoment(child.birth_date, child.birth_time),
             at,
           );
-          const age = parts.totalDays === 0 ? "при рождении" : formatAge(parts);
+          const age = parts.totalDays === 0 ? t("при рождении") : formatAge(parts);
           const values = METRIC_ORDER.flatMap((key) => {
             const info = METRICS[key];
             const raw = measurement[info.field];

@@ -1,3 +1,4 @@
+import { locale, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
 import { useState, type ReactNode } from "react";
 import { Button } from "../../components/ui/Button";
@@ -134,14 +135,14 @@ export function SleepTimerCard({
 
           <div className={`${styles.big} tnum`}>{formatClock(elapsed)}</div>
           <p className={styles.sub}>
-            уснул в {formatTime(active.start_at)}
+            {t("уснул в {0}", [formatTime(active.start_at)])}
             {activeAuthor ? ` · ${activeAuthor}` : ""}
           </p>
 
           <div className={styles.actions}>
             <Button size="lg" variant="primary" onClick={stopSleep}>
               <Icon name="stop" size={18} />
-              Проснулся
+              {t("Проснулся")}
             </Button>
             {action}
           </div>
@@ -150,10 +151,10 @@ export function SleepTimerCard({
             <Segmented<SleepKind>
               value={active.kind}
               onChange={changeKind}
-              ariaLabel="Тип сна"
+              ariaLabel={t("Тип сна")}
               options={[
-                { value: "nap", label: "Дневной" },
-                { value: "night", label: "Ночной" },
+                { value: "nap", label: t("Дневной") },
+                { value: "night", label: t("Ночной") },
               ]}
             />
           </div>
@@ -163,7 +164,7 @@ export function SleepTimerCard({
             className={styles.editLink}
             onClick={() => setEditorOpen(true)}
           >
-            поправить время
+            {t("поправить время")}
           </button>
         </div>
 
@@ -212,21 +213,20 @@ export function SleepTimerCard({
       <div className={styles.card}>
         <span className={styles.status}>
           <Icon name="sun" size={14} />
-          Бодрствует
+          {t("Бодрствует")}
         </span>
 
         {awakeMs === null ? (
           <p className={styles.lead}>
-            Нажмите «Уснул», когда малыш заснёт — дальше приложение посчитает
-            само.
+            {t("Нажмите «Уснул», когда малыш заснёт — дальше приложение посчитает\n            само.")}
           </p>
         ) : (
           <>
             <div className={`${styles.big} tnum`}>
-              {awakeMs < 60_000 ? "только что" : formatDuration(awakeMs)}
+              {awakeMs < 60_000 ? t("только что") : formatDuration(awakeMs)}
             </div>
             <p className={styles.sub}>
-              проснулся в {formatTime(new Date(wakeAt as number))}
+              {t("проснулся в {0}", [formatTime(new Date(wakeAt as number))])}
             </p>
           </>
         )}
@@ -245,26 +245,30 @@ export function SleepTimerCard({
                   className={`${styles.hint} ${forecastDue ? styles.hintWarn : ""}`}
                 >
                   {forecastDue
-                    ? "пора укладывать — обычно уже засыпает"
-                    : `следующий сон примерно в ${formatTime(
+                    ? t("пора укладывать — обычно уже засыпает")
+                    : t("следующий сон примерно в {0} · через {1}", [formatTime(
                         new Date(forecast.at),
-                      )} · через ${formatDuration(forecast.at - now)}`}
+                      ), formatDuration(forecast.at - now)])}
                 </p>
                 <p className={styles.basis}>
                   {forecast.basedOn === "history"
-                    ? `по ${forecast.samples} последним промежуткам между снами`
-                    : "по возрастному ориентиру — своих записей пока мало"}
+                    ? t("по {0} последним промежуткам между снами", [forecast.samples])
+                    : t("по возрастному ориентиру — своих записей пока мало")}
                 </p>
               </>
             ) : (
               <p className={`${styles.hint} ${overdue ? styles.hintWarn : ""}`}>
                 {overdue
-                  ? "бодрствует дольше обычного для этого возраста"
-                  : `в ${age.totalMonths} мес обычно бодрствуют ${
+                  ? t("бодрствует дольше обычного для этого возраста")
+                  : t("в {0} мес обычно бодрствуют {1}", [
+                      age.totalMonths,
                       band.wakeMin >= 60
-                        ? `${(band.wakeMin / 60).toLocaleString("ru-RU")}–${(band.wakeMax / 60).toLocaleString("ru-RU")} ч`
-                        : `${band.wakeMin}–${band.wakeMax} мин`
-                    }`}
+                        ? t("{0}–{1} ч", [
+                            (band.wakeMin / 60).toLocaleString(locale()),
+                            (band.wakeMax / 60).toLocaleString(locale()),
+                          ])
+                        : t("{0}–{1} мин", [band.wakeMin, band.wakeMax]),
+                    ])}
               </p>
             )}
           </>
@@ -273,7 +277,7 @@ export function SleepTimerCard({
         <div className={styles.actions}>
           <Button size="lg" variant="primary" onClick={startSleep}>
             <Icon name="moon" size={18} />
-            Уснул
+            {t("Уснул")}
           </Button>
           {action}
         </div>
@@ -281,8 +285,8 @@ export function SleepTimerCard({
         {child.notify_bedtime && (bedtimeSoon || bedtimePassed) && (
           <p className={`${styles.hint} ${styles.hintWarn}`}>
             {bedtimePassed
-              ? `время сна было в ${bedtime.time}`
-              : `до сна ${formatDuration(untilBedtime ?? 0)}`}
+              ? t("время сна было в {0}", [bedtime.time ?? ""])
+              : t("до сна {0}", [formatDuration(untilBedtime ?? 0)])}
           </p>
         )}
         {child.notify_bedtime &&
@@ -291,7 +295,10 @@ export function SleepTimerCard({
           untilBedtime !== null &&
           untilBedtime > 0 && (
           <p className={styles.hint}>
-            отход ко сну в {bedtime.time} — через {formatDuration(untilBedtime)}
+            {t("отход ко сну в {0} — через {1}", [
+              bedtime.time ?? "",
+              formatDuration(untilBedtime),
+            ])}
           </p>
         )}
       </div>

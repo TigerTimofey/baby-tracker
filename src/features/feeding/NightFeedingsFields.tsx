@@ -1,7 +1,8 @@
+import { pluralOf, t } from "../../lib/i18n";
 import { Field, TextInput } from "../../components/ui/Form";
 import { Segmented } from "../../components/ui/Segmented";
 import type { NightFeedingKind } from "../../data/types";
-import { plural } from "../../lib/time";
+
 import styles from "./NightFeedingsSheet.module.css";
 
 const MAX_COUNT = 12;
@@ -25,7 +26,7 @@ export function NightFeedingsFields({
   onKind,
   amount,
   onAmount,
-  countLabel = "Сколько раз",
+  countLabel = t("Сколько раз"),
 }: NightFeedingsFieldsProps) {
   return (
     <>
@@ -36,21 +37,21 @@ export function NightFeedingsFields({
               type="button"
               className={styles.step}
               disabled={count <= min}
-              aria-label="Меньше"
+              aria-label={t("Меньше")}
               onClick={() => onCount(count - 1)}
             >
               −
             </button>
             <span className={`${styles.count} tnum`}>
               {count === 0
-                ? "не было"
-                : `${count} ${plural(count, ["раз", "раза", "раз"])}`}
+                ? t("не было")
+                : `${count} ${pluralOf(count, "раз")}`}
             </span>
             <button
               type="button"
               className={styles.step}
               disabled={count >= MAX_COUNT}
-              aria-label="Больше"
+              aria-label={t("Больше")}
               onClick={() => onCount(count + 1)}
             >
               +
@@ -60,17 +61,17 @@ export function NightFeedingsFields({
       </Field>
 
       {count > 0 && (
-        <Field label="Чем кормили">
+        <Field label={t("Чем кормили")}>
           {(id) => (
             <Segmented<NightFeedingKind>
               id={id}
               value={kind}
               onChange={onKind}
-              ariaLabel="Чем кормили"
+              ariaLabel={t("Чем кормили")}
               options={[
-                { value: "breast", label: "Грудь" },
-                { value: "bottle", label: "Бутылочка" },
-                { value: "solid", label: "Прикорм" },
+                { value: "breast", label: t("Грудь") },
+                { value: "bottle", label: t("Бутылочка") },
+                { value: "solid", label: t("Прикорм") },
               ]}
             />
           )}
@@ -78,12 +79,12 @@ export function NightFeedingsFields({
       )}
 
       {count > 0 && kind === "bottle" && (
-        <Field label="По сколько мл" hint="за одно кормление, если помните">
+        <Field label={t("По сколько мл")} hint={t("за одно кормление, если помните")}>
           {(id) => (
             <TextInput
               id={id}
               inputMode="numeric"
-              suffix="мл"
+              suffix={t("мл")}
               value={amount}
               onChange={(event) => onAmount(event.target.value)}
               placeholder="90"
