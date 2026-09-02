@@ -323,6 +323,7 @@ export const ET: Record<string, string> = {
   "По сколько мл": "Mitu ml korraga",
   "Поделиться": "Jaga",
   "Подмышка": "Kaenlaalune",
+  "Подписка потерялась: сейчас напоминания приходят, только пока приложение открыто. Выключите и включите тумблер, чтобы восстановить.": "Tellimus on kadunud: praegu tulevad meeldetuletused ainult siis, kui rakendus on avatud. Lülitage lüliti välja ja uuesti sisse, et see taastada.",
   "Подробности — в": "Üksikasjad on",
   "Подтвердить": "Kinnita",
   "Пока без синхронизации, только на этом устройстве": "Praegu ilma sünkroonimiseta, ainult selles seadmes",

@@ -15,8 +15,8 @@ import { bedtimeOf } from "../features/sleep/sleepUtils";
 import {
   disablePush,
   enablePush,
-  pushConfigured,
-  pushSupported,
+  pushStatus,
+  type PushState,
 } from "../lib/push";
 import { getSyncStatus } from "../data/sync";
 import type { Settings } from "../data/types";
@@ -41,6 +41,25 @@ import styles from "./SettingsPage.module.css";
 
 const WARN_OPTIONS = ["15", "30", "60"] as const;
 
+/**
+ * Что показать про доставку при закрытом приложении. Раньше подпись
+ * появлялась один раз, сразу после нажатия тумблера, и потом врала: подписка
+ * могла отвалиться, а надпись оставалась прежней.
+ */
+const PUSH_HINT: Record<PushState, () => string> = {
+  on: () => t("Уведомления придут, даже если приложение закрыто."),
+  lost: () =>
+    t("Подписка потерялась: сейчас напоминания приходят, только пока приложение открыто. Выключите и включите тумблер, чтобы восстановить."),
+  off: () =>
+    t("Подписка потерялась: сейчас напоминания приходят, только пока приложение открыто. Выключите и включите тумблер, чтобы восстановить."),
+  "no-account": () =>
+    t("Войдите в аккаунт, чтобы уведомления приходили при закрытом приложении."),
+  "not-configured": () =>
+    t("Серверные уведомления не настроены: нет VITE_VAPID_PUBLIC_KEY. Напоминания придут, только пока приложение открыто."),
+  unsupported: () =>
+    t("Этот браузер не умеет получать уведомления с сервера — напоминания придут, только пока приложение открыто."),
+};
+
 export function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,7 +72,21 @@ export function SettingsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [permission, setPermission] = useState(notificationPermission);
   const [storage, setStorage] = useState<StorageStatus | null>(null);
-  const [pushNote, setPushNote] = useState<string | null>(null);
+  const [pushState, setPushState] = useState<PushState | null>(null);
+
+  useEffect(() => {
+    if (!settings.notifications || permission !== "granted") {
+      setPushState(null);
+      return;
+    }
+    let alive = true;
+    void pushStatus().then((state) => {
+      if (alive) setPushState(state);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [settings.notifications, permission]);
 
   const bedtime = bedtimeOf(child, settings);
 
@@ -144,7 +177,7 @@ export function SettingsPage() {
               onChange={async (next) => {
                 if (!next) {
                   updateSettings({ notifications: false });
-                  setPushNote(null);
+                  setPushState(null);
                   await disablePush();
                   return;
                 }
@@ -154,32 +187,15 @@ export function SettingsPage() {
                 updateSettings({ notifications: granted === "granted" });
                 if (granted !== "granted") return;
 
-                if (!pushSupported()) {
-                  setPushNote(
-                    t("Этот браузер не умеет получать уведомления с сервера — напоминания придут, только пока приложение открыто."),
-                  );
-                  return;
-                }
-                if (!pushConfigured()) {
-                  setPushNote(
-                    t("Серверные уведомления не настроены: нет VITE_VAPID_PUBLIC_KEY. Напоминания придут, только пока приложение открыто."),
-                  );
-                  return;
-                }
-
-                const result = await enablePush(getSyncStatus().familyId);
-                setPushNote(
-                  result.ok
-                    ? t("Уведомления придут, даже если приложение закрыто.")
-                    : result.reason === "no-account"
-                      ? t("Войдите в аккаунт, чтобы уведомления приходили при закрытом приложении.")
-                      : t("Не удалось подписаться на серверные уведомления. Напоминания придут, пока приложение открыто."),
-                );
+                await enablePush(getSyncStatus().familyId);
+                setPushState(await pushStatus());
               }}
             />
           </div>
 
-          {pushNote && <p className={styles.rowHint}>{pushNote}</p>}
+          {settings.notifications && permission === "granted" && pushState && (
+            <p className={styles.rowHint}>{PUSH_HINT[pushState]()}</p>
+          )}
 
           {settings.notifications && permission === "granted" && child && (
             <>

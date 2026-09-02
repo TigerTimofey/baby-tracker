@@ -9,6 +9,7 @@ import { getSyncStatus, initSync, joinFamily, subscribeSync } from "./data/sync"
 import { showToast } from "./components/ui/toast";
 import { applyLang, applyTheme } from "./data/settings";
 import { ensurePersistentStorageOnce } from "./lib/storage";
+import { PUSH_CHANGED, refreshPush } from "./lib/push";
 import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
 import { GrowthPage } from "./pages/GrowthPage";
@@ -40,6 +41,27 @@ export default function App() {
     getSyncStatus,
     getSyncStatus,
   );
+
+  /**
+   * Подписку на уведомления перезаписываем при каждом входе в приложение и по
+   * сигналу от service worker: браузер меняет её адрес сам, и без этого
+   * напоминания однажды прекращаются без всякого признака.
+   */
+  useEffect(() => {
+    if (status.state === "checking" || status.state === "signed_out") return;
+    void refreshPush(status.familyId);
+  }, [status.state, status.familyId]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string } | null;
+      if (data?.type === PUSH_CHANGED) void refreshPush(getSyncStatus().familyId);
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () =>
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, []);
   const settings = useSettings();
   const { children, loading } = useActiveChild();
 

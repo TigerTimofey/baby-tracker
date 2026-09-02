@@ -326,6 +326,7 @@ export const EN: Record<string, string> = {
   "По сколько мл": "How many ml each",
   "Поделиться": "Share",
   "Подмышка": "Armpit",
+  "Подписка потерялась: сейчас напоминания приходят, только пока приложение открыто. Выключите и включите тумблер, чтобы восстановить.": "The subscription is lost: right now reminders only arrive while the app is open. Switch the toggle off and on again to restore it.",
   "Подробности — в": "Details in",
   "Подтвердить": "Confirm",
   "Пока без синхронизации, только на этом устройстве": "Without syncing for now, only on this device",
