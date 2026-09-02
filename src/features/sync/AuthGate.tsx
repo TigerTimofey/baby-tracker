@@ -6,7 +6,8 @@ import { Field, TextInput } from "../../components/ui/Form";
 import { GoogleMark } from "../../components/ui/GoogleMark";
 import { Icon } from "../../components/ui/Icon";
 import { getPendingInvite } from "../../data/invite";
-import { updateSettings } from "../../data/settings";
+// Вход без регистрации отключён — см. закомментированную кнопку ниже.
+// import { updateSettings } from "../../data/settings";
 import {
   fetchEnabledProviders,
   requestCode,
@@ -227,6 +228,7 @@ export function AuthGate({ configured }: AuthGateProps) {
         </>
       )}
 
+      {/* Вход без регистрации отключён: пользоваться апкой можно только после входа.
       <button
         type="button"
         className={styles.skip}
@@ -234,6 +236,7 @@ export function AuthGate({ configured }: AuthGateProps) {
       >
         {t("Пока без синхронизации, только на этом устройстве")}
       </button>
+      */}
     </div>
   );
 }
