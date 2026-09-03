@@ -9,7 +9,7 @@ import { syncNow } from "../data/sync";
 import { ChildForm } from "../features/children/ChildForm";
 import { useReminders } from "../features/notify/useReminders";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
-import { CheckinBanner } from "../features/family/CheckinBanner";
+// import { CheckinBanner } from "../features/family/CheckinBanner";
 import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
 import { Button } from "./ui/Button";
@@ -134,10 +134,11 @@ export function AppShell() {
       <PullToRefresh onRefresh={refresh} />
 
       <main className={styles.main}>
-        {/* Снаружи обёртки с key={pathname}: внутри неё карточка пересоздавалась
-            при каждой смене вкладки — и вопрос всплывал только после перехода,
-            а до него висел невидимым. Она часть оболочки, а не страницы. */}
-        <CheckinBanner />
+        {/* Карточка вопроса «всё по плану?» отключена вместе со строкой в
+            настройках. Стоит снаружи обёртки с key={pathname}: внутри неё она
+            пересоздавалась при каждой смене вкладки, и вопрос всплывал только
+            после перехода. */}
+        {/* <CheckinBanner /> */}
 
         <div
           key={location.pathname}

@@ -6,6 +6,7 @@ import { Toaster } from "./components/ui/Toaster";
 import { useActiveChild, useSettings } from "./data/hooks";
 import { clearPendingInvite, getPendingInvite } from "./data/invite";
 import { getSyncStatus, initSync, joinFamily, subscribeSync } from "./data/sync";
+import { joinPresence, leavePresence } from "./data/presence";
 import { showToast } from "./components/ui/toast";
 import { applyLang, applyTheme } from "./data/settings";
 import { ensurePersistentStorageOnce } from "./lib/storage";
@@ -51,6 +52,17 @@ export default function App() {
     if (status.state === "checking" || status.state === "signed_out") return;
     void refreshPush(status.familyId);
   }, [status.state, status.familyId]);
+
+  // Кто сейчас в приложении. Канал один на всё приложение, поэтому держим его
+  // здесь, а не в карточке семьи: та живёт только пока открыты настройки.
+  useEffect(() => {
+    if (!status.familyId || !status.userId) {
+      leavePresence();
+      return;
+    }
+    joinPresence(status.familyId, status.userId);
+    return () => leavePresence();
+  }, [status.familyId, status.userId]);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;

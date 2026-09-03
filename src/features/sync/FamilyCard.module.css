@@ -64,3 +64,25 @@
   line-height: 1.45;
   color: var(--text-faint);
 }
+
+/* Кружок «в сети» на аватарке. Обводка цветом карточки, чтобы точка читалась
+   и на светлой теме, и поверх фотографии. */
+.avatar {
+  position: relative;
+  display: inline-flex;
+}
+
+.dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--surface);
+  border-radius: var(--r-full);
+  background: var(--border);
+}
+
+.on {
+  background: var(--ok);
+}

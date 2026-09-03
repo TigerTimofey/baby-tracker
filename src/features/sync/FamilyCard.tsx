@@ -1,3 +1,4 @@
+import { getOnline, subscribeOnline } from "../../data/presence";
 import { t } from "../../lib/i18n";
 import { useState, useSyncExternalStore } from "react";
 import { Card } from "../../components/ui/Card";
@@ -37,6 +38,7 @@ function Avatar({ member }: { member: FamilyMember }) {
 }
 
 export function FamilyCard() {
+  const online = useSyncExternalStore(subscribeOnline, getOnline, getOnline);
   const status = useSyncExternalStore(
     subscribeSync,
     getSyncStatus,
@@ -73,7 +75,15 @@ export function FamilyCard() {
           const isMe = member.user_id === status.userId;
           return (
             <div key={member.user_id} className={styles.member}>
-              <Avatar member={member} />
+              <span className={styles.avatar}>
+                <Avatar member={member} />
+                <span
+                  className={`${styles.dot} ${online.includes(member.user_id) ? styles.on : ""}`}
+                  aria-label={
+                    online.includes(member.user_id) ? t("в сети") : t("не в сети")
+                  }
+                />
+              </span>
               <span className={`${styles.name} ${isMe ? styles.me : ""}`}>
                 {member.display_name ?? (isMe ? t("вы") : t("второй родитель"))}
               </span>

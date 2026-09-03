@@ -5,7 +5,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { LangSwitch } from "../components/ui/LangSwitch";
-import { CheckinRow } from "../features/family/CheckinRow";
+// Вопрос «всё по плану?» отключён. Код на месте: строка настроек —
+// CheckinRow, карточка вопроса — CheckinBanner в AppShell. Вернуть — снять
+// комментарии в обоих местах.
+// import { CheckinRow } from "../features/family/CheckinRow";
 import { Icon } from "../components/ui/Icon";
 import { Segmented } from "../components/ui/Segmented";
 import { Switch } from "../components/ui/Switch";
@@ -277,7 +280,7 @@ export function SettingsPage() {
             </>
           )}
 
-          <CheckinRow />
+          {/* <CheckinRow /> */}
 
         </Card>
 
