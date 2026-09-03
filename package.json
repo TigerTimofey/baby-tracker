@@ -1,14 +1,15 @@
 {
   "name": "baby-tracker",
   "private": true,
-  "version": "2.41.0",
+  "version": "2.48.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "functions:deploy": "supabase functions deploy push-reminders --no-verify-jwt --use-api"
+    "functions:deploy": "supabase functions deploy push-reminders --no-verify-jwt --use-api",
+    "check:functions": "for d in supabase/functions/*/; do (cd \"$d\" && deno check --node-modules-dir=auto index.ts) || exit 1; done; rm -rf supabase/functions/*/node_modules supabase/functions/*/deno.lock"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

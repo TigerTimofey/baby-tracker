@@ -1,0 +1,39 @@
+/* Как соседние строки настроек: тот же отступ сверху и та же раскладка.
+   Отличие одно — содержимое многострочное (выбор адресата, приписка про
+   недоставленное), поэтому кнопка равняется по верху, а не по центру.
+   Снизу свой отступ: строка последняя в карточке и иначе липнет к краю. */
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-4);
+  margin-top: var(--gap-4);
+  padding-bottom: var(--gap-3);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  font-size: 15px;
+}
+
+.hint {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}
+
+.pick {
+  margin-top: var(--gap-3);
+}
+
+.note {
+  margin-top: var(--gap-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--big-number);
+}

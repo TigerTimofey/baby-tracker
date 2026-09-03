@@ -46,6 +46,9 @@ export interface PushResult {
 /** Сообщение от service worker: подписку сменил браузер, надо перезаписать. */
 export const PUSH_CHANGED = "push-subscription-changed";
 
+/** Сообщение от service worker: пришло уведомление, экран мог устареть. */
+export const PUSH_RECEIVED = "push-received";
+
 async function storeSubscription(
   subscription: PushSubscription,
   userId: string,
@@ -72,6 +75,48 @@ async function storeSubscription(
   return error ? { ok: false, reason: "failed" } : { ok: true };
 }
 
+/**
+ * Та ли это подписка, что нужна серверу.
+ *
+ * Ключ VAPID вшивается в подписку при создании и потом не меняется. Если ключ
+ * на сервере сменили, браузер продолжает отдавать старую подписку как ни в чём
+ * не бывало — а push-сервис отвечает на неё 403. Сравниваем байты.
+ */
+function sameKey(subscription: PushSubscription): boolean {
+  const raw = subscription.options.applicationServerKey;
+  if (!raw) return false;
+  const have = new Uint8Array(raw);
+  const want = urlBase64ToBytes(VAPID_PUBLIC_KEY);
+  return (
+    have.length === want.length && have.every((byte, i) => byte === want[i])
+  );
+}
+
+/**
+ * Подписка под нынешний ключ. Старую, если ключ разошёлся, отменяем и удаляем
+ * её строку: иначе она осталась бы в базе мёртвым грузом, а сервер продолжал
+ * бы стучаться по ней и получать отказ.
+ */
+async function liveSubscription(
+  registration: ServiceWorkerRegistration,
+): Promise<PushSubscription> {
+  const existing = await registration.pushManager.getSubscription();
+  if (existing && sameKey(existing)) return existing;
+
+  if (existing) {
+    const dead = existing.endpoint;
+    await existing.unsubscribe();
+    if (supabase) {
+      await supabase.from("push_subscriptions").delete().eq("endpoint", dead);
+    }
+  }
+
+  return registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToBytes(VAPID_PUBLIC_KEY),
+  });
+}
+
 async function currentUserId(): Promise<string | null> {
   if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
@@ -87,14 +132,7 @@ export async function enablePush(familyId: string | null): Promise<PushResult> {
 
   try {
     const registration = await navigator.serviceWorker.ready;
-
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToBytes(VAPID_PUBLIC_KEY),
-      });
-    }
+    const subscription = await liveSubscription(registration);
 
     return await storeSubscription(subscription, userId, familyId);
   } catch {
@@ -123,13 +161,7 @@ export async function refreshPush(familyId: string | null): Promise<PushResult> 
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToBytes(VAPID_PUBLIC_KEY),
-      });
-    }
+    const subscription = await liveSubscription(registration);
     return await storeSubscription(subscription, userId, familyId);
   } catch {
     return { ok: false, reason: "failed" };
@@ -160,6 +192,7 @@ export async function pushStatus(): Promise<PushState> {
     const registration = await navigator.serviceWorker.getRegistration();
     const subscription = await registration?.pushManager.getSubscription();
     if (!subscription) return "off";
+    if (!sameKey(subscription)) return "lost";
     if (!supabase) return "off";
 
     const { data, error } = await supabase

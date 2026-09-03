@@ -9,6 +9,7 @@ import { syncNow } from "../data/sync";
 import { ChildForm } from "../features/children/ChildForm";
 import { useReminders } from "../features/notify/useReminders";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
+import { CheckinBanner } from "../features/family/CheckinBanner";
 import { PullToRefresh } from "./PullToRefresh";
 import { SyncBadge } from "./SyncBadge";
 import { Button } from "./ui/Button";
@@ -133,6 +134,11 @@ export function AppShell() {
       <PullToRefresh onRefresh={refresh} />
 
       <main className={styles.main}>
+        {/* Снаружи обёртки с key={pathname}: внутри неё карточка пересоздавалась
+            при каждой смене вкладки — и вопрос всплывал только после перехода,
+            а до него висел невидимым. Она часть оболочки, а не страницы. */}
+        <CheckinBanner />
+
         <div
           key={location.pathname}
           className={direction > 0 ? styles.pageIn : styles.pageBack}

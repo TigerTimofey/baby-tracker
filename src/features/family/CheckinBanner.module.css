@@ -1,0 +1,74 @@
+/* Вопрос от второго родителя. Выделен цветом сна — это не тревога, а
+   «отзовись»; красный тут был бы враньём. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+  margin-bottom: var(--gap-4);
+  padding: var(--gap-4);
+  border: 1px solid var(--sleep);
+  border-radius: var(--r-lg);
+  background: var(--sleep-soft);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-full);
+  color: var(--sleep);
+  background: var(--surface);
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.who {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions button {
+  flex: 1;
+}
+
+/* Ответ красим по смыслу: «всё хорошо» зелёным, «не очень» нашим жёлтым.
+   Красный тут был бы преувеличением — это ответ про самочувствие, а не
+   тревога. */
+.good {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+
+.good .mark {
+  color: var(--ok);
+}
+
+.bad {
+  border-color: var(--big-number);
+  background: color-mix(in srgb, var(--big-number) 12%, transparent);
+}
+
+.bad .mark {
+  color: var(--big-number);
+}

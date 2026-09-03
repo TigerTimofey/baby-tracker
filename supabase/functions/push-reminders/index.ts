@@ -286,7 +286,9 @@ Deno.serve(async (request) => {
           sent += 1;
         } catch (error) {
           const status = (error as { statusCode?: number }).statusCode;
-          if (status === 404 || status === 410) {
+          // 403 — подписку создавали под другой ключ VAPID: этим ключом её
+      // не оживить никогда, и держать строку незачем.
+      if (status === 403 || status === 404 || status === 410) {
             await supabase
               .from("push_subscriptions")
               .delete()

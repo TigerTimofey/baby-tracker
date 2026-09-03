@@ -44,7 +44,13 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
       },
       devOptions: {
-        enabled: false,
+        // Включён и в разработке: без воркера нет подписки на уведомления, и
+        // проверить их на дев-сервере было нельзя — тумблер выглядел
+        // включённым, а отправлять было некуда. Предкэш в разработке пустой,
+        // так что старые файлы он не отдаёт.
+        enabled: true,
+        type: "module",
+        suppressWarnings: true,
       },
     }),
   ],

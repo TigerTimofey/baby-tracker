@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { LangSwitch } from "../components/ui/LangSwitch";
+import { CheckinRow } from "../features/family/CheckinRow";
 import { Icon } from "../components/ui/Icon";
 import { Segmented } from "../components/ui/Segmented";
 import { Switch } from "../components/ui/Switch";
@@ -33,7 +34,6 @@ import {
 import {
   notificationPermission,
   requestNotificationPermission,
-  showNotification,
 } from "../lib/notifications";
 import { formatDate } from "../lib/time";
 import { APP_VERSION } from "../lib/version";
@@ -277,29 +277,7 @@ export function SettingsPage() {
             </>
           )}
 
-          {settings.notifications && permission === "granted" && (
-            <div className={styles.row}>
-              <div className={styles.rowText}>
-                <div className={styles.rowLabel}>{t("Проверить")}</div>
-                <div className={styles.rowHint}>
-                  {t("Придёт пробное уведомление")}
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  void showNotification(
-                    "test",
-                    t("Проверка"),
-                    t("Уведомления работают"),
-                  )
-                }
-              >
-                {t("Отправить")}
-              </Button>
-            </div>
-          )}
+          <CheckinRow />
 
         </Card>
 

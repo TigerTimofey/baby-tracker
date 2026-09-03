@@ -288,6 +288,32 @@ alter table public.temperatures
 alter table public.push_subscriptions
   add column if not exists locale text;
 
+-- Пинг второму родителю: «всё по плану?» и ответ одним нажатием.
+-- Живёт только на сервере: офлайн у вопроса смысла нет, он про «прямо сейчас».
+create table if not exists public.checkins (
+  id          uuid primary key default gen_random_uuid(),
+  family_id   uuid not null references public.families (id) on delete cascade,
+  from_user   uuid not null references auth.users (id) on delete cascade,
+  to_user     uuid not null references auth.users (id) on delete cascade,
+  asked_at    timestamptz not null default now(),
+  answer      text check (answer in ('ok', 'not_ok')),
+  answered_at timestamptz
+);
+
+create index if not exists checkins_to_idx
+  on public.checkins (to_user, asked_at desc);
+create index if not exists checkins_from_idx
+  on public.checkins (from_user, asked_at desc);
+
+alter table public.checkins enable row level security;
+
+drop policy if exists checkins_family on public.checkins;
+create policy checkins_family on public.checkins
+  for all
+  using (public.is_family_member(family_id))
+  with check (public.is_family_member(family_id));
+
+
 -- 'breast' без стороны появился, когда различать левую и правую стало
 -- необязательным. Пересоздаём проверку, а не создаём — иначе на базе,
 -- залитой раньше, старое ограничение отвергнет новые записи.

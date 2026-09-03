@@ -32,6 +32,9 @@ interface PushPayload {
 /** Сообщение странице: подписка сменилась, её надо сохранить заново. */
 const PUSH_CHANGED = "push-subscription-changed";
 
+/** Сообщение странице: пришло уведомление — на экране могло устареть. */
+const PUSH_RECEIVED = "push-received";
+
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
@@ -56,7 +59,22 @@ self.addEventListener("push", (event) => {
     data: { url: payload.url ?? "./" },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(title, options);
+
+      // Открытая страница про уведомление ничего не знает: она его не
+      // показывала. Без этого ответ на «всё по плану?» приходил в шторку, а в
+      // приложении оставалось «ответа пока нет».
+      const clients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clients) {
+        client.postMessage({ type: PUSH_RECEIVED, tag: options.tag });
+      }
+    })(),
+  );
 });
 
 /**
