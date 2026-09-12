@@ -21,6 +21,14 @@ export interface CheckRow {
   value: string;
   detail: string;
   status: CheckStatus;
+  /**
+   * Куда идти, чтобы показатель заполнился. Строка без данных иначе сообщает о
+   * пробеле, но не помогает его закрыть: вкладку приходится искать самому.
+   *
+   * Только адрес: подпись у ссылки одна на все строки и живёт в компоненте.
+   * Нет — когда добавить нечего: возраст вне таблиц ВОЗ ничем не исправить.
+   */
+  addAt?: string;
 }
 
 export interface Checkup {
@@ -40,6 +48,7 @@ function sleepRow(stats: SleepStats, ageMonths: number): CheckRow {
       value: t("нет данных"),
       detail: t("нужно хотя бы {0} полных дня с записями", [MIN_DAYS_FOR_SLEEP]),
       status: "unknown",
+      addAt: "/sleep",
     };
   }
 
@@ -74,6 +83,7 @@ export function buildCheckup(
         value: t("нет измерений"),
         detail: t("добавьте замер на вкладке «ВОЗ»"),
         status: "unknown",
+        addAt: "/growth",
       });
       continue;
     }
@@ -91,6 +101,8 @@ export function buildCheckup(
             ? t("в профиле не указан пол — таблицы ВОЗ для мальчиков и девочек разные")
             : t("возраст вне таблиц ВОЗ — сравнить не с чем"),
         status: "unknown",
+        // Пол дозаполняется в профиле; возраст вне таблиц не лечится ничем.
+        addAt: child.sex === null ? "/settings" : undefined,
       });
       continue;
     }

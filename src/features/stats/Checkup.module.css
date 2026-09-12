@@ -137,6 +137,19 @@
   color: var(--text-faint);
 }
 
+/* Ссылка «где это заполнить» — тем же приглушённым подчёркнутым стилем, что и
+   «поправить время» в карточке сна: это подсказка, а не кнопка, и в списке
+   показателей она не должна спорить с самими значениями. Цвет задан явно:
+   глобальное правило для <a> красит ссылки в акцентный. */
+.rowLink {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .disclaimer {
   margin: var(--gap-3) 0 0;
   padding-top: var(--gap-3);

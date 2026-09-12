@@ -529,6 +529,7 @@ export const EN: Record<string, string> = {
   "дневной": "day",
   "днём": "during the day",
   "до сна {0}": "{0} until bedtime",
+  "добавить данные": "add info",
   "добавьте замер на вкладке «ВОЗ»": "add a measurement on the WHO tab",
   "добавьте профиль": "add a profile",
   "если знаете": "if you know it",

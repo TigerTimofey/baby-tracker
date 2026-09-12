@@ -526,6 +526,7 @@ export const ET: Record<string, string> = {
   "дневной": "päevane",
   "днём": "päeval",
   "до сна {0}": "uneajani {0}",
+  "добавить данные": "lisa andmed",
   "добавьте замер на вкладке «ВОЗ»": "lisage mõõtmine WHO vahekaardil",
   "добавьте профиль": "lisage profiil",
   "если знаете": "kui teate",

@@ -1,5 +1,6 @@
 import { t } from "../../lib/i18n";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Icon } from "../../components/ui/Icon";
 import type { Checkup as CheckupData } from "./checkupData";
 import styles from "./Checkup.module.css";
@@ -55,6 +56,11 @@ export function Checkup({ data }: { data: CheckupData }) {
                   <span className={styles.rowLabel}>{row.label}</span>
                   <span className={styles.rowValue}>{row.value}</span>
                   <span className={styles.rowDetail}>{row.detail}</span>
+                  {row.addAt && (
+                    <Link className={styles.rowLink} to={row.addAt}>
+                      {t("добавить данные")}
+                    </Link>
+                  )}
                 </span>
               </li>
             ))}
