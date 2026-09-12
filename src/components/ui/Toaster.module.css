@@ -1,10 +1,12 @@
 .wrap {
   position: fixed;
-  left: 50%;
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);
+  /* Центр считается по свободной части экрана, а не по всему окну: в альбомной
+     ориентации справа стоит рейка навигации, и тост иначе съезжает под неё. */
+  left: calc(50% - (var(--rail-w) + env(safe-area-inset-right)) / 2);
+  bottom: calc(var(--nav-inset) + env(safe-area-inset-bottom) + 12px);
   z-index: 60;
   transform: translateX(-50%);
-  width: calc(100% - 2 * var(--page-pad));
+  width: calc(100% - var(--rail-w) - env(safe-area-inset-right) - 2 * var(--page-pad));
   max-width: 460px;
   pointer-events: none;
 }

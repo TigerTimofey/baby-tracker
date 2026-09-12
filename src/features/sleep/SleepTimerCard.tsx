@@ -21,6 +21,7 @@ import {
   formatTime,
   parseTimeOfDay,
 } from "../../lib/time";
+import { FeedingEditor } from "../feeding/FeedingEditor";
 import { findActive as findActiveFeeding } from "../feeding/feedingUtils";
 import { notificationPermission } from "../../lib/notifications";
 import { NightFeedingsSheet } from "../feeding/NightFeedingsSheet";
@@ -39,6 +40,48 @@ import styles from "./SleepTimerCard.module.css";
 
 const ASK_ABOUT_FEEDINGS_MS = 2 * 3600_000;
 const NO_FEEDINGS: Feeding[] = [];
+
+/**
+ * Число вместе с единицей измерения: «38 мин», «1 ч 20 мин», «3 мес», «15:10».
+ * Разделитель внутри числа ловится только между цифрами, поэтому «20:30 —
+ * через 6» не слипается в одно: пробел перед тире обрывает совпадение.
+ *
+ * Единица — не список слов, а любое короткое слово следом: набор зависит от
+ * языка (мин/ч/мес, min/h/mo, min/t/kuud), и держать три списка в синхроне с
+ * переводами пришлось бы вручную. Ограничение в четыре буквы отсекает обычные
+ * слова: в «at 3 months» единица не подхватится, потому что дальше идёт буква.
+ *
+ * Граница слова здесь — lookahead, а не \b: \b в JavaScript считает по [A-Za-z0-9_],
+ * и после кириллицы границы просто нет — «38 мин» осталось бы без «мин».
+ */
+const NUMBER =
+  /(\d+(?:[.,:–—-]\d+)*(?:\s\p{L}{1,4}(?![\p{L}\p{N}]))?(?:\s\d+(?:[.,:–—-]\d+)*(?:\s\p{L}{1,4}(?![\p{L}\p{N}]))?)*)/u;
+
+/**
+ * Подсказка набрана самым тусклым цветом, и время в ней теряется — а читают
+ * в первую очередь именно его. Числа с единицами подсвечиваются оранжевым
+ * (см. .num): заметно на сером, но не спорит с крупным таймером.
+ *
+ * Разметка не заводится в переводы: строки собираются через t() с подстановкой
+ * {0}, и тег внутри перевода пришлось бы держать на каждом языке. Здесь разбор
+ * идёт по готовой строке и работает для всех языков сразу.
+ */
+function Digits({ children }: { children: string }) {
+  return (
+    <>
+      {children.split(NUMBER).map((part, index) =>
+        // split с группой захвата кладёт сами числа на нечётные места.
+        index % 2 === 1 ? (
+          <span key={index} className={styles.num}>
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
 
 interface SleepTimerCardProps {
   child: Child;
@@ -65,18 +108,60 @@ export function SleepTimerCard({
   const settings = useSettings();
   const author = useAuthorLabel();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [feedingEditorOpen, setFeedingEditorOpen] = useState(false);
   const [nightSleep, setNightSleep] = useState<SleepSession | null>(null);
 
   const { data: feedingData } = useLive(
     async () => await listByChild("feedings", child.id),
     [child.id],
   );
-  const feedingNow = Boolean(findActiveFeeding(feedingData ?? NO_FEEDINGS));
+  const activeFeeding = findActiveFeeding(feedingData ?? NO_FEEDINGS);
+  const feedingNow = Boolean(activeFeeding);
 
   const active = findActive(sessions);
   const activeAuthor = active ? author(active.created_by) : null;
   const age = ageOf(birthMoment(child.birth_date, child.birth_time), new Date(now));
   const band = bandFor(age.totalMonths);
+
+  /**
+   * Ссылка на правку времени — по одной на каждый идущий таймер. Сон и
+   * кормление могут идти одновременно, поэтому подписи всегда называют, к чему
+   * относятся: просто «поправить время» рядом со второй такой же ссылкой не
+   * говорит ничего.
+   */
+  const editLinks =
+    active || activeFeeding ? (
+      <div className={styles.editLinks}>
+        {active && (
+          <button
+            type="button"
+            className={styles.editLink}
+            onClick={() => setEditorOpen(true)}
+          >
+            {t("поправить время сна")}
+          </button>
+        )}
+        {activeFeeding && (
+          <button
+            type="button"
+            className={styles.editLink}
+            onClick={() => setFeedingEditorOpen(true)}
+          >
+            {t("поправить время кормления")}
+          </button>
+        )}
+      </div>
+    ) : null;
+
+  const feedingEditor =
+    feedingEditorOpen && activeFeeding ? (
+      <FeedingEditor
+        open
+        onClose={() => setFeedingEditorOpen(false)}
+        childId={child.id}
+        feeding={activeFeeding}
+      />
+    ) : null;
 
   async function startSleep() {
     const at = new Date();
@@ -128,44 +213,42 @@ export function SleepTimerCard({
     return (
       <>
         <div className={`${styles.card} ${styles.sleeping}`}>
-          <span className={styles.status}>
-            <Icon name="moon" size={14} />
-            {kindLabel(active.kind)}
-          </span>
+          <div className={styles.info}>
+            <span className={styles.status}>
+              <Icon name="moon" size={14} />
+              {kindLabel(active.kind)}
+            </span>
 
-          <div className={`${styles.big} tnum`}>{formatClock(elapsed)}</div>
-          <p className={styles.sub}>
-            {t("уснул в {0}", [formatTime(active.start_at)])}
-            {activeAuthor ? ` · ${activeAuthor}` : ""}
-          </p>
-
-          <div className={styles.actions}>
-            <Button size="lg" variant="primary" onClick={stopSleep}>
-              <Icon name="stop" size={18} />
-              {t("Проснулся")}
-            </Button>
-            {action}
+            <div className={`${styles.big} tnum`}>{formatClock(elapsed)}</div>
+            <p className={styles.sub}>
+              {t("уснул в {0}", [formatTime(active.start_at)])}
+              {activeAuthor ? ` · ${activeAuthor}` : ""}
+            </p>
           </div>
 
-          <div style={{ maxWidth: 260, margin: "var(--gap-4) auto 0" }}>
-            <Segmented<SleepKind>
-              value={active.kind}
-              onChange={changeKind}
-              ariaLabel={t("Тип сна")}
-              options={[
-                { value: "nap", label: t("Дневной") },
-                { value: "night", label: t("Ночной") },
-              ]}
-            />
-          </div>
+          <div className={styles.controls}>
+            <div className={styles.actions}>
+              <Button size="lg" variant="primary" onClick={stopSleep}>
+                <Icon name="stop" size={18} />
+                {t("Проснулся")}
+              </Button>
+              {action}
+            </div>
 
-          <button
-            type="button"
-            className={styles.editLink}
-            onClick={() => setEditorOpen(true)}
-          >
-            {t("поправить время")}
-          </button>
+            <div className={styles.kindSwitch}>
+              <Segmented<SleepKind>
+                value={active.kind}
+                onChange={changeKind}
+                ariaLabel={t("Тип сна")}
+                options={[
+                  { value: "nap", label: t("Дневной") },
+                  { value: "night", label: t("Ночной") },
+                ]}
+              />
+            </div>
+
+            {editLinks}
+          </div>
         </div>
 
         {editorOpen && (
@@ -176,6 +259,7 @@ export function SleepTimerCard({
             session={active}
           />
         )}
+        {feedingEditor}
         {nightSleep && (
           <NightFeedingsSheet
             open
@@ -211,98 +295,113 @@ export function SleepTimerCard({
   return (
     <>
       <div className={styles.card}>
-        <span className={styles.status}>
-          <Icon name="sun" size={14} />
-          {t("Бодрствует")}
-        </span>
+        <div className={styles.info}>
+          <span className={styles.status}>
+            <Icon name="sun" size={14} />
+            {t("Бодрствует")}
+          </span>
 
-        {awakeMs === null ? (
-          <p className={styles.lead}>
-            {t("Нажмите «Уснул», когда малыш заснёт — дальше приложение посчитает\n            само.")}
-          </p>
-        ) : (
-          <>
-            <div className={`${styles.big} tnum`}>
-              {awakeMs < 60_000 ? t("только что") : formatDuration(awakeMs)}
-            </div>
-            <p className={styles.sub}>
-              {t("проснулся в {0}", [formatTime(new Date(wakeAt as number))])}
+          {awakeMs === null ? (
+            <p className={styles.lead}>
+              {t("Нажмите «Уснул», когда малыш заснёт — дальше приложение посчитает\n            само.")}
             </p>
-          </>
-        )}
-
-        {awakeMs !== null && (
-          <>
-            <div className={styles.bar}>
-              <div
-                className={`${styles.barFill} ${overdue ? styles.barOver : ""}`}
-                style={{ width: `${Math.round(progress * 100)}%` }}
-              />
-            </div>
-            {forecast ? (
-              <>
-                <p
-                  className={`${styles.hint} ${forecastDue ? styles.hintWarn : ""}`}
-                >
-                  {forecastDue
-                    ? t("пора укладывать — обычно уже засыпает")
-                    : t("следующий сон примерно в {0} · через {1}", [formatTime(
-                        new Date(forecast.at),
-                      ), formatDuration(forecast.at - now)])}
-                </p>
-                <p className={styles.basis}>
-                  {forecast.basedOn === "history"
-                    ? t("по {0} последним промежуткам между снами", [forecast.samples])
-                    : t("по возрастному ориентиру — своих записей пока мало")}
-                </p>
-              </>
-            ) : (
-              <p className={`${styles.hint} ${overdue ? styles.hintWarn : ""}`}>
-                {overdue
-                  ? t("бодрствует дольше обычного для этого возраста")
-                  : t("в {0} мес обычно бодрствуют {1}", [
-                      age.totalMonths,
-                      band.wakeMin >= 60
-                        ? t("{0}–{1} ч", [
-                            (band.wakeMin / 60).toLocaleString(locale()),
-                            (band.wakeMax / 60).toLocaleString(locale()),
-                          ])
-                        : t("{0}–{1} мин", [band.wakeMin, band.wakeMax]),
-                    ])}
+          ) : (
+            <>
+              <div className={`${styles.big} tnum`}>
+                {awakeMs < 60_000 ? t("только что") : formatDuration(awakeMs)}
+              </div>
+              <p className={styles.sub}>
+                {t("проснулся в {0}", [formatTime(new Date(wakeAt as number))])}
               </p>
-            )}
-          </>
-        )}
+            </>
+          )}
 
-        <div className={styles.actions}>
-          <Button size="lg" variant="primary" onClick={startSleep}>
-            <Icon name="moon" size={18} />
-            {t("Уснул")}
-          </Button>
-          {action}
+          {awakeMs !== null && (
+            <>
+              <div className={styles.bar}>
+                <div
+                  className={`${styles.barFill} ${overdue ? styles.barOver : ""}`}
+                  style={{ width: `${Math.round(progress * 100)}%` }}
+                />
+              </div>
+              {forecast ? (
+                <>
+                  <p
+                    className={`${styles.hint} ${forecastDue ? styles.hintWarn : ""}`}
+                  >
+                    <Digits>
+                      {forecastDue
+                        ? t("пора укладывать — обычно уже засыпает")
+                        : t("следующий сон примерно в {0} · через {1}", [formatTime(
+                            new Date(forecast.at),
+                          ), formatDuration(forecast.at - now)])}
+                    </Digits>
+                  </p>
+                  <p className={styles.basis}>
+                    {forecast.basedOn === "history"
+                      ? t("по {0} последним промежуткам между снами", [forecast.samples])
+                      : t("по возрастному ориентиру — своих записей пока мало")}
+                  </p>
+                </>
+              ) : (
+                <p className={`${styles.hint} ${overdue ? styles.hintWarn : ""}`}>
+                  <Digits>
+                    {overdue
+                      ? t("бодрствует дольше обычного для этого возраста")
+                      : t("в {0} мес обычно бодрствуют {1}", [
+                          age.totalMonths,
+                          band.wakeMin >= 60
+                            ? t("{0}–{1} ч", [
+                                (band.wakeMin / 60).toLocaleString(locale()),
+                                (band.wakeMax / 60).toLocaleString(locale()),
+                              ])
+                            : t("{0}–{1} мин", [band.wakeMin, band.wakeMax]),
+                        ])}
+                  </Digits>
+                </p>
+              )}
+            </>
+          )}
         </div>
 
-        {child.notify_bedtime && (bedtimeSoon || bedtimePassed) && (
-          <p className={`${styles.hint} ${styles.hintWarn}`}>
-            {bedtimePassed
-              ? t("время сна было в {0}", [bedtime.time ?? ""])
-              : t("до сна {0}", [formatDuration(untilBedtime ?? 0)])}
-          </p>
-        )}
-        {child.notify_bedtime &&
-          !bedtimeSoon &&
-          !bedtimePassed &&
-          untilBedtime !== null &&
-          untilBedtime > 0 && (
-          <p className={styles.hint}>
-            {t("отход ко сну в {0} — через {1}", [
-              bedtime.time ?? "",
-              formatDuration(untilBedtime),
-            ])}
-          </p>
-        )}
+        <div className={styles.controls}>
+          <div className={styles.actions}>
+            <Button size="lg" variant="primary" onClick={startSleep}>
+              <Icon name="moon" size={18} />
+              {t("Уснул")}
+            </Button>
+            {action}
+          </div>
+
+          {child.notify_bedtime && (bedtimeSoon || bedtimePassed) && (
+            <p className={`${styles.hint} ${styles.hintWarn}`}>
+              <Digits>
+                {bedtimePassed
+                  ? t("время сна было в {0}", [bedtime.time ?? ""])
+                  : t("до сна {0}", [formatDuration(untilBedtime ?? 0)])}
+              </Digits>
+            </p>
+          )}
+          {child.notify_bedtime &&
+            !bedtimeSoon &&
+            !bedtimePassed &&
+            untilBedtime !== null &&
+            untilBedtime > 0 && (
+            <p className={styles.hint}>
+              <Digits>
+                {t("отход ко сну в {0} — через {1}", [
+                  bedtime.time ?? "",
+                  formatDuration(untilBedtime),
+                ])}
+              </Digits>
+            </p>
+          )}
+
+          {editLinks}
+        </div>
       </div>
 
+      {feedingEditor}
       {nightSleep && (
         <NightFeedingsSheet
           open

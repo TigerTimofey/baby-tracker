@@ -145,3 +145,29 @@
   top: calc(var(--gap-4) + env(safe-area-inset-top));
   right: var(--gap-4);
 }
+
+/* Альбомная ориентация: экран построен вокруг крупного знака и заголовка, и на
+   высоте в 390 пикселей кнопка входа оказывается за нижним краем. Шапка
+   ужимается — форма поднимается на первый экран. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .screen {
+    gap: var(--gap-3);
+    padding: var(--gap-4) var(--gap-5);
+    padding-top: calc(var(--gap-4) + env(safe-area-inset-top));
+  }
+
+  .mark {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .text {
+    max-width: 46ch;
+    font-size: 14px;
+  }
+}

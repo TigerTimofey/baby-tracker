@@ -102,6 +102,17 @@
   color: var(--feeding);
 }
 
+/* Числа в подсказке вместе с единицей — оранжевым: вокруг самый тусклый текст
+   карточки, и время в нём иначе не находится взглядом. Не цветом крупного
+   таймера: тот остаётся единственным главным числом карточки, и подсказка под
+   ним не должна спорить за внимание. Табличные цифры держат ширину, пока
+   «через 38 мин» пересчитывается каждую секунду. */
+.num {
+  color: var(--feeding);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
 .actions {
   position: relative;
   display: flex;
@@ -116,9 +127,26 @@
   min-width: 0;
 }
 
+.kindSwitch {
+  position: relative;
+  max-width: 260px;
+  margin: var(--gap-4) auto 0;
+}
+
+/* Ссылок бывает две — на сон и на кормление, если оба таймера идут. Встают в
+   строку, а в узкой колонке переносятся друг под друга. Отступ сверху держит
+   контейнер: у одиночной ссылки он был свой, и с двумя удваивался бы. */
+.editLinks {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-1) var(--gap-4);
+  margin-top: var(--gap-3);
+}
+
 .editLink {
   position: relative;
-  margin-top: var(--gap-3);
   border: none;
   background: none;
   font-size: 13px;
@@ -146,4 +174,96 @@
   font-size: 12px;
   line-height: 1.4;
   color: var(--text-faint);
+}
+
+/* Показания и кнопки лежат в двух обёртках, которые в портретной вёрстке
+   прозрачны (display: contents) — колонка карточки остаётся ровно такой, какой
+   была. В альбомной они становятся колонками сетки. */
+.info,
+.controls {
+  display: contents;
+}
+
+/* ——— Альбомная ориентация ———
+   Столбиком карточка не помещается в 400 пикселей высоты: кнопки уезжают под
+   нижний край. Цифры и подсказки уходят влево, управление — вправо, где оно
+   целиком на виду. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .card {
+    display: grid;
+    /* Правая колонка не уже 200px: «Проснулся» с иконкой переносится по
+       словам, если дать меньше. */
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 264px);
+    align-items: center;
+    gap: var(--gap-4);
+    padding: var(--gap-4);
+  }
+
+  .info,
+  .controls {
+    display: block;
+    position: relative;
+    min-width: 0;
+  }
+
+  .big {
+    margin-top: 4px;
+    /* Размер считается от высоты экрана, а не от ширины: в альбомной
+       ориентации ширины вдоволь, а упирается всё в высоту. */
+    font-size: clamp(30px, 8.5vh, 46px);
+  }
+
+  .lead {
+    margin-top: var(--gap-2);
+    font-size: 14px;
+  }
+
+  .bar {
+    margin-top: var(--gap-3);
+  }
+
+  .actions {
+    margin-top: 0;
+    gap: var(--gap-2);
+  }
+
+  /* Кнопки идут столбиком во всю ширину колонки: две рядом дают по 95px на
+     каждую, и подпись в них не помещается. */
+  .actions > * {
+    flex: 1 1 100%;
+  }
+
+  .kindSwitch {
+    margin-top: var(--gap-3);
+  }
+
+  .editLinks {
+    margin-top: var(--gap-2);
+  }
+
+  :global(html[data-night="on"]) .big {
+    font-size: clamp(34px, 10vh, 52px);
+  }
+
+  :global(html[data-night="on"]) .actions > * {
+    height: 60px;
+    font-size: 18px;
+  }
+
+  :global(html[data-night="on"]) .actions {
+    gap: var(--gap-2);
+  }
+}
+
+/* Самые низкие альбомные экраны (iPhone SE — 320 пикселей): подсказка под
+   прогнозом переносится на лишнюю строку, и карточка вылезает за сгиб на
+   несколько пикселей. Отыгрываются они на внутренних отступах. */
+@media (orientation: landscape) and (max-height: 360px) {
+  .card {
+    padding: var(--gap-3);
+  }
+
+  .actions {
+    gap: 6px;
+  }
 }

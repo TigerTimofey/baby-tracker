@@ -111,7 +111,7 @@
   margin: 0 auto;
   padding: var(--gap-4) var(--page-pad);
 
-  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--gap-5));
+  padding-bottom: calc(var(--nav-inset) + env(safe-area-inset-bottom) + var(--gap-5));
 }
 
 /* Обёртка анимации не должна разрывать цепочку высот: страница внутри неё
@@ -224,4 +224,67 @@
 
 .sheetActions > * {
   flex: 1;
+}
+
+/* ——— Альбомная ориентация ———
+   Нижняя панель вместе с шапкой съедала треть короткого экрана, и кнопки
+   карточки оказывались за нижним краем. Здесь она встаёт вертикальной рейкой
+   слева, а страница сдвигается на её ширину: высота уходит целиком контенту. */
+@media (orientation: landscape) and (max-height: 560px) {
+  /* Отступ на рейку висит на .app, а не на шапке и main по отдельности:
+     шапка залипает внутри .app, поэтому одного padding хватает обоим. */
+  .app {
+    padding-right: calc(var(--rail-w) + env(safe-area-inset-right));
+    padding-left: env(safe-area-inset-left);
+  }
+
+  /* Вырез экрана в альбомной ориентации уходит вбок, и запас сверху шапке
+     больше не нужен — а каждый пиксель здесь на счету. */
+  .header {
+    padding-top: 0;
+  }
+
+  .headerInner {
+    padding: 5px var(--page-pad);
+  }
+
+  .main {
+    padding-top: var(--gap-3);
+  }
+
+  .nav {
+    top: 0;
+    left: auto;
+    flex-direction: column;
+    width: calc(var(--rail-w) + env(safe-area-inset-right));
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    border-top: none;
+    border-left: 1px solid var(--border-soft);
+  }
+
+  .navInner {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+    max-width: none;
+    padding: var(--gap-2) 6px;
+  }
+
+  /* flex: 1 из строчной панели растянул бы вкладки на всю высоту рейки —
+     подложка активной превратилась бы в полосу в треть экрана. */
+  .navItem {
+    flex: 0 0 auto;
+    height: auto;
+    padding: 9px 2px;
+    border-radius: var(--r-md);
+  }
+
+  /* В рейке иконки стоят столбиком и активная вкладка одним цветом читается
+     хуже, чем в строке: подложка возвращает ей заметность. */
+  .navItemActive {
+    background: color-mix(in srgb, var(--navTone) 15%, transparent);
+  }
 }

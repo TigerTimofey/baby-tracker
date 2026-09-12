@@ -101,3 +101,24 @@
     opacity: 0;
   }
 }
+
+/* Альбомная ориентация: шторка иначе занимает почти всю высоту и наезжает на
+   рейку навигации — закрыть её, не попав по вкладке, становится негде. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .overlay {
+    padding: var(--gap-3);
+    padding-right: calc(
+      var(--gap-3) + var(--rail-w) + env(safe-area-inset-right)
+    );
+    padding-bottom: calc(var(--gap-3) + env(safe-area-inset-bottom));
+  }
+
+  .panel {
+    max-height: calc(100dvh - 2 * var(--gap-3));
+    padding: var(--gap-4);
+  }
+
+  .header {
+    margin-bottom: var(--gap-3);
+  }
+}
