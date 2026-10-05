@@ -11,6 +11,51 @@ const START_SLOP = 8;
 const EXIT_MS = 190;
 const INTERACTIVE = "input, textarea, select, button, [role='tab'], a";
 
+/** Прокрутка страницы на момент, когда открылась первая шторка. */
+let lockedScrollY = 0;
+
+/**
+ * Замок прокрутки страницы на время шторки.
+ *
+ * overflow: hidden на body в iOS не держит: когда клавиатура подводит поле к
+ * экрану, Safari прокручивает всю страницу, и после закрытия шторки она
+ * остаётся сдвинутой — навигация, прибитая к низу через position: fixed,
+ * висит не у края. Поэтому body фиксируется на месте с отрицательным top:
+ * документ становится ростом с экран, прокручивать нечего, а при закрытии
+ * прокрутка возвращается туда, где была. Счётчик, а не флаг: шторки бывают
+ * вложенными, замок ставит первая и снимает последняя.
+ */
+function lockPage(): () => void {
+  const body = document.body;
+  const count = Number(body.dataset.sheets ?? 0);
+  if (count === 0) {
+    lockedScrollY = window.scrollY;
+    body.style.position = "fixed";
+    body.style.top = `-${lockedScrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+  }
+  body.dataset.sheets = String(count + 1);
+
+  return () => {
+    const left = Number(body.dataset.sheets ?? 1) - 1;
+    if (left > 0) {
+      body.dataset.sheets = String(left);
+      return;
+    }
+    delete body.dataset.sheets;
+    body.style.position = "";
+    body.style.top = "";
+    body.style.left = "";
+    body.style.right = "";
+    body.style.width = "";
+    body.style.overflow = "";
+    window.scrollTo(0, lockedScrollY);
+  };
+}
+
 interface SheetProps {
   open: boolean;
   onClose: () => void;
@@ -48,23 +93,14 @@ export function Sheet({
     };
     document.addEventListener("keydown", onKeyDown);
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    // Пока открыта шторка, нижняя навигация прячется (см. AppShell): в iOS
-    // при открытой клавиатуре всё, что прижато к низу через position: fixed,
-    // всплывает над клавиатурой и торчит сквозь затемнение. Счётчик, а не
-    // флаг: шторки бывают вложенными, и закрытие одной не должно возвращать
-    // навигацию, пока открыта другая.
-    const body = document.body;
-    body.dataset.sheets = String(Number(body.dataset.sheets ?? 0) + 1);
+    // Замок прокрутки заодно ставит на body атрибут data-sheets, по которому
+    // AppShell прячет нижнюю навигацию: в iOS при открытой клавиатуре всё,
+    // что прижато к низу через position: fixed, всплывает над клавиатурой.
+    const unlock = lockPage();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-      const left = Number(body.dataset.sheets ?? 1) - 1;
-      if (left <= 0) delete body.dataset.sheets;
-      else body.dataset.sheets = String(left);
+      unlock();
     };
   }, [open, onClose]);
 
