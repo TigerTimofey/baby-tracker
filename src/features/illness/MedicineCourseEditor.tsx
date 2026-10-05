@@ -63,6 +63,11 @@ function templatesFrom(courses: MedicineCourse[]): MedicineCourse[] {
  * Курс лекарства: название и доза — руками, их знает только родитель;
  * расписание — числом приёмов и временем каждого. Приложение ничего не
  * подставляет само, кроме ходового расписания на выбранное число приёмов.
+ *
+ * Автофокуса на названии нет нарочно. В iOS программный фокус заставляет
+ * Safari прокрутить страницу, чтобы показать поле над клавиатурой, — и после
+ * закрытия шторки нижняя панель оставалась не у края. У шторки кормления,
+ * где ничего не фокусируется само, этого никогда не было.
  */
 export function MedicineCourseEditor({
   open,
@@ -239,9 +244,6 @@ export function MedicineCourseEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      // Сверху, а не снизу: поля шторки оказываются над клавиатурой, и
-      // Safari не нужно прокручивать страницу, чтобы их показать.
-      side="top"
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
       <form onSubmit={handleSubmit}>
@@ -253,7 +255,6 @@ export function MedicineCourseEditor({
               onChange={(event) => setName(event.target.value)}
               placeholder={t("Например, Амоксициллин")}
               autoComplete="off"
-              autoFocus={!course && !copyOf && templates.length === 0}
             />
           )}
         </Field>

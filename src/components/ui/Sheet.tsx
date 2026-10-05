@@ -1,5 +1,11 @@
 import { t } from "../../lib/i18n";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
 import styles from "./Sheet.module.css";
@@ -85,7 +91,11 @@ export function Sheet({
   // геометрия свайпа умножается на него, остальное одинаково.
   const dir = side === "top" ? -1 : 1;
 
-  useEffect(() => {
+  // Layout-эффект, а не обычный: замок должен встать до первой отрисовки
+  // шторки. Если внутри неё поле с автофокусом, iOS начинает прокручивать
+  // страницу сразу после отрисовки — обычный эффект успел бы захватить уже
+  // сдвинутую прокрутку и вернул бы её при закрытии.
+  useLayoutEffect(() => {
     if (!open) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
