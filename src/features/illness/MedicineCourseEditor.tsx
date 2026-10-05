@@ -14,7 +14,7 @@ import {
   resizeTimes,
   sortTimes,
 } from "./courseUtils";
-import { UNITS, formatDose, unitLabel } from "./medUtils";
+import { UNITS, courseTitle, formatDose, unitLabel } from "./medUtils";
 import styles from "./MedicineCourseEditor.module.css";
 
 const MAX_AMOUNT = 10_000;
@@ -33,6 +33,30 @@ interface MedicineCourseEditorProps {
   onClose: () => void;
   childId: string;
   course?: MedicineCourse;
+  /** Повторить курс: поля заполнены с этого, но сохранится новый, с сегодня. */
+  copyOf?: MedicineCourse;
+  /** Все курсы малыша — для подсказок «Из прошлых курсов» у нового. */
+  courses?: MedicineCourse[];
+}
+
+const NO_COURSES: MedicineCourse[] = [];
+const MAX_TEMPLATES = 6;
+
+/**
+ * Прошлые курсы — и есть память о лекарствах: что давали, по сколько и как
+ * часто. Одно лекарство с одной дозой — одна подсказка, свежие впереди.
+ */
+function templatesFrom(courses: MedicineCourse[]): MedicineCourse[] {
+  const seen = new Set<string>();
+  return [...courses]
+    .sort((a, b) => b.started_at.localeCompare(a.started_at))
+    .filter((course) => {
+      const key = `${course.name.trim().toLocaleLowerCase()}|${course.amount}|${course.unit}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, MAX_TEMPLATES);
 }
 
 /**
@@ -45,12 +69,17 @@ export function MedicineCourseEditor({
   onClose,
   childId,
   course,
+  copyOf,
+  courses = NO_COURSES,
 }: MedicineCourseEditorProps) {
-  const [name, setName] = useState(course?.name ?? "");
+  // Откуда брать начальные значения полей: правка — из курса, повтор — из
+  // образца. Дата начала и срок у повтора свои: он начинается сегодня.
+  const seed = course ?? copyOf;
+  const [name, setName] = useState(seed?.name ?? "");
   const [amount, setAmount] = useState(
-    course?.amount == null ? "" : formatDose(course.amount),
+    seed?.amount == null ? "" : formatDose(seed.amount),
   );
-  const [unit, setUnit] = useState<DoseUnit>(course?.unit ?? "ml");
+  const [unit, setUnit] = useState<DoseUnit>(seed?.unit ?? "ml");
   // Дата начала: по умолчанию сегодня. Курс, начатый вчера и заведённый
   // только сегодня, ставят задним числом — тогда и день курса, и ожидание
   // приёмов считаются с той даты.
@@ -58,14 +87,14 @@ export function MedicineCourseEditor({
     dayKey(course?.started_at ?? new Date()),
   );
   const [times, setTimes] = useState<string[]>(
-    course && course.times.length > 0
-      ? sortTimes(course.times)
+    seed && seed.times.length > 0
+      ? sortTimes(seed.times)
       : defaultTimes(DEFAULT_COUNT),
   );
   // Срок — кнопкой из ходовых или своим числом в поле ниже. Два состояния,
   // а не одно: пока родитель набирает «7» в поле, кнопка «7» не должна
   // перехватывать выбор и очищать поле у него под пальцами.
-  const initialDays = course?.days ?? null;
+  const initialDays = seed?.days ?? null;
   const [preset, setPreset] = useState(
     initialDays !== null && DAY_OPTIONS.includes(String(initialDays))
       ? String(initialDays)
@@ -85,6 +114,31 @@ export function MedicineCourseEditor({
   function setTime(index: number, value: string) {
     setTimes(times.map((time, at) => (at === index ? value : time)));
   }
+
+  /** Подсказка из прошлого курса: имя, доза, расписание и срок разом. */
+  function applyTemplate(template: MedicineCourse) {
+    setName(template.name);
+    setAmount(template.amount == null ? "" : formatDose(template.amount));
+    setUnit(template.unit);
+    setTimes(
+      template.times.length > 0
+        ? sortTimes(template.times)
+        : defaultTimes(DEFAULT_COUNT),
+    );
+    const days = template.days ?? null;
+    if (days === null) {
+      setPreset(OPEN_ENDED);
+      setCustom("");
+    } else if (DAY_OPTIONS.includes(String(days))) {
+      setPreset(String(days));
+      setCustom("");
+    } else {
+      setPreset(OPEN_ENDED);
+      setCustom(String(days));
+    }
+  }
+
+  const templates = course ? [] : templatesFrom(courses);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -196,10 +250,26 @@ export function MedicineCourseEditor({
               onChange={(event) => setName(event.target.value)}
               placeholder={t("Например, Амоксициллин")}
               autoComplete="off"
-              autoFocus={!course}
+              autoFocus={!course && !copyOf && templates.length === 0}
             />
           )}
         </Field>
+
+        {templates.length > 0 && (
+          <div className={styles.chips}>
+            <span className={styles.chipsLabel}>{t("Из прошлых курсов:")}</span>
+            {templates.map((template) => (
+              <Button
+                key={template.id}
+                size="sm"
+                variant="secondary"
+                onClick={() => applyTemplate(template)}
+              >
+                {courseTitle(template)}
+              </Button>
+            ))}
+          </div>
+        )}
 
         <Field label={t("Доза на приём")}>
           {(id) => (

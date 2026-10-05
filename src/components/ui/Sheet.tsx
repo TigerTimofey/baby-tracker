@@ -16,13 +16,29 @@ interface SheetProps {
   onClose: () => void;
   title: ReactNode;
   subtitle?: ReactNode;
+  /**
+   * Откуда выезжает. Снизу — обычная шторка; сверху — выпадает из-под шапки,
+   * для того, что открывают из шапки: список малышей. Закрывается свайпом в
+   * ту же сторону, откуда пришла.
+   */
+  side?: "bottom" | "top";
   children: ReactNode;
 }
 
-export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  subtitle,
+  side = "bottom",
+  children,
+}: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
   const [settling, setSettling] = useState(false);
+  // Направление закрытия: снизу — вниз (+1), сверху — вверх (−1). Вся
+  // геометрия свайпа умножается на него, остальное одинаково.
+  const dir = side === "top" ? -1 : 1;
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +109,8 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
       if (startY === null) return;
 
       const y = event.touches[0].clientY;
-      const delta = y - startY;
+      // Положительная delta — движение в сторону закрытия.
+      const delta = (y - startY) * dir;
 
       if (delta <= 0) {
         if (dragging) {
@@ -113,11 +130,11 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
       if (event.cancelable) event.preventDefault();
 
       const elapsed = event.timeStamp - lastAt;
-      if (elapsed > 0) velocity = (y - lastY) / elapsed;
+      if (elapsed > 0) velocity = ((y - lastY) * dir) / elapsed;
       lastY = y;
       lastAt = event.timeStamp;
 
-      apply(delta * RESISTANCE);
+      apply(delta * RESISTANCE * dir);
     };
 
     const onEnd = () => {
@@ -127,8 +144,8 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
       dragging = false;
       setSettling(true);
 
-      if (current >= CLOSE_DISTANCE || velocity >= CLOSE_VELOCITY) {
-        apply(panel.getBoundingClientRect().height + 48);
+      if (current * dir >= CLOSE_DISTANCE || velocity >= CLOSE_VELOCITY) {
+        apply(dir * (panel.getBoundingClientRect().height + 48));
         window.setTimeout(onClose, EXIT_MS);
         return;
       }
@@ -147,17 +164,19 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
       panel.removeEventListener("touchend", onEnd);
       panel.removeEventListener("touchcancel", onEnd);
     };
-  }, [open, onClose]);
+  }, [open, onClose, dir]);
 
   if (!open) return null;
 
+  const top = side === "top";
+
   return createPortal(
     <div
-      className={styles.overlay}
+      className={`${styles.overlay} ${top ? styles.overlayTop : ""}`}
       style={{
         backgroundColor: `rgba(0, 0, 0, ${(
           0.55 *
-          (1 - Math.min(0.8, offset / 420))
+          (1 - Math.min(0.8, Math.abs(offset) / 420))
         ).toFixed(3)})`,
       }}
       onMouseDown={(event) => {
@@ -166,7 +185,13 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
     >
       <div
         ref={panelRef}
-        className={`${styles.panel} ${settling ? styles.settling : ""}`}
+        className={[
+          styles.panel,
+          top ? styles.panelTop : "",
+          settling ? styles.settling : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         style={offset ? { transform: `translateY(${offset}px)` } : undefined}
         role="dialog"
         aria-modal="true"
@@ -174,7 +199,7 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
         data-testid="sheet-panel"
         data-offset={Math.round(offset)}
       >
-        <div className={styles.grabber} />
+        {!top && <div className={styles.grabber} />}
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>{title}</h2>
@@ -190,6 +215,8 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
           </button>
         </div>
         {children}
+        {/* У верхней шторки ручка снизу: тянут за нижний край, вверх. */}
+        {top && <div className={`${styles.grabber} ${styles.grabberBottom}`} />}
       </div>
     </div>,
     document.body,

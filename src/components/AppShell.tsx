@@ -173,6 +173,7 @@ export function AppShell() {
       <Sheet
         open={switcherOpen}
         onClose={() => setSwitcherOpen(false)}
+        side="top"
         title={t("Малыши")}
       >
         <div className={styles.childList}>

@@ -122,3 +122,41 @@
     margin-bottom: var(--gap-3);
   }
 }
+
+/* ——— Шторка сверху ———
+   Выпадает из-под шапки, как список под кнопкой, которая её открыла: для
+   переключателя малышей, он живёт в шапке, и снизу выезжать ему было странно.
+   Скругление и рамка — снизу, отступ сверху учитывает вырез экрана. Правила
+   стоят после общих и после медиазапросов: при равной специфичности побеждает
+   порядок, и верхняя шторка остаётся наверху и на широком экране. */
+.overlayTop {
+  align-items: flex-start;
+  padding: 0;
+}
+
+.panelTop {
+  border-top: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
+  padding-top: calc(var(--gap-5) + env(safe-area-inset-top));
+  padding-bottom: var(--gap-4);
+  animation: drop 0.24s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.grabberBottom {
+  margin: var(--gap-4) auto 0;
+}
+
+@keyframes drop {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .panelTop {
+    border-top: none;
+    border-radius: 0 0 var(--r-xl) var(--r-xl);
+  }
+}

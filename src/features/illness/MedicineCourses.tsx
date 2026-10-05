@@ -60,6 +60,8 @@ export function MedicineCourses({
 }: MedicineCoursesProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [picked, setPicked] = useState<MedicineCourse | null>(null);
+  /** Образец для повтора: шторка открывается заполненной, сохранится новый. */
+  const [copyOf, setCopyOf] = useState<MedicineCourse | null>(null);
   /** Раскрытый курс — один за раз, как болезни в истории. */
   const [open, setOpen] = useState<string | null>(null);
   /**
@@ -83,11 +85,25 @@ export function MedicineCourses({
 
   function openNew() {
     setPicked(null);
+    setCopyOf(null);
     setEditorOpen(true);
   }
 
   function openEdit(course: MedicineCourse) {
     setPicked(course);
+    setCopyOf(null);
+    setEditorOpen(true);
+  }
+
+  /**
+   * Повторить — не вернуть: тот курс остаётся законченным в истории, а новый
+   * начинается сегодня с теми же лекарством, дозой и расписанием. Шторка
+   * открывается заполненной, чтобы поправить, если что-то поменялось.
+   */
+  function openCopy(course: MedicineCourse) {
+    setPicked(null);
+    setCopyOf(course);
+    setOpen(null);
     setEditorOpen(true);
   }
 
@@ -214,9 +230,14 @@ export function MedicineCourses({
           {t("Завершить курс")}
         </Button>
       ) : (
-        <Button variant="secondary" block onClick={() => resume(course)}>
-          {t("Вернуть курс")}
-        </Button>
+        <>
+          <Button variant="primary" block onClick={() => openCopy(course)}>
+            {t("Повторить курс")}
+          </Button>
+          <Button variant="secondary" block onClick={() => resume(course)}>
+            {t("Вернуть курс")}
+          </Button>
+        </>
       )}
       <div className={styles.detailsRow}>
         <Button variant="secondary" onClick={() => openEdit(course)}>
@@ -386,11 +407,13 @@ export function MedicineCourses({
 
       {editorOpen && (
         <MedicineCourseEditor
-          key={picked?.id ?? "new-course"}
+          key={picked?.id ?? (copyOf ? `copy-${copyOf.id}` : "new-course")}
           open={editorOpen}
           onClose={() => setEditorOpen(false)}
           childId={childId}
           course={picked ?? undefined}
+          copyOf={copyOf ?? undefined}
+          courses={courses}
         />
       )}
     </>
