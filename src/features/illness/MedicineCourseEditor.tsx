@@ -263,6 +263,7 @@ export function MedicineCourseEditor({
                 <TextInput
                   key={index}
                   type="time"
+                  className={styles.time}
                   value={time}
                   onChange={(event) => setTime(index, event.target.value)}
                   aria-label={t("Приём {0}", [index + 1])}
