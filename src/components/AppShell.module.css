@@ -159,14 +159,19 @@
   border-top: 1px solid var(--border-soft);
 }
 
+/* Вкладки собраны в центре, а не растянуты на всю ширину: на телефоне
+   разницы нет, пять вкладок и так занимают весь экран, а на широком экране
+   они стояли бы редкой цепочкой с иконкой в каждом углу. */
 .navInner {
   display: flex;
+  justify-content: center;
   width: 100%;
   max-width: 620px;
 }
 
 .navItem {
-  flex: 1;
+  flex: 1 1 0;
+  max-width: 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,12 +181,21 @@
   color: var(--text-faint);
   font-size: 10.5px;
   font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .navItemActive {
   color: var(--navTone);
+}
+
+/* Пока открыта шторка, навигации нет: она под затемнением и не нужна, а в
+   iOS с открытой клавиатурой fixed-низ всплывает над клавиатурой и торчит
+   сквозь затемнение посреди экрана. Атрибут ставит Sheet. */
+:global(body[data-sheets]) .nav {
+  visibility: hidden;
 }
 
 .childList {
@@ -277,6 +291,7 @@
      подложка активной превратилась бы в полосу в треть экрана. */
   .navItem {
     flex: 0 0 auto;
+    max-width: none;
     height: auto;
     padding: 9px 2px;
     border-radius: var(--r-md);

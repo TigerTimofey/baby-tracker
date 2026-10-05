@@ -35,9 +35,20 @@ export function Sheet({ open, onClose, title, subtitle, children }: SheetProps) 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Пока открыта шторка, нижняя навигация прячется (см. AppShell): в iOS
+    // при открытой клавиатуре всё, что прижато к низу через position: fixed,
+    // всплывает над клавиатурой и торчит сквозь затемнение. Счётчик, а не
+    // флаг: шторки бывают вложенными, и закрытие одной не должно возвращать
+    // навигацию, пока открыта другая.
+    const body = document.body;
+    body.dataset.sheets = String(Number(body.dataset.sheets ?? 0) + 1);
+
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
+      const left = Number(body.dataset.sheets ?? 1) - 1;
+      if (left <= 0) delete body.dataset.sheets;
+      else body.dataset.sheets = String(left);
     };
   }, [open, onClose]);
 
