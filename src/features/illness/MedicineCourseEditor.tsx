@@ -239,6 +239,9 @@ export function MedicineCourseEditor({
     <Sheet
       open={open}
       onClose={onClose}
+      // Сверху, а не снизу: поля шторки оказываются над клавиатурой, и
+      // Safari не нужно прокручивать страницу, чтобы их показать.
+      side="top"
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
       <form onSubmit={handleSubmit}>

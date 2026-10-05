@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "./ui/Icon";
 import styles from "./PullToRefresh.module.css";
 
@@ -9,11 +9,9 @@ const MIN_VISIBLE_MS = 550;
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
-  /** Что прокручивается: тянуть можно только от самого верха. Без него — окно. */
-  scrollRef?: RefObject<HTMLElement | null>;
 }
 
-export function PullToRefresh({ onRefresh, scrollRef }: PullToRefreshProps) {
+export function PullToRefresh({ onRefresh }: PullToRefreshProps) {
   const [pull, setPull] = useState(0);
   const [busy, setBusy] = useState(false);
   const [settling, setSettling] = useState(false);
@@ -32,11 +30,8 @@ export function PullToRefresh({ onRefresh, scrollRef }: PullToRefreshProps) {
     const blocked = () =>
       busyRef.current || document.querySelector('[role="dialog"]') !== null;
 
-    const scrolled = () =>
-      (scrollRef?.current?.scrollTop ?? window.scrollY) > 0;
-
     const onStart = (event: TouchEvent) => {
-      if (blocked() || event.touches.length !== 1 || scrolled()) {
+      if (blocked() || event.touches.length !== 1 || window.scrollY > 0) {
         startY.current = null;
         return;
       }
@@ -49,7 +44,7 @@ export function PullToRefresh({ onRefresh, scrollRef }: PullToRefreshProps) {
 
       const delta = event.touches[0].clientY - startY.current;
 
-      if (delta <= 0 || scrolled()) {
+      if (delta <= 0 || window.scrollY > 0) {
         if (dragging.current) {
           dragging.current = false;
           setSettling(true);
@@ -113,7 +108,7 @@ export function PullToRefresh({ onRefresh, scrollRef }: PullToRefreshProps) {
       window.removeEventListener("touchend", onEnd);
       window.removeEventListener("touchcancel", onEnd);
     };
-  }, [onRefresh, scrollRef]);
+  }, [onRefresh]);
 
   const ready = !busy && pull >= TRIGGER;
 
