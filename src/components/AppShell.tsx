@@ -1,6 +1,12 @@
 import { t } from "../lib/i18n";
 import { ChildAvatar } from "./ui/ChildAvatar";
-import { useCallback, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useActiveChild, useNow } from "../data/hooks";
 import { notifyChange } from "../data/repo";
@@ -89,6 +95,28 @@ export function AppShell() {
 
   useReminders(child);
 
+  // Прокручивается середина, а не окно (см. .scroll в стилях). При смене
+  // вкладки — к началу: иначе новая страница открывалась бы на глубине
+  // прежней.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [location.pathname]);
+
+  // Страховка от iOS: после закрытия клавиатуры визуальный вьюпорт иногда
+  // остаётся сдвинутым, и весь экран висит выше края до первого касания.
+  // Когда высота вьюпорта вернулась к полной, прокрутка окна в ноль
+  // возвращает его на место; окно у нас и так на нуле, вреда нет.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const onResize = () => {
+      if (viewport.height >= window.innerHeight - 1) window.scrollTo(0, 0);
+    };
+    viewport.addEventListener("resize", onResize);
+    return () => viewport.removeEventListener("resize", onResize);
+  }, []);
+
   const tone = toneForPath(location.pathname);
   const toneStyle = {
     "--tone": `var(--${tone})`,
@@ -101,6 +129,7 @@ export function AppShell() {
 
   return (
     <div className={styles.app} style={toneStyle}>
+      <div className={styles.body}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <button
@@ -132,7 +161,8 @@ export function AppShell() {
         </div>
       </header>
 
-      <PullToRefresh onRefresh={refresh} />
+      <div className={styles.scroll} ref={scrollRef}>
+      <PullToRefresh onRefresh={refresh} scrollRef={scrollRef} />
 
       <main className={styles.main}>
         {/* Карточка вопроса «всё по плану?» отключена вместе со строкой в
@@ -148,6 +178,8 @@ export function AppShell() {
           <Outlet />
         </div>
       </main>
+      </div>
+      </div>
 
       <nav className={styles.nav}>
         <div className={styles.navInner}>
