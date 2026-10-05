@@ -413,7 +413,6 @@ export function MedicineCourses({
           childId={childId}
           course={picked ?? undefined}
           copyOf={copyOf ?? undefined}
-          courses={courses}
         />
       )}
     </>

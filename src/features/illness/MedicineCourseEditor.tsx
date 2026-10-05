@@ -14,7 +14,7 @@ import {
   resizeTimes,
   sortTimes,
 } from "./courseUtils";
-import { UNITS, courseTitle, formatDose, unitLabel } from "./medUtils";
+import { UNITS, formatDose, unitLabel } from "./medUtils";
 import styles from "./MedicineCourseEditor.module.css";
 
 const MAX_AMOUNT = 10_000;
@@ -35,28 +35,6 @@ interface MedicineCourseEditorProps {
   course?: MedicineCourse;
   /** Повторить курс: поля заполнены с этого, но сохранится новый, с сегодня. */
   copyOf?: MedicineCourse;
-  /** Все курсы малыша — для подсказок «Из прошлых курсов» у нового. */
-  courses?: MedicineCourse[];
-}
-
-const NO_COURSES: MedicineCourse[] = [];
-const MAX_TEMPLATES = 6;
-
-/**
- * Прошлые курсы — и есть память о лекарствах: что давали, по сколько и как
- * часто. Одно лекарство с одной дозой — одна подсказка, свежие впереди.
- */
-function templatesFrom(courses: MedicineCourse[]): MedicineCourse[] {
-  const seen = new Set<string>();
-  return [...courses]
-    .sort((a, b) => b.started_at.localeCompare(a.started_at))
-    .filter((course) => {
-      const key = `${course.name.trim().toLocaleLowerCase()}|${course.amount}|${course.unit}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, MAX_TEMPLATES);
 }
 
 /**
@@ -75,7 +53,6 @@ export function MedicineCourseEditor({
   childId,
   course,
   copyOf,
-  courses = NO_COURSES,
 }: MedicineCourseEditorProps) {
   // Откуда брать начальные значения полей: правка — из курса, повтор — из
   // образца. Дата начала и срок у повтора свои: он начинается сегодня.
@@ -120,30 +97,6 @@ export function MedicineCourseEditor({
     setTimes(times.map((time, at) => (at === index ? value : time)));
   }
 
-  /** Подсказка из прошлого курса: имя, доза, расписание и срок разом. */
-  function applyTemplate(template: MedicineCourse) {
-    setName(template.name);
-    setAmount(template.amount == null ? "" : formatDose(template.amount));
-    setUnit(template.unit);
-    setTimes(
-      template.times.length > 0
-        ? sortTimes(template.times)
-        : defaultTimes(DEFAULT_COUNT),
-    );
-    const days = template.days ?? null;
-    if (days === null) {
-      setPreset(OPEN_ENDED);
-      setCustom("");
-    } else if (DAY_OPTIONS.includes(String(days))) {
-      setPreset(String(days));
-      setCustom("");
-    } else {
-      setPreset(OPEN_ENDED);
-      setCustom(String(days));
-    }
-  }
-
-  const templates = course ? [] : templatesFrom(courses);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -244,49 +197,36 @@ export function MedicineCourseEditor({
     <Sheet
       open={open}
       onClose={onClose}
+      side="full"
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
       <form onSubmit={handleSubmit}>
-        <Field label={t("Название")}>
-          {(id) => (
-            <TextInput
-              id={id}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("Например, Амоксициллин")}
-              autoComplete="off"
-            />
-          )}
-        </Field>
+        <div className={styles.pair}>
+          <Field label={t("Название")}>
+            {(id) => (
+              <TextInput
+                id={id}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={t("Например, Амоксициллин")}
+                autoComplete="off"
+              />
+            )}
+          </Field>
 
-        {templates.length > 0 && (
-          <div className={styles.chips}>
-            <span className={styles.chipsLabel}>{t("Из прошлых курсов:")}</span>
-            {templates.map((template) => (
-              <Button
-                key={template.id}
-                size="sm"
-                variant="secondary"
-                onClick={() => applyTemplate(template)}
-              >
-                {courseTitle(template)}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        <Field label={t("Доза на приём")}>
-          {(id) => (
-            <TextInput
-              id={id}
-              inputMode="decimal"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              placeholder={t("2,5")}
-              suffix={unitLabel(unit)}
-            />
-          )}
-        </Field>
+          <Field label={t("Доза на приём")}>
+            {(id) => (
+              <TextInput
+                id={id}
+                inputMode="decimal"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder={t("2,5")}
+                suffix={unitLabel(unit)}
+              />
+            )}
+          </Field>
+        </div>
 
         <Field label={t("Единицы")}>
           {(id) => (

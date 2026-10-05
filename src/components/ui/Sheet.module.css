@@ -160,3 +160,56 @@
     border-radius: 0 0 var(--r-xl) var(--r-xl);
   }
 }
+
+/* ——— Окно во весь экран ———
+   Для длинных форм: курс лекарства с его расписанием в шторке на 88% высоты
+   приходилось листать. Здесь панель занимает весь экран, без скругления и
+   ручки, с отступами под вырез и индикатор «домой». На широком экране —
+   высокое окно по центру, как у остальных шторок, во весь монитор форма
+   выглядела бы нелепо. Правила стоят после медиазапросов, чтобы побеждать
+   по порядку при равной специфичности. */
+.overlayFull {
+  align-items: stretch;
+  padding: 0;
+}
+
+.panelFull {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  border: none;
+  border-radius: 0;
+  padding-top: calc(var(--gap-5) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--gap-5) + env(safe-area-inset-bottom));
+}
+
+/* Содержимое — по центру по вертикали, пока оно короче экрана. Авто-отступы,
+   а не justify-content: center: тот при переполнении обрезает верх, а
+   авто-отступы просто сходят на нет, и длинная форма прокручивается с
+   начала. */
+.panelFull > :first-child {
+  margin-top: auto;
+}
+
+.panelFull > :last-child {
+  margin-bottom: auto;
+}
+
+@media (min-width: 640px) {
+  .overlayFull {
+    align-items: center;
+    padding: var(--gap-4);
+  }
+
+  .panelFull {
+    max-width: 520px;
+    height: auto;
+    max-height: 92dvh;
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding-top: var(--gap-5);
+    padding-bottom: var(--gap-5);
+  }
+}

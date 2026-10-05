@@ -213,7 +213,6 @@ export const ET: Record<string, string> = {
   "Из бутылочки": "Pudelist",
   "Из бутылочки за день": "Pudelist päevas",
   "Из курса:": "Kuurist:",
-  "Из прошлых курсов:": "Varasematest kuuridest:",
   "Из чего состоят сутки": "Millest ööpäev koosneb",
   "Изменить": "Muuda",
   "Измерение": "Mõõtmine",

@@ -216,7 +216,6 @@ export const EN: Record<string, string> = {
   "Из бутылочки": "From a bottle",
   "Из бутылочки за день": "From a bottle per day",
   "Из курса:": "From a course:",
-  "Из прошлых курсов:": "From past courses:",
   "Из чего состоят сутки": "What the day is made of",
   "Изменить": "Edit",
   "Измерение": "Measurement",

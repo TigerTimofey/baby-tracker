@@ -70,9 +70,11 @@ interface SheetProps {
   /**
    * Откуда выезжает. Снизу — обычная шторка; сверху — выпадает из-под шапки,
    * для того, что открывают из шапки: список малышей. Закрывается свайпом в
-   * ту же сторону, откуда пришла.
+   * ту же сторону, откуда пришла. «full» — во весь экран, как отдельное окно:
+   * для длинных форм вроде курса лекарства; свайпом не закрывается, только
+   * крестиком, «Отменой» и Escape.
    */
-  side?: "bottom" | "top";
+  side?: "bottom" | "top" | "full";
   children: ReactNode;
 }
 
@@ -120,6 +122,9 @@ export function Sheet({
 
     setOffset(0);
     setSettling(false);
+    // Окно во весь экран свайпом не закрывается: тянуть его некуда, а жест
+    // спорил бы с прокруткой длинной формы.
+    if (side === "full") return;
 
     let startY: number | null = null;
     let dragging = false;
@@ -210,15 +215,22 @@ export function Sheet({
       panel.removeEventListener("touchend", onEnd);
       panel.removeEventListener("touchcancel", onEnd);
     };
-  }, [open, onClose, dir]);
+  }, [open, onClose, dir, side]);
 
   if (!open) return null;
 
   const top = side === "top";
+  const full = side === "full";
 
   return createPortal(
     <div
-      className={`${styles.overlay} ${top ? styles.overlayTop : ""}`}
+      className={[
+        styles.overlay,
+        top ? styles.overlayTop : "",
+        full ? styles.overlayFull : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{
         backgroundColor: `rgba(0, 0, 0, ${(
           0.55 *
@@ -234,6 +246,7 @@ export function Sheet({
         className={[
           styles.panel,
           top ? styles.panelTop : "",
+          full ? styles.panelFull : "",
           settling ? styles.settling : "",
         ]
           .filter(Boolean)
@@ -245,7 +258,7 @@ export function Sheet({
         data-testid="sheet-panel"
         data-offset={Math.round(offset)}
       >
-        {!top && <div className={styles.grabber} />}
+        {!top && !full && <div className={styles.grabber} />}
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>{title}</h2>
