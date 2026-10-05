@@ -197,7 +197,6 @@ export function MedicineCourseEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      side="full"
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
       <form onSubmit={handleSubmit}>

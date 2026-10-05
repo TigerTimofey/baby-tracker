@@ -59,6 +59,33 @@ function lockPage(): () => void {
     body.style.width = "";
     body.style.overflow = "";
     window.scrollTo(0, lockedScrollY);
+    // Ещё раз на следующем кадре: iOS дорисовывает уход клавиатуры уже после
+    // закрытия шторки и может сдвинуть страницу снова.
+    window.requestAnimationFrame(() => window.scrollTo(0, lockedScrollY));
+  };
+}
+
+/**
+ * Сдвиг страницы после клавиатуры в iOS. Пока открыта шторка, body закреплён
+ * и документ ростом с экран, так что любая прокрутка окна — перетяг за край,
+ * который Safari оставляет после клавиатуры; прокрутка в ноль возвращает
+ * экран на место. Вызывается, когда клавиатура закрылась (высота визуального
+ * вьюпорта вернулась к полной) и когда поле потеряло фокус.
+ */
+function realignAfterKeyboard(): () => void {
+  const viewport = window.visualViewport;
+  const reset = () => window.scrollTo(0, 0);
+  const onResize = () => {
+    if (!viewport || viewport.height >= window.innerHeight - 1) reset();
+  };
+  const onFocusOut = () => {
+    window.setTimeout(reset, 60);
+  };
+  viewport?.addEventListener("resize", onResize);
+  document.addEventListener("focusout", onFocusOut);
+  return () => {
+    viewport?.removeEventListener("resize", onResize);
+    document.removeEventListener("focusout", onFocusOut);
   };
 }
 
@@ -109,9 +136,11 @@ export function Sheet({
     // AppShell прячет нижнюю навигацию: в iOS при открытой клавиатуре всё,
     // что прижато к низу через position: fixed, всплывает над клавиатурой.
     const unlock = lockPage();
+    const stopRealign = realignAfterKeyboard();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
+      stopRealign();
       unlock();
     };
   }, [open, onClose]);

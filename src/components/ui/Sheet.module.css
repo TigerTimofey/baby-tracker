@@ -15,6 +15,7 @@
   max-width: 520px;
   max-height: 88dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-bottom: none;
