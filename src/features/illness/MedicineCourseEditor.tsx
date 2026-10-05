@@ -1,6 +1,7 @@
 import { t } from "../../lib/i18n";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../components/ui/Button";
+import dateStyles from "../../components/ui/DateTimeField.module.css";
 import { Field, FormActions, TextInput } from "../../components/ui/Form";
 import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
@@ -199,7 +200,12 @@ export function MedicineCourseEditor({
       onClose={onClose}
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
-      <form onSubmit={handleSubmit}>
+      {/* Форма уложена так, чтобы помещаться на экран телефона без внутренней
+          прокрутки, как шторка измерения: в iOS поле ввода внутри
+          прокручиваемой панели заставляет Safari прокрутить и окно, и после
+          клавиатуры страница остаётся сдвинутой. Поля даты и времени — те же,
+          что в DateTimeField, один в один. */}
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.pair}>
           <Field label={t("Название")}>
             {(id) => (
@@ -227,33 +233,35 @@ export function MedicineCourseEditor({
           </Field>
         </div>
 
-        <Field label={t("Единицы")}>
-          {(id) => (
-            <Segmented<DoseUnit>
-              id={id}
-              value={unit}
-              onChange={setUnit}
-              ariaLabel={t("Единицы")}
-              options={UNITS.map((item) => ({
-                value: item,
-                label: unitLabel(item),
-              }))}
-            />
-          )}
-        </Field>
+        <div className={styles.half}>
+          <Field label={t("Единицы")}>
+            {(id) => (
+              <Segmented<DoseUnit>
+                id={id}
+                value={unit}
+                onChange={setUnit}
+                ariaLabel={t("Единицы")}
+                options={UNITS.map((item) => ({
+                  value: item,
+                  label: unitLabel(item),
+                }))}
+              />
+            )}
+          </Field>
 
-        <Field label={t("Начало курса")}>
-          {(id) => (
-            <TextInput
-              id={id}
-              type="date"
-              className={styles.picker}
-              value={startDate}
-              max={dayKey(new Date())}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
-          )}
-        </Field>
+          <Field label={t("Начало курса")}>
+            {(id) => (
+              <input
+                id={id}
+                className={dateStyles.input}
+                type="date"
+                value={startDate}
+                max={dayKey(new Date())}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            )}
+          </Field>
+        </div>
 
         <Field label={t("Сколько раз в день")}>
           {(id) => (
@@ -267,17 +275,14 @@ export function MedicineCourseEditor({
           )}
         </Field>
 
-        <Field
-          label={t("Во сколько")}
-          hint={t("ходовое расписание — поправьте под себя")}
-        >
+        <Field label={t("Во сколько")}>
           {(id) => (
             <div id={id} className={styles.times}>
               {times.map((time, index) => (
-                <TextInput
+                <input
                   key={index}
+                  className={dateStyles.input}
                   type="time"
-                  className={styles.picker}
                   value={time}
                   onChange={(event) => setTime(index, event.target.value)}
                   aria-label={t("Приём {0}", [index + 1])}

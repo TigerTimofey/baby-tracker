@@ -672,7 +672,6 @@ export const EN: Record<string, string> = {
   "уложили": "put down",
   "уснул в {0}": "fell asleep at {0}",
   "утром, когда встаёте": "in the morning, when you get up",
-  "ходовое расписание — поправьте под себя": "a common schedule — adjust it to yours",
   "через {0}": "in {0}",
   "∞ — без срока, пока не завершите сами": "∞ — open-ended, until you finish it yourself",
 };

@@ -669,7 +669,6 @@ export const ET: Record<string, string> = {
   "уложили": "pani magama",
   "уснул в {0}": "uinus kell {0}",
   "утром, когда встаёте": "hommikul, kui tõusete",
-  "ходовое расписание — поправьте под себя": "tavaline graafik — kohandage endale sobivaks",
   "через {0}": "{0} pärast",
   "∞ — без срока, пока не завершите сами": "∞ — tähtajata, kuni ise lõpetate",
 };
