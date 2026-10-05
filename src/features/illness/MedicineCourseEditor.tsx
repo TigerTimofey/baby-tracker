@@ -234,6 +234,7 @@ export function MedicineCourseEditor({
             <TextInput
               id={id}
               type="date"
+              className={styles.picker}
               value={startDate}
               max={dayKey(new Date())}
               onChange={(event) => setStartDate(event.target.value)}
@@ -263,7 +264,7 @@ export function MedicineCourseEditor({
                 <TextInput
                   key={index}
                   type="time"
-                  className={styles.time}
+                  className={styles.picker}
                   value={time}
                   onChange={(event) => setTime(index, event.target.value)}
                   aria-label={t("Приём {0}", [index + 1])}

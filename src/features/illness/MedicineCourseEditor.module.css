@@ -15,8 +15,9 @@
   }
 }
 
-/* Без встроенного вида поле времени в Safari слушается ширины колонки. */
-.time {
+/* Без встроенного вида поля даты и времени в Safari слушаются ширины
+   контейнера; со встроенным у них своя ширина, и на телефоне они вылезают. */
+.picker {
   min-width: 0;
   padding-left: 10px;
   padding-right: 10px;
@@ -29,7 +30,7 @@
 .days {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--gap-3);
 }
 
 .error {
