@@ -7,7 +7,7 @@ import { Segmented } from "../../components/ui/Segmented";
 import { Sheet } from "../../components/ui/Sheet";
 import { showToast } from "../../components/ui/toast";
 import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
-import type { DoseUnit, Medicine } from "../../data/types";
+import type { DoseUnit, Medicine, MedicineCourse } from "../../data/types";
 import { resolveLocalInput, toLocalInputValue } from "../../lib/time";
 import {
   DEFAULT_PRESET,
@@ -19,15 +19,19 @@ import {
   unitLabel,
   type Preset,
 } from "./medUtils";
+import styles from "./MedicineEditor.module.css";
 
 const MAX_AMOUNT = 10_000;
 const CUSTOM = "custom";
+const NO_COURSES: MedicineCourse[] = [];
 
 interface MedicineEditorProps {
   open: boolean;
   onClose: () => void;
   childId: string;
   dose?: Medicine;
+  /** Идущие курсы: их лекарства подставляются одним нажатием. */
+  courses?: MedicineCourse[];
 }
 
 export function MedicineEditor({
@@ -35,11 +39,18 @@ export function MedicineEditor({
   onClose,
   childId,
   dose,
+  courses = NO_COURSES,
 }: MedicineEditorProps) {
   const [at, setAt] = useState(
     toLocalInputValue(dose?.given_at ?? new Date()),
   );
-  const start = dose ? presetForName(dose.name) : DEFAULT_PRESET;
+  // Пока идёт курс, записывают чаще всего его лекарство: открываем сразу
+  // «Другое», где лежат подсказки из курса, — иначе до них два лишних нажатия.
+  const start = dose
+    ? presetForName(dose.name)
+    : courses.length > 0
+      ? "other"
+      : DEFAULT_PRESET;
   const [preset, setPreset] = useState<Preset>(start);
   const [name, setName] = useState(dose?.name ?? presetInfo(start).name);
   // Пустая строка — «ничего не выбрано»: дозу не подставляем сами, её
@@ -68,6 +79,14 @@ export function MedicineEditor({
     // Дозировки у препаратов разные, старый выбор к новому не относится.
     setChoice("");
     setAmount("");
+  }
+
+  /** Из курса: имя, доза и единицы разом. Доза — в поле, её можно поправить. */
+  function pickCourse(course: MedicineCourse) {
+    setName(course.name);
+    setUnit(course.unit);
+    setChoice("");
+    setAmount(course.amount === null ? "" : formatDose(course.amount));
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -163,18 +182,38 @@ export function MedicineEditor({
         </Field>
 
         {preset === "other" && (
-          <Field label={t("Название")}>
-            {(id) => (
-              <TextInput
-                id={id}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder={t("Например, Виферон")}
-                autoComplete="off"
-                autoFocus
-              />
+          <>
+            <Field label={t("Название")}>
+              {(id) => (
+                <TextInput
+                  id={id}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder={t("Например, Виферон")}
+                  autoComplete="off"
+                  autoFocus={courses.length === 0}
+                />
+              )}
+            </Field>
+            {courses.length > 0 && (
+              <div className={styles.chips}>
+                <span className={styles.chipsLabel}>{t("Из курса:")}</span>
+                {courses.map((course) => (
+                  <Button
+                    key={course.id}
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => pickCourse(course)}
+                  >
+                    {course.name}
+                    {course.amount === null
+                      ? ""
+                      : ` · ${formatDose(course.amount)} ${unitLabel(course.unit)}`}
+                  </Button>
+                ))}
+              </div>
             )}
-          </Field>
+          </>
         )}
 
         <Field label={t("Сколько")}>

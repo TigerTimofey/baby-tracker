@@ -9,11 +9,13 @@ import type {
   Milestone,
   SleepSession,
   Medicine,
+  MedicineCourse,
   Temperature,
 } from "./types";
 
 const DB_NAME = "malysh";
-const DB_VERSION = 3;
+// 4: добавилось хранилище medicine_courses.
+const DB_VERSION = 4;
 
 interface BabyDB extends DBSchema {
   children: {
@@ -56,6 +58,11 @@ interface BabyDB extends DBSchema {
     value: Local<Medicine>;
     indexes: { by_dirty: number; by_child: string };
   };
+  medicine_courses: {
+    key: string;
+    value: Local<MedicineCourse>;
+    indexes: { by_dirty: number; by_child: string };
+  };
   meta: { key: string; value: unknown };
 }
 
@@ -83,6 +90,7 @@ export function getDB(): Promise<BabyDatabase> {
           "diapers",
           "temperatures",
           "medicines",
+          "medicine_courses",
         ] as const) {
           if (db.objectStoreNames.contains(name)) continue;
           const store = db.createObjectStore(name, { keyPath: "id" });

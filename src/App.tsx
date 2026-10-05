@@ -15,6 +15,7 @@ import { Onboarding } from "./features/children/Onboarding";
 import { AuthGate } from "./features/sync/AuthGate";
 import { GrowthPage } from "./pages/GrowthPage";
 import { IllnessPage } from "./pages/IllnessPage";
+import { MedsPage } from "./pages/MedsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SleepPage } from "./pages/SleepPage";
 import { StatsPage } from "./pages/StatsPage";
@@ -120,6 +121,7 @@ export default function App() {
         <Route path="sleep" element={<SleepPage />} />
         <Route path="growth" element={<GrowthPage />} />
         <Route path="illness" element={<IllnessPage />} />
+        <Route path="meds" element={<MedsPage />} />
         <Route path="stats" element={<StatsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

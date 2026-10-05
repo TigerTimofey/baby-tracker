@@ -103,6 +103,7 @@ export async function countDirty(): Promise<number> {
     "diapers",
     "temperatures",
     "medicines",
+    "medicine_courses",
   ] as const) {
     total += await db.countFromIndex(table, "by_dirty", 1);
   }
@@ -186,6 +187,7 @@ const CHILD_TABLES = [
   "diapers",
   "temperatures",
   "medicines",
+  "medicine_courses",
 ] as const;
 
 export interface ChildRecordCounts {
@@ -196,6 +198,7 @@ export interface ChildRecordCounts {
   diapers: number;
   temperatures: number;
   medicines: number;
+  medicine_courses: number;
   total: number;
 }
 
@@ -210,6 +213,7 @@ export async function countChildRecords(
     diapers: 0,
     temperatures: 0,
     medicines: 0,
+    medicine_courses: 0,
     total: 0,
   };
 

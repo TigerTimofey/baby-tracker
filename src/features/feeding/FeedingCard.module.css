@@ -51,6 +51,39 @@
   margin-bottom: var(--gap-3);
 }
 
+/* «Что сейчас»: строка про последнее кормление и прогноз следующего. Прогноз
+   прижат к ней — это продолжение той же мысли, а не отдельный абзац; отступ
+   до строки «Сегодня…» держит обёртка. Карточка сна берёт отсюда .summary без
+   обёртки, и для неё отступ остаётся прежним. */
+.now {
+  margin-bottom: var(--gap-3);
+}
+
+.now > .summary {
+  margin-bottom: 4px;
+}
+
+.now > .summary:last-child {
+  margin-bottom: 0;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.hintWarn {
+  color: var(--feeding);
+}
+
+.basis {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
 .list {
   display: flex;
   flex-direction: column;

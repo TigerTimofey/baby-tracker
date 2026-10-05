@@ -2,15 +2,17 @@ import { t, withCount } from "../../lib/i18n";
 import { useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Digits } from "../../components/ui/Digits";
 import { Icon } from "../../components/ui/Icon";
 import { useAuthorLabel, useLive, useNow } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
-import type { Feeding } from "../../data/types";
+import type { Feeding, SleepSession } from "../../data/types";
 import {
   formatClock,
   formatDuration,
   formatTime,
 } from "../../lib/time";
+import { findActive as findActiveSleep } from "../sleep/sleepUtils";
 import { FeedingEditor } from "./FeedingEditor";
 import {
   durationMs,
@@ -21,12 +23,23 @@ import {
   lastFinished,
   startMs,
 } from "./feedingUtils";
+import { forecastNextFeeding } from "./forecast";
 import styles from "./FeedingCard.module.css";
 
 const NO_FEEDINGS: Feeding[] = [];
+const NO_SESSIONS: SleepSession[] = [];
 const DAY_MS = 24 * 3600_000;
 
-export function FeedingCard({ childId }: { childId: string }) {
+interface FeedingCardProps {
+  childId: string;
+  /** Записи сна — чтобы не торопить с кормлением, пока малыш спит. */
+  sessions?: SleepSession[];
+}
+
+export function FeedingCard({
+  childId,
+  sessions = NO_SESSIONS,
+}: FeedingCardProps) {
   const now = useNow(1000);
   const author = useAuthorLabel();
   const [editing, setEditing] = useState<Feeding | null>(null);
@@ -52,6 +65,15 @@ export function FeedingCard({ childId }: { childId: string }) {
     (sum, feeding) => sum + (feeding.amount_ml ?? 0),
     0,
   );
+
+  // Прогноз только пока кормление не идёт: вместо него на этом месте таймер.
+  const forecast = active ? null : forecastNextFeeding(feedings, now);
+  const forecastDue = forecast !== null && forecast.at <= now;
+  // «Пора кормить» не горит, пока малыш спит: будить ради графика никто не
+  // станет, а оранжевая строка всю ночь только раздражала бы. Прогноз на
+  // будущее время во сне остаётся — ночью полезно знать, во сколько ждать.
+  const sleeping = Boolean(findActiveSleep(sessions));
+  const showForecast = forecast !== null && !(forecastDue && sleeping);
 
   const addButton = (
     <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
@@ -82,11 +104,34 @@ export function FeedingCard({ childId }: { childId: string }) {
         )}
 
         {!active && (
-          <p className={styles.summary}>
-            {previous
-              ? t("Последнее кормление {0} назад, длилось {1}", [formatDuration(now - endMs(previous, now)), formatDuration(durationMs(previous, now))])
-              : t("Записей пока нет. Нажмите «Кормлю», когда начнёте.")}
-          </p>
+          <div className={styles.now}>
+            <p className={styles.summary}>
+              {previous
+                ? t("Последнее кормление {0} назад, длилось {1}", [formatDuration(now - endMs(previous, now)), formatDuration(durationMs(previous, now))])
+                : t("Записей пока нет. Нажмите «Кормлю», когда начнёте.")}
+            </p>
+            {showForecast && forecast && (
+              <>
+                <p
+                  className={`${styles.hint} ${forecastDue ? styles.hintWarn : ""}`}
+                >
+                  <Digits>
+                    {forecastDue
+                      ? t("пора кормить — обычно уже ест")
+                      : t("следующее кормление примерно в {0} · через {1}", [
+                          formatTime(new Date(forecast.at)),
+                          formatDuration(forecast.at - now),
+                        ])}
+                  </Digits>
+                </p>
+                <p className={styles.basis}>
+                  {t("по {0} последним промежуткам между кормлениями", [
+                    forecast.samples,
+                  ])}
+                </p>
+              </>
+            )}
+          </div>
         )}
 
         {/* Список за сегодня жил здесь и повторял «Историю кормлений» в другом

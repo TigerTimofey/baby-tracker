@@ -1,0 +1,283 @@
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-3);
+  margin-top: var(--gap-4);
+}
+
+.actions > * {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.course + .course {
+  margin-top: var(--gap-3);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--border-soft);
+}
+
+/* Плашка курса — как «Кормление идёт» на карточке кормлений: слева значок и
+   что это, справа крупно — во сколько следующий приём. Один взгляд: что дали
+   и когда следующая. Без фона и без значка: цвет несёт название — зелёное,
+   пока всё по расписанию, оранжевое, когда пора. Заливка здесь спорила бы с
+   пилюлями под ней, а значок дублировал галочки на них. Вся плашка — кнопка, раскрывает курс, как
+   заголовок сворачиваемой карточки. */
+.badge {
+  --badge: var(--ok);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.badgeDue {
+  --badge: var(--feeding);
+}
+
+/* Срок вышел: ни зелёного, ни оранжевого — курс просто ждёт решения. */
+.badgeExpired {
+  --badge: var(--text-muted);
+}
+
+.badgeText {
+  flex: 1;
+  min-width: 0;
+}
+
+.badgeTitle {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--badge);
+  overflow-wrap: anywhere;
+}
+
+.badgeSub {
+  display: block;
+  margin-top: 1px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.badgeNext {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.badgeTime {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* «Через 1 ч 40 мин» — оранжевым и жирно всегда, не только когда пора: это
+   второе по важности число плашки, и серым оно терялось под крупным временем. */
+.badgeWhen {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--feeding);
+  white-space: nowrap;
+}
+
+/* Под плашкой — приёмы дня пилюлями во всю ширину карточки. Зелёная с
+   галочкой — дали, цвета болезни — время прошло, а выдачи нет, оранжевая —
+   следующий, без цвета — ещё впереди. Пилюля — переключатель: нажали —
+   отметили, ещё раз — сняли, без тоста; будущие выключены, кроме следующего
+   за полтора часа до срока. */
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: var(--gap-2) 0 var(--gap-3);
+}
+
+.dayNav {
+  margin-top: var(--gap-2);
+}
+
+/* Пилюля — кнопка, по которой жмут ночью, поэтому не меньше 40 пикселей в
+   высоту и с воздухом вокруг: мелкие метки промахивались. */
+.slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.slot:active {
+  background: var(--surface-2);
+}
+
+/* Будущий приём выключен, но следующий не гасим: он и так главный в ряду. */
+.slot:disabled {
+  cursor: default;
+}
+
+.slot:disabled:not(.slotNext) {
+  opacity: 0.55;
+}
+
+.slotGiven {
+  border-color: transparent;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.slotNext {
+  border-color: var(--feeding);
+  color: var(--feeding);
+}
+
+.slotDue {
+  border-color: transparent;
+  background: var(--feeding-soft);
+}
+
+.slotPast {
+  border-color: transparent;
+  background: var(--illness-soft);
+  color: var(--illness);
+}
+
+/* Шеврон в правом краю плашки и строки законченного курса — как у заголовка
+   сворачиваемой карточки. Бледный, чтобы не спорить с крупным временем. */
+.chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Раскрытый курс: «Завершить» во всю ширину, под ним правка и удаление в
+   ряд. Удаление мягкое, с «Вернуть». */
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+  padding: var(--gap-3) 0 var(--gap-2);
+}
+
+/* Тумблер «На главном экране» — строкой, как в настройках: подпись слева,
+   тумблер справа. В раскрытом курсе, а не на виду: включают один раз. */
+.pinRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  padding: 2px 0 6px;
+}
+
+.pinText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pinLabel {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pinHint {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.detailsRow {
+  display: flex;
+  gap: var(--gap-3);
+}
+
+.detailsRow > * {
+  flex: 1;
+}
+
+.note {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+  white-space: pre-wrap;
+}
+
+/* Законченные курсы — бледным списком под идущими: имя и до какого числа.
+   Нажатие открывает редактор — там курс можно вернуть или удалить. */
+.finished {
+  margin-top: var(--gap-3);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--border-soft);
+}
+
+.finishedTitle {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.finishedItem + .finishedItem {
+  border-top: 1px solid var(--border-soft);
+}
+
+.finishedItem .details {
+  margin-bottom: 10px;
+}
+
+.finishedRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.finishedName {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.finishedWhen {
+  flex: none;
+}

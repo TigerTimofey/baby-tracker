@@ -2,7 +2,12 @@ import { t } from "../../lib/i18n";
 import { useEffect } from "react";
 import { useLive, useSettings } from "../../data/hooks";
 import { listByChild } from "../../data/repo";
-import type { Child, Medicine, SleepSession } from "../../data/types";
+import type {
+  Child,
+  Medicine,
+  MedicineCourse,
+  SleepSession,
+} from "../../data/types";
 import {
   alreadyNotified,
   markNotified,
@@ -13,15 +18,18 @@ import {
   ageOf,
   birthMoment,
   formatDuration,
+  formatTime,
   parseTimeOfDay,
 } from "../../lib/time";
-import { nextDoses } from "../illness/medUtils";
+import { courseStatuses } from "../illness/courseUtils";
+import { formatDose, nextDoses, unitLabel } from "../illness/medUtils";
 import { bandFor, bedtimeOf, findActive, lastWakeMs } from "../sleep/sleepUtils";
 
 const CHECK_MS = 30_000;
 const BEDTIME_WINDOW_MS = 60 * 60_000;
 const NO_SESSIONS: SleepSession[] = [];
 const NO_DOSES: Medicine[] = [];
+const NO_COURSES: MedicineCourse[] = [];
 
 function dayKey(now: Date): string {
   return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
@@ -44,6 +52,13 @@ export function useReminders(child: Child | null): void {
   );
   const doses = doseData ?? NO_DOSES;
 
+  const { data: courseData } = useLive(
+    async () =>
+      childId ? await listByChild("medicine_courses", childId) : NO_COURSES,
+    [childId],
+  );
+  const courses = courseData ?? NO_COURSES;
+
   const enabled = settings.notifications && Boolean(child);
 
   useEffect(() => {
@@ -64,6 +79,26 @@ export function useReminders(child: Child | null): void {
           "medicine",
           t("Можно дать лекарство"),
           t("{0}: прошло {1} ч с прошлого раза", [dose.name, dose.gapHours]),
+        );
+      }
+
+      // Приём по курсу: ключ — курс и время приёма, поэтому каждое напоминание
+      // уходит один раз, а выдача, записанная любым способом, его снимает.
+      // «Пора» живёт два часа после срока (LATE_WINDOW_MS в courseUtils),
+      // дальше приём считается пропущенным и напоминание не шлётся.
+      for (const status of courseStatuses(courses, doses, now.getTime())) {
+        if (!status.due) continue;
+        const key = `course:${status.course.id}:${status.nextAt}`;
+        if (alreadyNotified(key)) continue;
+        markNotified(key);
+        const what =
+          status.course.amount === null
+            ? status.course.name
+            : `${status.course.name} ${formatDose(status.course.amount)} ${unitLabel(status.course.unit)}`;
+        void showNotification(
+          "medicine",
+          t("Пора дать лекарство"),
+          t("{0} — приём в {1}", [what, formatTime(new Date(status.nextAt))]),
         );
       }
 
@@ -138,5 +173,5 @@ export function useReminders(child: Child | null): void {
     check();
     const timer = setInterval(check, CHECK_MS);
     return () => clearInterval(timer);
-  }, [enabled, child, sessions, doses, settings]);
+  }, [enabled, child, sessions, doses, courses, settings]);
 }

@@ -240,6 +240,26 @@ create table if not exists public.medicines (
   synced_at  timestamptz not null default now()
 );
 
+-- Курс лекарства: что, сколько и во сколько давать. Сами выдачи остаются в
+-- medicines — курс лишь подсказывает следующий приём и напоминает.
+create table if not exists public.medicine_courses (
+  id         uuid primary key,
+  child_id   uuid not null references public.children (id) on delete cascade,
+  name       text not null,
+  amount     numeric(8,2),
+  unit       text not null check (unit in ('mg', 'ml')),
+  times      text[] not null default '{}',
+  days       integer,
+  pinned     boolean not null default false,
+  note       text,
+  started_at timestamptz not null default now(),
+  ended_at   timestamptz,
+  created_by uuid,
+  updated_at timestamptz not null default now(),
+  deleted    boolean not null default false,
+  synced_at  timestamptz not null default now()
+);
+
 create or replace function public.can_access_child(target_child uuid)
 returns boolean
 language sql
@@ -262,7 +282,8 @@ declare
 begin
   foreach t in array array[
     'children', 'sleep_sessions', 'measurements',
-    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines'
+    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines',
+    'medicine_courses'
   ]
   loop
     execute format(
@@ -285,8 +306,10 @@ alter table public.feedings
 alter table public.temperatures
   add column if not exists recovered_at timestamptz;
 
-alter table public.push_subscriptions
-  add column if not exists locale text;
+-- Срок курса и закрепление на главном экране появились позже таблицы.
+alter table public.medicine_courses
+  add column if not exists days integer,
+  add column if not exists pinned boolean not null default false;
 
 -- Пинг второму родителю: «всё по плану?» и ответ одним нажатием.
 -- Живёт только на сервере: офлайн у вопроса смысла нет, он про «прямо сейчас».
@@ -328,7 +351,8 @@ declare
 begin
   foreach t in array array[
     'children', 'sleep_sessions', 'measurements',
-    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines'
+    'milestones', 'feedings', 'diapers', 'temperatures', 'medicines',
+    'medicine_courses'
   ]
   loop
 
@@ -367,6 +391,12 @@ create table if not exists public.push_subscriptions (
   created_at   timestamptz not null default now(),
   last_seen_at timestamptz not null default now()
 );
+
+-- Колонка появилась позже таблицы: на старой базе её добавит эта строка,
+-- на новой она уже есть в create table выше. Раньше alter стоял до create
+-- table, и на пустой базе скрипт падал на нём.
+alter table public.push_subscriptions
+  add column if not exists locale text;
 
 create index if not exists push_subscriptions_family_idx
   on public.push_subscriptions (family_id);
@@ -434,7 +464,7 @@ declare
 begin
   foreach t in array array[
     'sleep_sessions', 'measurements', 'milestones', 'feedings', 'diapers',
-    'temperatures', 'medicines'
+    'temperatures', 'medicines', 'medicine_courses'
   ]
   loop
     execute format('drop policy if exists %I on public.%I', t || '_all', t);

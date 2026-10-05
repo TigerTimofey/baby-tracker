@@ -1,0 +1,21 @@
+/* Времена приёмов — сеткой: три в ряд на телефоне, шесть на широком экране.
+   Столбиком шесть полей по 48 пикселей заняли бы половину шторки. */
+.times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+/* Срок: ходовые кнопкой, своё число полем под ними. Поле заполнено — кнопки
+   не подсвечены, и наоборот; выбор всегда один. */
+.days {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error {
+  margin: 0 0 var(--gap-3);
+  font-size: 14px;
+  color: var(--danger);
+}

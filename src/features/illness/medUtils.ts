@@ -1,6 +1,6 @@
 import { locale, t } from "../../lib/i18n";
 import { parseISO } from "date-fns";
-import type { DoseUnit, Medicine } from "../../data/types";
+import type { DoseUnit, Medicine, MedicineCourse } from "../../data/types";
 
 export const UNITS: DoseUnit[] = ["ml", "mg"];
 
@@ -89,6 +89,12 @@ export function presetForName(name: string): Preset {
 
 export function unitLabel(unit: DoseUnit): string {
   return unit === "ml" ? t("мл") : t("мг");
+}
+
+/** «Амоксициллин · 5 мл» — так курс подписан везде. */
+export function courseTitle(course: MedicineCourse): string {
+  if (course.amount === null) return course.name;
+  return `${course.name} · ${formatDose(course.amount)} ${unitLabel(course.unit)}`;
 }
 
 export function givenMs(dose: Medicine): number {

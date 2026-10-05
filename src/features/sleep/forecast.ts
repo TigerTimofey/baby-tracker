@@ -1,6 +1,6 @@
 import { parseISO } from "date-fns";
 import type { SleepSession } from "../../data/types";
-import { wakeWindows } from "../stats/statsUtils";
+import { median, wakeWindows } from "../stats/statsUtils";
 import { bandFor, lastWakeMs } from "./sleepUtils";
 
 const HISTORY_DAYS = 14;
@@ -11,14 +11,6 @@ export interface SleepForecast {
   at: number;
   basedOn: "history" | "age";
   samples: number;
-}
-
-function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? sorted[middle]
-    : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
 export function forecastNextSleep(

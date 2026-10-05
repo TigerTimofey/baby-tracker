@@ -1,0 +1,73 @@
+/* Компактная «Аптечка» на главном экране: под таймером сна, только
+   закреплённые курсы. Строка на курс — название и пилюли дня справа,
+   ничего больше: следующий приём и так виден по оранжевой пилюле. */
+.card {
+  margin-top: var(--gap-4);
+}
+
+.nav {
+  margin-bottom: 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: 15px 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--border-soft);
+}
+
+/* Название — кнопка на вкладку «Аптечка»; цвет тот же, что у плашки там. */
+.name {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ok);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.nameDue {
+  color: var(--feeding);
+}
+
+.nameExpired {
+  color: var(--text-muted);
+}
+
+/* Пилюли — сеткой, а не потоком: шесть приёмов встают ровными рядами по два,
+   а не пятью в строку и одной сиротой справа. Ширина не задана, только
+   предел: auto-fit считает колонки по нему, а пустые схлопывает, так что одна
+   пилюля прижата к краю, а не висит в левой ячейке. Ряды — по центру
+   относительно названия. */
+.slots {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  justify-content: end;
+  align-content: center;
+  gap: 8px;
+  max-width: 60%;
+}
+
+/* Пилюли те же, что в «Аптечке», только ниже и во всю ячейку сетки. */
+.small {
+  justify-content: center;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.expired {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}

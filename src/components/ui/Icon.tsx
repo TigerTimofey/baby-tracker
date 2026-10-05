@@ -20,6 +20,7 @@ export type IconName =
   | "chevron-right"
   | "chevron-down"
   | "bottle"
+  | "pill"
   | "clock"
   | "spinner";
 
@@ -99,6 +100,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M10 3h4v3l1.5 2v11a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2V8L10 6Z" />
       <path d="M8.5 12h7" />
+    </>
+  ),
+  pill: (
+    <>
+      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+      <path d="m8.5 8.5 7 7" />
     </>
   ),
   spinner: <path d="M12 3a9 9 0 1 0 9 9" />,

@@ -1,0 +1,14 @@
+/* Подсказки из курса под полем названия: одно нажатие ставит и имя, и дозу,
+   и единицы. Поле остаётся — записать можно и то, чего в курсе нет. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: calc(8px - var(--gap-4)) 0 var(--gap-4);
+}
+
+.chipsLabel {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}

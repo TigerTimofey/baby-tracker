@@ -4,6 +4,7 @@ import { listByChild } from "../data/repo";
 import type { SleepSession } from "../data/types";
 import { FeedingButton } from "../features/feeding/FeedingButton";
 import { FeedingCard } from "../features/feeding/FeedingCard";
+import { PinnedCourses } from "../features/illness/PinnedCourses";
 import { DayLog } from "../features/history/DayLog";
 import { DayTimeline } from "../features/timeline/DayTimeline";
 import { Card } from "../components/ui/Card";
@@ -35,9 +36,10 @@ export function SleepPage() {
         sessions={sessions}
         action={<FeedingButton childId={child.id} />}
       />
+      <PinnedCourses childId={child.id} />
       <div className={styles.pair}>
         <SleepCard childId={child.id} sessions={sessions} />
-        <FeedingCard childId={child.id} />
+        <FeedingCard childId={child.id} sessions={sessions} />
       </div>
       <div style={{ marginTop: "var(--gap-4)" }}>
         <SleepSummary child={child} sessions={sessions} />

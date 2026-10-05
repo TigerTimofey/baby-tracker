@@ -32,6 +32,7 @@ const TABS: Tab[] = [
   { to: "/sleep", label: "Сон", icon: "moon", tone: "sleep" },
   { to: "/growth", label: "ВОЗ", icon: "growth", tone: "growth" },
   { to: "/illness", label: "Болезнь", icon: "thermometer", tone: "illness" },
+  { to: "/meds", label: "Аптечка", icon: "pill", tone: "meds" },
   { to: "/stats", label: "Статистика", icon: "stats", tone: "stats" },
 ];
 

@@ -129,6 +129,29 @@ export interface Medicine extends SyncFields {
   note: string | null;
 }
 
+/**
+ * Курс лекарства: что, сколько и во сколько давать. Сами выдачи остаются
+ * записями `Medicine` — курс лишь подсказывает следующий приём, напоминает и
+ * заполняет выдачу одним нажатием.
+ */
+export interface MedicineCourse extends SyncFields {
+  child_id: string;
+  name: string;
+  amount: number | null;
+  unit: DoseUnit;
+  /** Время приёмов «ЧЧ:ММ», по одному на приём, отсортированы. */
+  times: string[];
+  /** Срок курса в днях, считая день начала; null — без срока. */
+  days: number | null;
+  /** Показывать компактно на главном экране, под таймером сна. Общее для
+   * семьи: закрепил один родитель — видят оба. */
+  pinned: boolean;
+  note: string | null;
+  started_at: ISODateTime;
+  /** Курс закончен: не показывается среди идущих и не напоминает. */
+  ended_at: ISODateTime | null;
+}
+
 export interface TableMap {
   children: Child;
   sleep_sessions: SleepSession;
@@ -138,6 +161,7 @@ export interface TableMap {
   diapers: Diaper;
   temperatures: Temperature;
   medicines: Medicine;
+  medicine_courses: MedicineCourse;
 }
 
 export type TableName = keyof TableMap;
@@ -151,6 +175,7 @@ export const TABLES: TableName[] = [
   "diapers",
   "temperatures",
   "medicines",
+  "medicine_courses",
 ];
 
 /** Язык интерфейса. Английский основной, остальные — выбором в настройках. */

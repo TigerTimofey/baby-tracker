@@ -1,0 +1,34 @@
+/* Листание по дням — как в «Ленте дня»: стрелки по краям, день посередине.
+   Влево — к началу курса, вправо — до сегодня; дальше стрелки гаснут. Одно и
+   то же в «Аптечке» и в компактной карточке на главном экране. */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+}
+
+.btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 600;
+}

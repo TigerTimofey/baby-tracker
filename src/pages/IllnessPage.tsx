@@ -8,11 +8,12 @@ import { Icon } from "../components/ui/Icon";
 import { useActiveChild, useAuthorLabel, useLive, useNow } from "../data/hooks";
 import { listByChild, restore, save, softDelete } from "../data/repo";
 import { showToast } from "../components/ui/toast";
-import type { Medicine, Temperature } from "../data/types";
+import type { Medicine, MedicineCourse, Temperature } from "../data/types";
 import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
 import { MedicineEditor } from "../features/illness/MedicineEditor";
 import { TemperatureEditor } from "../features/illness/TemperatureEditor";
+import { activeCourses } from "../features/illness/courseUtils";
 import { doseLine, doseTimers, givenMs } from "../features/illness/medUtils";
 import {
   currentSpell,
@@ -50,6 +51,7 @@ function shortAge(months: number): string {
   return `${years} ${pluralOf(years, "год")}`;
 }
 const NO_DOSES: Medicine[] = [];
+const NO_COURSES: MedicineCourse[] = [];
 
 type Entry =
   | { kind: "temp"; at: number; reading: Temperature }
@@ -79,6 +81,13 @@ export function IllnessPage() {
     [childId],
   );
   const doses = doseData ?? NO_DOSES;
+
+  const { data: courseData } = useLive(
+    async () =>
+      childId ? await listByChild("medicine_courses", childId) : NO_COURSES,
+    [childId],
+  );
+  const courses = courseData ?? NO_COURSES;
 
   if (!child) return null;
 
@@ -482,18 +491,6 @@ export function IllnessPage() {
                   {t("Вернуть болезнь")}
                 </Button>
               }
-              footer={
-                <div className={styles.pastDanger}>
-                  <Button
-                    variant="danger"
-                    block
-                    onClick={() => setAskDelete(spell.last.id)}
-                  >
-                    <Icon name="trash" size={17} />
-                    {t("Удалить болезнь")}
-                  </Button>
-                </div>
-              }
             >
               <div className={`${styles.big} ${styles.done}`}>
                 {formatSpan(recoveredAt - spell.since)}
@@ -520,6 +517,20 @@ export function IllnessPage() {
               </div>
 
               {spellSections(spell, spellDoses)}
+
+              {/* Удаление — внутри, а не в footer: у свёрнутого итога оно
+                  торчало единственной кнопкой. Теперь появляется вместе с
+                  журналом, как у болезни в истории. */}
+              <div className={styles.pastDanger}>
+                <Button
+                  variant="danger"
+                  block
+                  onClick={() => setAskDelete(spell.last.id)}
+                >
+                  <Icon name="trash" size={17} />
+                  {t("Удалить болезнь")}
+                </Button>
+              </div>
             </Card>
           </>
         ) : spell ? (
@@ -725,6 +736,7 @@ export function IllnessPage() {
           onClose={() => setMedOpen(false)}
           childId={child.id}
           dose={pickedDose ?? undefined}
+          courses={activeCourses(courses)}
         />
       )}
     </>
