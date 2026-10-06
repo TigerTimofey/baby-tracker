@@ -473,68 +473,11 @@ export function IllnessPage() {
             </div>
           </Card>
         ) : spell && recoveredAt !== null ? (
-          <>
-            {startCard(
-              t("Болезнь закрыта {0} в {1}.", [formatDayLabel(
-                new Date(recoveredAt),
-              ).toLowerCase(), formatTime(new Date(recoveredAt))]),
-            )}
-            <Card
-              title={t("Итог болезни")}
-              collapsible
-              actionFirst
-              meta={t("Последняя болезнь: {0}", [rangeOf(spell.since, recoveredAt)])}
-              action={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => reopenSpell(spell)}
-                >
-                  {t("Вернуть болезнь")}
-                </Button>
-              }
-            >
-              <div className={`${styles.big} ${styles.done}`}>
-                {formatSpan(recoveredAt - spell.since)}
-              </div>
-              <div className={styles.facts}>
-                <div className={styles.fact}>
-                  <span className={styles.factLabel}>{t("Пик")}</span>
-                  <span className={`${styles.factValue} tnum`}>
-                    {formatCelsius(spell.peak.celsius)}
-                  </span>
-                </div>
-                <div className={styles.fact}>
-                  <span className={styles.factLabel}>{t("Замеров")}</span>
-                  <span className={`${styles.factValue} tnum`}>
-                    {spell.readings.length}
-                  </span>
-                </div>
-                <div className={styles.fact}>
-                  <span className={styles.factLabel}>{t("Лекарств")}</span>
-                  <span className={`${styles.factValue} tnum`}>
-                    {spellDoses.length}
-                  </span>
-                </div>
-              </div>
-
-              {spellSections(spell, spellDoses)}
-
-              {/* Удаление — внутри, а не в footer: у свёрнутого итога оно
-                  торчало единственной кнопкой. Теперь появляется вместе с
-                  журналом, как у болезни в истории. */}
-              <div className={styles.pastDanger}>
-                <Button
-                  variant="danger"
-                  block
-                  onClick={() => setAskDelete(spell.last.id)}
-                >
-                  <Icon name="trash" size={17} />
-                  {t("Удалить болезнь")}
-                </Button>
-              </div>
-            </Card>
-          </>
+          startCard(
+            t("Болезнь закрыта {0} в {1}.", [formatDayLabel(
+              new Date(recoveredAt),
+            ).toLowerCase(), formatTime(new Date(recoveredAt))]),
+          )
         ) : spell ? (
           <Card
             title={t("Сейчас")}
@@ -610,6 +553,68 @@ export function IllnessPage() {
           doses={doses}
           now={now}
         />
+
+        {/* Итог закрытой болезни — под «Лекарствами», а не над ними: курс
+            может продолжаться после болезни, и ему место сразу под «Сейчас»,
+            а итог — к историям, он уже прошлое. */}
+        {!confirming && spell && recoveredAt !== null && (
+          <Card title={t("Итог болезни")} collapsible>
+            {/* Шапка — как у остальных сворачиваемых карточек: заголовок и
+                шеврон. Период и «Вернуть болезнь» внутри: раньше они стояли
+                в шапке своей строкой, и свёрнутый итог выглядел иначе, чем
+                соседняя «История лекарств». */}
+            <p className={styles.period}>
+              {t("Последняя болезнь: {0}", [rangeOf(spell.since, recoveredAt)])}
+            </p>
+            <div className={`${styles.big} ${styles.done}`}>
+              {formatSpan(recoveredAt - spell.since)}
+            </div>
+            <div className={styles.facts}>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>{t("Пик")}</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {formatCelsius(spell.peak.celsius)}
+                </span>
+              </div>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>{t("Замеров")}</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {spell.readings.length}
+                </span>
+              </div>
+              <div className={styles.fact}>
+                <span className={styles.factLabel}>{t("Лекарств")}</span>
+                <span className={`${styles.factValue} tnum`}>
+                  {spellDoses.length}
+                </span>
+              </div>
+            </div>
+
+            {spellSections(spell, spellDoses)}
+
+            {/* Вернуть и удалить — внутри, а не в шапке или footer: у
+                свёрнутого итога они торчали, и карточка выглядела иначе, чем
+                соседние. Появляются вместе с журналом, как у болезни в
+                истории. */}
+            <div className={styles.pastDanger}>
+              <Button
+                variant="secondary"
+                block
+                onClick={() => reopenSpell(spell)}
+              >
+                {t("Вернуть болезнь")}
+              </Button>
+              <Button
+                variant="danger"
+                block
+                onClick={() => setAskDelete(spell.last.id)}
+              >
+                <Icon name="trash" size={17} />
+                {t("Удалить болезнь")}
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {entries.length === 0 ? (
           <EmptyState

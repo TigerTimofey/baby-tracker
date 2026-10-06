@@ -213,7 +213,6 @@ export function MedicineCourseEditor({
                 id={id}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder={t("Например, Амоксициллин")}
                 autoComplete="off"
               />
             )}
@@ -315,8 +314,6 @@ export function MedicineCourseEditor({
                 inputMode="numeric"
                 value={custom}
                 onChange={(event) => setCustom(event.target.value)}
-                placeholder={t("или своё число")}
-                suffix={t("дн.")}
                 aria-label={t("Своё число дней")}
               />
             </div>
