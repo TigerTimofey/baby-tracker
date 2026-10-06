@@ -195,7 +195,8 @@
    затемнением и не нужна, а в iOS с открытой клавиатурой fixed-низ всплывает
    над клавиатурой и торчит сквозь затемнение посреди экрана. Атрибут ставит
    Sheet; окно по центру его не ставит — панель остаётся на месте. */
-:global(body[data-nav-hidden]) .nav {
+:global(body[data-nav-hidden]) .nav,
+:global(body[data-keyboard]) .nav {
   visibility: hidden;
 }
 

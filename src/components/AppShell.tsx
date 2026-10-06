@@ -1,6 +1,6 @@
 import { t } from "../lib/i18n";
 import { ChildAvatar } from "./ui/ChildAvatar";
-import { useCallback, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useActiveChild, useNow } from "../data/hooks";
 import { notifyChange } from "../data/repo";
@@ -8,6 +8,7 @@ import { updateSettings } from "../data/settings";
 import { syncNow } from "../data/sync";
 import { ChildForm } from "../features/children/ChildForm";
 import { useReminders } from "../features/notify/useReminders";
+import { watchKeyboard } from "../lib/keyboard";
 import { ageOf, birthMoment, formatAge } from "../lib/time";
 // import { CheckinBanner } from "../features/family/CheckinBanner";
 import { PullToRefresh } from "./PullToRefresh";
@@ -88,6 +89,10 @@ export function AppShell() {
   );
 
   useReminders(child);
+
+  // Пока открыта экранная клавиатура, панель навигации спрятана (см.
+  // lib/keyboard): в iOS иначе она всплывает над клавиатурой.
+  useEffect(() => watchKeyboard(), []);
 
   const tone = toneForPath(location.pathname);
   const toneStyle = {
