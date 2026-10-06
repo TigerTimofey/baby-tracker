@@ -21,15 +21,16 @@ const INTERACTIVE = "input, textarea, select, button, [role='tab'], a";
 let lockedScrollY = 0;
 
 /**
- * Замок прокрутки страницы на время шторки.
+ * Страница на время шторки: overflow: hidden на body и запомненная
+ * прокрутка, которая возвращается при закрытии.
  *
- * overflow: hidden на body в iOS не держит: когда клавиатура подводит поле к
- * экрану, Safari прокручивает всю страницу, и после закрытия шторки она
- * остаётся сдвинутой — навигация, прибитая к низу через position: fixed,
- * висит не у края. Поэтому body фиксируется на месте с отрицательным top:
- * документ становится ростом с экран, прокручивать нечего, а при закрытии
- * прокрутка возвращается туда, где была. Счётчик, а не флаг: шторки бывают
- * вложенными, замок ставит первая и снимает последняя.
+ * Фиксировать body через position: fixed, как делают для iOS, здесь нельзя:
+ * в установленном приложении на iPhone в тот же миг панель навигации,
+ * прибитая к низу, поднималась ровно на свою высоту и оставалась так до
+ * смены вкладки — без всякой клавиатуры. Поэтому только overflow: hidden, а
+ * со сдвигом после клавиатуры борются другие слои (см. realignAfterKeyboard и
+ * README). Счётчик, а не флаг: шторки бывают вложенными, замок ставит первая
+ * и снимает последняя.
  */
 function lockPage(hideNav: boolean): () => void {
   const body = document.body;
@@ -42,11 +43,6 @@ function lockPage(hideNav: boolean): () => void {
   }
   if (count === 0) {
     lockedScrollY = window.scrollY;
-    body.style.position = "fixed";
-    body.style.top = `-${lockedScrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
     body.style.overflow = "hidden";
   }
   body.dataset.sheets = String(count + 1);
@@ -63,11 +59,6 @@ function lockPage(hideNav: boolean): () => void {
       return;
     }
     delete body.dataset.sheets;
-    body.style.position = "";
-    body.style.top = "";
-    body.style.left = "";
-    body.style.right = "";
-    body.style.width = "";
     body.style.overflow = "";
     window.scrollTo(0, lockedScrollY);
     // Ещё раз на следующем кадре: iOS дорисовывает уход клавиатуры уже после
@@ -77,15 +68,14 @@ function lockPage(hideNav: boolean): () => void {
 }
 
 /**
- * Сдвиг страницы после клавиатуры в iOS. Пока открыта шторка, body закреплён
- * и документ ростом с экран, так что любая прокрутка окна — перетяг за край,
- * который Safari оставляет после клавиатуры; прокрутка в ноль возвращает
- * экран на место. Вызывается, когда клавиатура закрылась (высота визуального
- * вьюпорта вернулась к полной) и когда поле потеряло фокус.
+ * Сдвиг страницы после клавиатуры в iOS: Safari прокручивает окно, чтобы
+ * показать поле, и после клавиатуры оставляет как есть. Когда клавиатура
+ * закрылась (высота визуального вьюпорта вернулась к полной) или поле
+ * потеряло фокус, прокрутка возвращается туда, где была до шторки.
  */
 function realignAfterKeyboard(): () => void {
   const viewport = window.visualViewport;
-  const reset = () => window.scrollTo(0, 0);
+  const reset = () => window.scrollTo(0, lockedScrollY);
   const onResize = () => {
     if (!viewport || viewport.height >= window.innerHeight - 1) reset();
   };
