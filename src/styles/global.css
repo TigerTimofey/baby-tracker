@@ -24,10 +24,6 @@
   --illness-soft: #f08bb42b;
   --stats: #63b3ed;
   --stats-soft: #63b3ed2b;
-  /* Аптечка — лаймовый: свободный участок круга между жёлтым больших чисел и
-     зелёным «в норме», читается как «витамины», не спорит ни с кем. */
-  --meds: #b6e34a;
-  --meds-soft: #b6e34a2b;
   --danger: #f2727f;
   --danger-soft: #f2727f2b;
 
@@ -98,8 +94,6 @@
   --illness-soft: #d95c931f;
   --stats: #2b7fc4;
   --stats-soft: #2b7fc41f;
-  --meds: #6f9d13;
-  --meds-soft: #6f9d131f;
   --danger: #d94a5c;
   --danger-soft: #d94a5c1f;
 
@@ -138,8 +132,6 @@
   --illness-soft: #c68d4a22;
   --stats: #b0864a;
   --stats-soft: #b0864a22;
-  --meds: #bd9a3c;
-  --meds-soft: #bd9a3c22;
   --feeding: #e2a441;
   --feeding-soft: #e2a44122;
   --danger: #c25c3a;

@@ -27,7 +27,7 @@ const NO_COURSES: MedicineCourse[] = [];
 
 /**
  * Закреплённые курсы на главном экране. Витамин D каждое утро — то, ради чего
- * открывают приложение чаще, чем ради вкладки «Аптечка»; тумблер там ставит
+ * открывают приложение чаще, чем ради вкладки «Болезнь»; тумблер там ставит
  * курс сюда. Пилюли те же и переключаются так же; название ведёт на вкладку.
  * Нет закреплённых — нет карточки.
  */
@@ -59,7 +59,7 @@ export function PinnedCourses({ childId }: { childId: string }) {
   const viewStart = dayStartBack(now, back);
   const today = viewStart === startOfDay(now);
 
-  const open = () => navigate("/meds");
+  const open = () => navigate("/illness");
 
   return (
     <Card

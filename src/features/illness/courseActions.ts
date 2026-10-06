@@ -1,4 +1,6 @@
-import { newId, nowISO, save, softDelete } from "../../data/repo";
+import { t } from "../../lib/i18n";
+import { showToast } from "../../components/ui/toast";
+import { newId, nowISO, restore, save, softDelete } from "../../data/repo";
 import type { Medicine, MedicineCourse } from "../../data/types";
 import {
   doseTimeForSlot,
@@ -56,4 +58,32 @@ export async function setCoursePinned(
   pinned: boolean,
 ): Promise<void> {
   await save("medicine_courses", { ...course, pinned });
+}
+
+/**
+ * Завершить — обычный конец курса. Курс уезжает в историю лекарств; «Вернуть»
+ * в тосте возвращает.
+ */
+export async function finishCourse(course: MedicineCourse): Promise<void> {
+  await save("medicine_courses", { ...course, ended_at: nowISO() });
+  showToast(t("Курс завершён"), {
+    label: t("Вернуть"),
+    run: () => void save("medicine_courses", { ...course, ended_at: null }),
+  });
+}
+
+export async function resumeCourse(course: MedicineCourse): Promise<void> {
+  await save("medicine_courses", { ...course, ended_at: null });
+}
+
+/**
+ * Удаление сразу, без вопроса, с «Вернуть» в тосте — как у всех записей
+ * здесь. Выдачи в журнале остаются: курс лишь подсказывал, записи — свои.
+ */
+export async function removeCourse(course: MedicineCourse): Promise<void> {
+  await softDelete("medicine_courses", course.id);
+  showToast(t("Курс удалён"), {
+    label: t("Вернуть"),
+    run: () => void restore("medicine_courses", course.id),
+  });
 }

@@ -232,23 +232,8 @@
   white-space: pre-wrap;
 }
 
-/* Законченные курсы — бледным списком под идущими: имя и до какого числа.
-   Нажатие открывает редактор — там курс можно вернуть или удалить. */
-.finished {
-  margin-top: var(--gap-3);
-  padding-top: var(--gap-3);
-  border-top: 1px solid var(--border-soft);
-}
-
-.finishedTitle {
-  margin: 0 0 4px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
+/* Законченные курсы в «Истории лекарств»: строка на курс — имя и до какого
+   числа, раскрывается на месте. */
 .finishedItem + .finishedItem {
   border-top: 1px solid var(--border-soft);
 }

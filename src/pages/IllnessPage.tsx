@@ -11,6 +11,8 @@ import { showToast } from "../components/ui/toast";
 import type { Medicine, MedicineCourse, Temperature } from "../data/types";
 import { FeverChart } from "../features/illness/FeverChart";
 import { IllnessReport } from "../features/illness/IllnessReport";
+import { FinishedCourses } from "../features/illness/FinishedCourses";
+import { MedicineCourses } from "../features/illness/MedicineCourses";
 import { MedicineEditor } from "../features/illness/MedicineEditor";
 import { TemperatureEditor } from "../features/illness/TemperatureEditor";
 import { activeCourses } from "../features/illness/courseUtils";
@@ -602,6 +604,13 @@ export function IllnessPage() {
           )
         )}
 
+        <MedicineCourses
+          childId={child.id}
+          courses={courses}
+          doses={doses}
+          now={now}
+        />
+
         {entries.length === 0 ? (
           <EmptyState
             icon="thermometer"
@@ -635,6 +644,8 @@ export function IllnessPage() {
             </Card>
           </>
         ) : null}
+
+        <FinishedCourses childId={child.id} courses={courses} />
 
         {pastSpells.length > 0 && (
           <Card title={t("История болезней")} collapsible>

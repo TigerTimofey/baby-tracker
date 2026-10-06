@@ -4,12 +4,9 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Icon } from "../../components/ui/Icon";
 import { Switch } from "../../components/ui/Switch";
-import { showToast } from "../../components/ui/toast";
-import { nowISO, restore, save, softDelete } from "../../data/repo";
 import type { Medicine, MedicineCourse } from "../../data/types";
 import {
   dayKey,
-  formatDate,
   formatDayDate,
   formatDuration,
   formatTime,
@@ -21,20 +18,21 @@ import {
   dayStartBack,
   daysBackAvailable,
   dosesOfDay,
-  finishedCourses,
   slotsForDay,
   startOfDay,
   type CourseSlot,
   type CourseStatus,
 } from "./courseUtils";
-import { setCoursePinned, toggleCourseSlot } from "./courseActions";
+import {
+  finishCourse,
+  removeCourse,
+  setCoursePinned,
+  toggleCourseSlot,
+} from "./courseActions";
 import { DayNav } from "./DayNav";
 import { MedicineCourseEditor } from "./MedicineCourseEditor";
 import { courseTitle } from "./medUtils";
 import styles from "./MedicineCourses.module.css";
-
-/** Законченных курсов копится много, а нужны последние: вернуть или удалить. */
-const SHOW_FINISHED = 5;
 
 interface MedicineCoursesProps {
   childId: string;
@@ -50,7 +48,8 @@ interface MedicineCoursesProps {
  * курса, — ещё одно снимает. Плашка раскрывается, как заголовок
  * сворачиваемой карточки: под ней «Завершить курс», «Изменить» и «Удалить».
  * Сами выдачи ложатся в тот же журнал, что и обычное «Лекарство», поэтому
- * врач видит одну ленту.
+ * врач видит одну ленту. Законченные курсы — в своей карточке «История
+ * лекарств» (FinishedCourses).
  */
 export function MedicineCourses({
   childId,
@@ -60,8 +59,6 @@ export function MedicineCourses({
 }: MedicineCoursesProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [picked, setPicked] = useState<MedicineCourse | null>(null);
-  /** Образец для повтора: шторка открывается заполненной, сохранится новый. */
-  const [copyOf, setCopyOf] = useState<MedicineCourse | null>(null);
   /** Раскрытый курс — один за раз, как болезни в истории. */
   const [open, setOpen] = useState<string | null>(null);
   /**
@@ -80,30 +77,15 @@ export function MedicineCourses({
   }
 
   const statuses = courseStatuses(courses, doses, now);
-  const finished = finishedCourses(courses).slice(0, SHOW_FINISHED);
-  const empty = statuses.length === 0 && finished.length === 0;
+  const empty = statuses.length === 0;
 
   function openNew() {
     setPicked(null);
-    setCopyOf(null);
     setEditorOpen(true);
   }
 
   function openEdit(course: MedicineCourse) {
     setPicked(course);
-    setCopyOf(null);
-    setEditorOpen(true);
-  }
-
-  /**
-   * Повторить — не вернуть: тот курс остаётся законченным в истории, а новый
-   * начинается сегодня с теми же лекарством, дозой и расписанием. Шторка
-   * открывается заполненной, чтобы поправить, если что-то поменялось.
-   */
-  function openCopy(course: MedicineCourse) {
-    setPicked(null);
-    setCopyOf(course);
-    setOpen(null);
     setEditorOpen(true);
   }
 
@@ -115,34 +97,9 @@ export function MedicineCourses({
     void toggleCourseSlot(childId, status, slot);
   }
 
-  /**
-   * Удаление сразу, без вопроса, с «Вернуть» в тосте — как у всех записей
-   * здесь. Выдачи в журнале остаются: курс лишь подсказывал, записи — свои.
-   */
-  async function remove(course: MedicineCourse) {
-    await softDelete("medicine_courses", course.id);
-    showToast(t("Курс удалён"), {
-      label: t("Вернуть"),
-      run: () => void restore("medicine_courses", course.id),
-    });
-  }
-
-  /**
-   * Завершить — обычный конец курса, поэтому первой кнопкой и во всю ширину.
-   * Курс уезжает в список законченных; «Вернуть» в тосте возвращает.
-   */
-  async function finish(course: MedicineCourse) {
+  function finish(course: MedicineCourse) {
     setOpen(null);
-    await save("medicine_courses", { ...course, ended_at: nowISO() });
-    showToast(t("Курс завершён"), {
-      label: t("Вернуть"),
-      run: () => void save("medicine_courses", { ...course, ended_at: null }),
-    });
-  }
-
-  async function resume(course: MedicineCourse) {
-    setOpen(null);
-    await save("medicine_courses", { ...course, ended_at: null });
+    void finishCourse(course);
   }
 
   /**
@@ -204,47 +161,35 @@ export function MedicineCourses({
   };
 
   /**
-   * Под раскрытым курсом: завершить или вернуть — во всю ширину, под ними
-   * правка и удаление. Три кнопки в ряд на телефоне не помещаются.
+   * Под раскрытым курсом: тумблер главного экрана, «Завершить курс» во всю
+   * ширину, под ними правка и удаление. Три кнопки в ряд на телефоне не
+   * помещаются.
    */
   const details = (course: MedicineCourse) => (
     <div className={styles.details}>
-      {course.ended_at === null && (
-        <div className={styles.pinRow}>
-          <span className={styles.pinText}>
-            <span className={styles.pinLabel}>{t("На главном экране")}</span>
-            <span className={styles.pinHint}>
-              {t("компактная карточка под таймером сна")}
-            </span>
+      <div className={styles.pinRow}>
+        <span className={styles.pinText}>
+          <span className={styles.pinLabel}>{t("На главном экране")}</span>
+          <span className={styles.pinHint}>
+            {t("компактная карточка под таймером сна")}
           </span>
-          <Switch
-            checked={Boolean(course.pinned)}
-            onChange={(next) => void setCoursePinned(course, next)}
-            label={t("На главном экране")}
-          />
-        </div>
-      )}
-      {course.ended_at === null ? (
-        <Button variant="secondary" block onClick={() => finish(course)}>
-          <Icon name="check" size={16} />
-          {t("Завершить курс")}
-        </Button>
-      ) : (
-        <>
-          <Button variant="primary" block onClick={() => openCopy(course)}>
-            {t("Повторить курс")}
-          </Button>
-          <Button variant="secondary" block onClick={() => resume(course)}>
-            {t("Вернуть курс")}
-          </Button>
-        </>
-      )}
+        </span>
+        <Switch
+          checked={Boolean(course.pinned)}
+          onChange={(next) => void setCoursePinned(course, next)}
+          label={t("На главном экране")}
+        />
+      </div>
+      <Button variant="secondary" block onClick={() => finish(course)}>
+        <Icon name="check" size={16} />
+        {t("Завершить курс")}
+      </Button>
       <div className={styles.detailsRow}>
         <Button variant="secondary" onClick={() => openEdit(course)}>
           <Icon name="pencil" size={16} />
           {t("Изменить")}
         </Button>
-        <Button variant="danger" onClick={() => remove(course)}>
+        <Button variant="danger" onClick={() => void removeCourse(course)}>
           <Icon name="trash" size={16} />
           {t("Удалить")}
         </Button>
@@ -379,40 +324,15 @@ export function MedicineCourses({
           </div>
         )}
 
-        {finished.length > 0 && (
-          <div className={styles.finished}>
-            <h3 className={styles.finishedTitle}>{t("Закончены")}</h3>
-            {finished.map((course) => (
-              <div key={course.id} className={styles.finishedItem}>
-                <button
-                  type="button"
-                  className={styles.finishedRow}
-                  aria-expanded={open === course.id}
-                  onClick={() => toggleOpen(course.id)}
-                >
-                  <span className={styles.finishedName}>
-                    {courseTitle(course)}
-                  </span>
-                  <span className={styles.finishedWhen}>
-                    {t("до {0}", [formatDate(course.ended_at as string)])}
-                  </span>
-                  {chevron(course.id)}
-                </button>
-                {open === course.id && details(course)}
-              </div>
-            ))}
-          </div>
-        )}
       </Card>
 
       {editorOpen && (
         <MedicineCourseEditor
-          key={picked?.id ?? (copyOf ? `copy-${copyOf.id}` : "new-course")}
+          key={picked?.id ?? "new-course"}
           open={editorOpen}
           onClose={() => setEditorOpen(false)}
           childId={childId}
           course={picked ?? undefined}
-          copyOf={copyOf ?? undefined}
         />
       )}
     </>
