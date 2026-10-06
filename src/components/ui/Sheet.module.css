@@ -214,3 +214,37 @@
     padding-bottom: var(--gap-5);
   }
 }
+
+/* ——— Окно по центру ———
+   Между шапкой и панелью навигации: затемнение начинается под шапкой и
+   кончается над панелью, обе остаются видны и на месте, окно центрируется в
+   оставшемся месте и не выше него — длинная форма прокручивается внутри. */
+.overlayCenter {
+  top: calc(var(--header-h) + env(safe-area-inset-top));
+  bottom: calc(var(--nav-inset) + env(safe-area-inset-bottom));
+  align-items: center;
+  padding: var(--gap-3) var(--page-pad);
+}
+
+.panelCenter {
+  max-height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding-bottom: var(--gap-5);
+  animation: pop 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .overlayCenter {
+    padding-right: calc(
+      var(--page-pad) + var(--rail-w) + env(safe-area-inset-right)
+    );
+  }
+}

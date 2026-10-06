@@ -31,9 +31,15 @@ let lockedScrollY = 0;
  * прокрутка возвращается туда, где была. Счётчик, а не флаг: шторки бывают
  * вложенными, замок ставит первая и снимает последняя.
  */
-function lockPage(): () => void {
+function lockPage(hideNav: boolean): () => void {
   const body = document.body;
   const count = Number(body.dataset.sheets ?? 0);
+  // Панель навигации прячется только под шторками, которые её закрывают:
+  // выезжающими снизу, сверху и во весь экран. Окно по центру стоит между
+  // шапкой и панелью, и обе должны остаться на месте.
+  if (hideNav) {
+    body.dataset.navHidden = String(Number(body.dataset.navHidden ?? 0) + 1);
+  }
   if (count === 0) {
     lockedScrollY = window.scrollY;
     body.style.position = "fixed";
@@ -46,6 +52,11 @@ function lockPage(): () => void {
   body.dataset.sheets = String(count + 1);
 
   return () => {
+    if (hideNav) {
+      const hidden = Number(body.dataset.navHidden ?? 1) - 1;
+      if (hidden <= 0) delete body.dataset.navHidden;
+      else body.dataset.navHidden = String(hidden);
+    }
     const left = Number(body.dataset.sheets ?? 1) - 1;
     if (left > 0) {
       body.dataset.sheets = String(left);
@@ -97,11 +108,12 @@ interface SheetProps {
   /**
    * Откуда выезжает. Снизу — обычная шторка; сверху — выпадает из-под шапки,
    * для того, что открывают из шапки: список малышей. Закрывается свайпом в
-   * ту же сторону, откуда пришла. «full» — во весь экран, как отдельное окно:
-   * для длинных форм вроде курса лекарства; свайпом не закрывается, только
+   * ту же сторону, откуда пришла. «full» — во весь экран, как отдельное окно.
+   * «center» — окно по центру между шапкой и панелью навигации, шапка
+   * остаётся видна и работает. Эти два свайпом не закрываются, только
    * крестиком, «Отменой» и Escape.
    */
-  side?: "bottom" | "top" | "full";
+  side?: "bottom" | "top" | "full" | "center";
   children: ReactNode;
 }
 
@@ -132,10 +144,11 @@ export function Sheet({
     };
     document.addEventListener("keydown", onKeyDown);
 
-    // Замок прокрутки заодно ставит на body атрибут data-sheets, по которому
-    // AppShell прячет нижнюю навигацию: в iOS при открытой клавиатуре всё,
-    // что прижато к низу через position: fixed, всплывает над клавиатурой.
-    const unlock = lockPage();
+    // Замок прокрутки заодно ставит на body атрибут data-nav-hidden, по
+    // которому AppShell прячет нижнюю навигацию: в iOS при открытой
+    // клавиатуре всё, что прижато к низу через position: fixed, всплывает над
+    // клавиатурой. Окно по центру панель не трогает.
+    const unlock = lockPage(side !== "center");
     const stopRealign = realignAfterKeyboard();
 
     return () => {
@@ -143,7 +156,7 @@ export function Sheet({
       stopRealign();
       unlock();
     };
-  }, [open, onClose]);
+  }, [open, onClose, side]);
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -151,9 +164,9 @@ export function Sheet({
 
     setOffset(0);
     setSettling(false);
-    // Окно во весь экран свайпом не закрывается: тянуть его некуда, а жест
-    // спорил бы с прокруткой длинной формы.
-    if (side === "full") return;
+    // Окно во весь экран или по центру свайпом не закрывается: тянуть его
+    // некуда, а жест спорил бы с прокруткой длинной формы.
+    if (side === "full" || side === "center") return;
 
     let startY: number | null = null;
     let dragging = false;
@@ -250,6 +263,7 @@ export function Sheet({
 
   const top = side === "top";
   const full = side === "full";
+  const center = side === "center";
 
   return createPortal(
     <div
@@ -257,6 +271,7 @@ export function Sheet({
         styles.overlay,
         top ? styles.overlayTop : "",
         full ? styles.overlayFull : "",
+        center ? styles.overlayCenter : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -276,6 +291,7 @@ export function Sheet({
           styles.panel,
           top ? styles.panelTop : "",
           full ? styles.panelFull : "",
+          center ? styles.panelCenter : "",
           settling ? styles.settling : "",
         ]
           .filter(Boolean)
@@ -287,7 +303,7 @@ export function Sheet({
         data-testid="sheet-panel"
         data-offset={Math.round(offset)}
       >
-        {!top && !full && <div className={styles.grabber} />}
+        {!top && !full && !center && <div className={styles.grabber} />}
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>{title}</h2>

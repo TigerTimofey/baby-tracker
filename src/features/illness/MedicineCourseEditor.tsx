@@ -198,6 +198,7 @@ export function MedicineCourseEditor({
     <Sheet
       open={open}
       onClose={onClose}
+      side="center"
       title={course ? t("Курс лекарства") : t("Новый курс")}
     >
       {/* Форма уложена так, чтобы помещаться на экран телефона без внутренней
